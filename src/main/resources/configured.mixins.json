@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "com.mrcrayfish.configured.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.8",
+  "refmap": "configured.refmap.json",
+  "mixins": [
+    "ModContainerMixin"
+  ],
+  "client": [
+
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
