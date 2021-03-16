@@ -20,15 +20,13 @@ public class Config
 
         public Client(ForgeConfigSpec.Builder builder)
         {
-            builder.push("client");
-            {
-                this.stringValue = builder.define("stringValue", "YEP");
-                this.booleanValue = builder.define("booleanValue", false);
-                this.intValue = builder.defineInRange("intValue",0, 1, 10);
-                this.doubleValue = builder.defineInRange("doubleValue", 0.0, 1.0, 10.0);
-                this.longValue = builder.defineInRange("longValue", 0L, 1L, 10L);
-                this.enumValue = builder.defineEnum("enumValue", Direction.NORTH);
-            }
+            this.stringValue = builder.define("stringValue", "YEP");
+            this.booleanValue = builder.define("booleanValue", false);
+            builder.push("special");
+            this.intValue = builder.defineInRange("intValue",0, 1, 10);
+            this.doubleValue = builder.defineInRange("doubleValue", 0.0, 1.0, 10.0);
+            this.longValue = builder.defineInRange("longValue", 0L, 1L, 10L);
+            this.enumValue = builder.defineEnum("enumValue", Direction.NORTH);
             builder.pop();
         }
     }
