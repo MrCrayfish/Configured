@@ -5,6 +5,7 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -153,7 +154,8 @@ public class ConfigScreen extends Screen
         this.children.add(this.list);
 
         this.searchTextField = new TextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
-        this.searchTextField.setSuggestion(new TranslationTextComponent("configured.gui.search").getUnformattedComponentText());
+        //It's broken
+        //this.searchTextField.setSuggestion(new TranslationTextComponent("configured.gui.search").getString());
         this.searchTextField.setResponder(s ->
         {
             if(!s.isEmpty())
@@ -291,8 +293,7 @@ public class ConfigScreen extends Screen
         @Override
         public void render(MatrixStack matrixStack, int x, int y, int left, int width, int p_230432_6_, int p_230432_7_, int p_230432_8_, boolean p_230432_9_, float p_230432_10_)
         {
-            ITextComponent title = this.valueSpec.getTranslationKey() != null ? new TranslationTextComponent(this.valueSpec.getTranslationKey()) : new StringTextComponent(lastValue(this.configValue.getPath(), "YEP"));
-
+            ITextComponent title = new StringTextComponent(this.label);
             if(ConfigScreen.this.minecraft.fontRenderer.getStringPropertyWidth(title) > width - 50)
             {
                 String trimmed = ConfigScreen.this.minecraft.fontRenderer.func_238417_a_(title, width - 50).getString() + "...";
@@ -421,6 +422,13 @@ public class ConfigScreen extends Screen
 
     private static String createLabelFromConfig(ForgeConfigSpec.ConfigValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
-        return (valueSpec.getTranslationKey() != null ? new TranslationTextComponent(valueSpec.getTranslationKey()) : new StringTextComponent(lastValue(configValue.getPath(), "YEP"))).getUnformattedComponentText();
+        if(valueSpec.getTranslationKey() != null)
+        {
+            return new TranslationTextComponent(valueSpec.getTranslationKey()).getString();
+        }
+        String valueName = lastValue(configValue.getPath(), "");
+        String[] words = valueName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
+        for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
+        return Strings.join(words, " ");
     }
 }
