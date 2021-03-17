@@ -11,7 +11,6 @@ import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.screen.EditGamerulesScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
@@ -22,7 +21,6 @@ import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -98,6 +96,9 @@ public class ConfigScreen extends Screen
         this.commonValues = commonSpec != null ? commonSpec.getValues() : null;
     }
 
+    /**
+     * Gathers the entries for each config spec to be later added to the option list
+     */
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
@@ -114,11 +115,18 @@ public class ConfigScreen extends Screen
         this.entries = ImmutableList.copyOf(entries);
     }
 
+    /**
+     * Scans the given unmodifiable config and creates an entry for each scanned
+     * config value based on it's type.
+     *
+     * @param values  the values to scan
+     * @param spec    the spec of config
+     * @param entries the list to add the entries to
+     */
     private void addEntries(UnmodifiableConfig values, ForgeConfigSpec spec, List<Entry> entries)
     {
         List<Entry> subEntries = new ArrayList<>();
-        values.valueMap().forEach((s, o) ->
-        {
+        values.valueMap().forEach((s, o) -> {
             if(o instanceof AbstractConfig)
             {
                 subEntries.add(new SubMenu(s, spec, (AbstractConfig) o));
@@ -177,8 +185,7 @@ public class ConfigScreen extends Screen
         this.children.add(this.list);
 
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
-        this.searchTextField.setResponder(s ->
-        {
+        this.searchTextField.setResponder(s -> {
             if(!s.isEmpty())
             {
                 this.list.replaceEntries(this.entries.stream().filter(entry -> (entry instanceof SubMenu || entry instanceof ConfigEntry<?>) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH))).collect(Collectors.toList()));
@@ -224,12 +231,18 @@ public class ConfigScreen extends Screen
         }
     }
 
+    /**
+     * Sets the tool tip to render. Must be actively called in the render method as
+     * the tooltip is reset every draw call.
+     *
+     * @param activeTooltip a tooltip list to show
+     */
     public void setActiveTooltip(List<IReorderingProcessor> activeTooltip)
     {
         this.activeTooltip = activeTooltip;
     }
 
-    public abstract class Entry extends AbstractOptionList.Entry<Entry>
+    abstract class Entry extends AbstractOptionList.Entry<Entry>
     {
         protected String label;
         protected List<IReorderingProcessor> tooltip;
@@ -417,8 +430,7 @@ public class ConfigScreen extends Screen
             super(configValue, valueSpec);
             this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 42, 20, new StringTextComponent("YEP"));
             this.textField.setText(configValue.get().toString());
-            this.textField.setResponder((s) ->
-            {
+            this.textField.setResponder((s) -> {
                 try
                 {
                     Number n = parser.apply(s);
@@ -562,7 +574,7 @@ public class ConfigScreen extends Screen
         public EnumEntry(ForgeConfigSpec.ConfigValue<Enum> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new StringTextComponent(((Enum)configValue.get()).name()), (button) -> {
+            this.button = new Button(10, 5, 44, 20, new StringTextComponent(((Enum) configValue.get()).name()), (button) -> {
                 Object o = configValue.get();
                 if(o instanceof Enum)
                 {
@@ -587,6 +599,11 @@ public class ConfigScreen extends Screen
         }
     }
 
+    /**
+     * A custom implementation of the text field widget to help reset the focus when it's used
+     * in an option list. This class is specific to {@link ConfigScreen} and won't work anywhere
+     * else.
+     */
     @OnlyIn(Dist.CLIENT)
     public class ConfigTextFieldWidget extends TextFieldWidget
     {
@@ -614,6 +631,14 @@ public class ConfigScreen extends Screen
         }
     }
 
+    /**
+     * Gets the last element in a list
+     *
+     * @param list         the list of get the value from
+     * @param defaultValue if the list is empty, return this value instead
+     * @param <V>          the type of list
+     * @return the last element
+     */
     private static <V> V lastValue(List<V> list, V defaultValue)
     {
         if(list.size() > 0)
@@ -623,6 +648,15 @@ public class ConfigScreen extends Screen
         return defaultValue;
     }
 
+    /**
+     * Tries to create a readable label from the given config value and spec. This will
+     * first attempt to create a label from the translation key in the spec, otherwise it
+     * will create a readable label from the raw config value name.
+     *
+     * @param configValue the config value
+     * @param valueSpec   the associated value spec
+     * @return a readable label string
+     */
     private static String createLabelFromConfig(ForgeConfigSpec.ConfigValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
         if(valueSpec.getTranslationKey() != null)
@@ -632,13 +666,23 @@ public class ConfigScreen extends Screen
         return createLabel(lastValue(configValue.getPath(), ""));
     }
 
+    /**
+     * Tries to create a readable label from the given input. This input should be
+     * the raw config value name. For example "shouldShowParticles" will be converted
+     * to "Should Show Particles".
+     *
+     * @param input the config value name
+     * @return a readable label string
+     */
     private static String createLabel(String input)
     {
         String valueName = input;
-        String[] words = valueName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])"); // Try split by camel case
+        // Try split by camel case
+        String[] words = valueName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         valueName = Strings.join(words, " ");
-        words = valueName.split("_"); // Try split by underscores
+        // Try split by underscores
+        words = valueName.split("_");
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         return Strings.join(words, " ");
     }
