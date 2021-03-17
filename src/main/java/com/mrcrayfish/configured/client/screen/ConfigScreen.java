@@ -5,6 +5,8 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.client.util.OptiFineHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -22,6 +24,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.ForgeConfig;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.StringUtils;
 
@@ -78,15 +81,15 @@ public class ConfigScreen extends Screen
         this.subMenu = true;
     }
 
-    public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable UnmodifiableConfig clientValues, @Nullable ForgeConfigSpec commonSpec, @Nullable UnmodifiableConfig commonValues)
+    public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable ForgeConfigSpec commonSpec)
     {
         super(new StringTextComponent(displayName));
         this.parent = parent;
         this.displayName = displayName;
         this.clientSpec = clientSpec;
-        this.clientValues = clientValues;
+        this.clientValues = clientSpec != null ? clientSpec.getValues() : null;
         this.commonSpec = commonSpec;
-        this.commonValues = commonValues;
+        this.commonValues = commonSpec != null ? commonSpec.getValues() : null;
     }
 
     private void constructEntries()
@@ -140,7 +143,21 @@ public class ConfigScreen extends Screen
                 }
                 else
                 {
-                    subEntries.add(new StringEntry(configValue, valueSpec));
+                    Object value = configValue.get();
+                    if(value instanceof List && ((List) value).size() > 0 && ((List) value).get(0) instanceof String)
+                    {
+                        //noinspection unchecked
+                        subEntries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<? extends String>>) configValue, valueSpec));
+                    }
+                    else if(value instanceof String)
+                    {
+                        //noinspection unchecked
+                        subEntries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
+                    }
+                    else
+                    {
+                        Configured.LOGGER.info("Unsupported config value: " + configValue.getPath());
+                    }
                 }
             }
         });
@@ -243,10 +260,9 @@ public class ConfigScreen extends Screen
 
         public SubMenu(String label, ForgeConfigSpec spec, AbstractConfig values)
         {
-            super(label);
-            String title = StringUtils.capitalize(label);
-            this.button = new Button(10, 5, 44, 20, new StringTextComponent(title).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
-                String newTitle = ConfigScreen.this.displayName + " > " + title;
+            super(createLabel(label));
+            this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
+                String newTitle = ConfigScreen.this.displayName + " > " + this.getLabel();
                 ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, spec, values));
             });
         }
@@ -442,9 +458,34 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class StringEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<?>>
+    public class StringEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<String>>
     {
-        public StringEntry(ForgeConfigSpec.ConfigValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        private final Button button;
+
+        public StringEntry(ForgeConfigSpec.ConfigValue<String> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        {
+            super(configValue, valueSpec);
+            String title = createLabelFromConfig(configValue, valueSpec);
+            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
+                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec));
+            });
+            this.eventListeners.add(this.button);
+        }
+
+        @Override
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
+            this.button.x = left + width - 45;
+            this.button.y = top;
+            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public class ListStringEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<List<? extends String>>>
+    {
+        public ListStringEntry(ForgeConfigSpec.ConfigValue<List<? extends String>> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
         }
@@ -525,7 +566,12 @@ public class ConfigScreen extends Screen
         {
             return new TranslationTextComponent(valueSpec.getTranslationKey()).getString();
         }
-        String valueName = lastValue(configValue.getPath(), "");
+        return createLabel(lastValue(configValue.getPath(), ""));
+    }
+
+    private static String createLabel(String input)
+    {
+        String valueName = input;
         String[] words = valueName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])"); // Try split by camel case
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         valueName = Strings.join(words, " ");

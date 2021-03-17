@@ -1,4 +1,5 @@
 {
     "configured.gui.search": "Search...",
-    "configured.gui.restore_defaults": "Restore Defaults"
+    "configured.gui.restore_defaults": "Restore Defaults",
+    "configured.gui.edit": "Edit"
 }
