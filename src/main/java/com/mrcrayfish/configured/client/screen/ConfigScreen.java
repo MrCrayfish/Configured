@@ -11,14 +11,18 @@ import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.screen.EditGamerulesScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.LanguageMap;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -66,6 +70,7 @@ public class ConfigScreen extends Screen
     private ConfigTextFieldWidget activeTextField;
     private ConfigTextFieldWidget searchTextField;
     private boolean subMenu = false;
+    private List<IReorderingProcessor> activeTooltip;
 
     public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values)
     {
@@ -207,16 +212,27 @@ public class ConfigScreen extends Screen
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
+        this.activeTooltip = null;
         this.renderBackground(matrixStack);
         this.list.render(matrixStack, mouseX, mouseY, partialTicks);
         this.searchTextField.render(matrixStack, mouseX, mouseY, partialTicks);
         drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
+        if(this.activeTooltip != null)
+        {
+            this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
+        }
+    }
+
+    public void setActiveTooltip(List<IReorderingProcessor> activeTooltip)
+    {
+        this.activeTooltip = activeTooltip;
     }
 
     public abstract class Entry extends AbstractOptionList.Entry<Entry>
     {
         protected String label;
+        protected List<IReorderingProcessor> tooltip;
 
         public Entry(String label)
         {
@@ -284,7 +300,6 @@ public class ConfigScreen extends Screen
     {
         protected T configValue;
         protected ForgeConfigSpec.ValueSpec valueSpec;
-        private List<IReorderingProcessor> tooltip;
         protected final List<IGuiEventListener> eventListeners = Lists.newArrayList();
 
         public ConfigEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec)
@@ -292,12 +307,10 @@ public class ConfigScreen extends Screen
             super(createLabelFromConfig(configValue, valueSpec));
             this.configValue = configValue;
             this.valueSpec = valueSpec;
-        }
-
-        public ConfigEntry setTooltip(List<IReorderingProcessor> tooltip)
-        {
-            this.tooltip = tooltip;
-            return this;
+            if(valueSpec.getComment() != null)
+            {
+                this.tooltip = this.createToolTip(configValue, valueSpec);
+            }
         }
 
         @Override
@@ -307,7 +320,7 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int x, int y, int left, int width, int p_230432_6_, int p_230432_7_, int p_230432_8_, boolean p_230432_9_, float p_230432_10_)
+        public void render(MatrixStack matrixStack, int x, int y, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float p_230432_10_)
         {
             ITextComponent title = new StringTextComponent(this.label);
             if(ConfigScreen.this.minecraft.fontRenderer.getStringPropertyWidth(title) > width - 50)
@@ -319,6 +332,36 @@ public class ConfigScreen extends Screen
             {
                 ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, title, left, y + 6, 0xFFFFFF);
             }
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                ConfigScreen.this.setActiveTooltip(this.tooltip);
+            }
+        }
+
+        private List<IReorderingProcessor> createToolTip(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec)
+        {
+            FontRenderer font = ConfigScreen.this.minecraft.fontRenderer;
+            List<ITextProperties> lines = font.getCharacterManager().func_238362_b_(new StringTextComponent(spec.getComment()), 200, Style.EMPTY);
+            String name = lastValue(value.getPath(), "");
+            lines.add(0, new StringTextComponent(name).mergeStyle(TextFormatting.YELLOW));
+            int rangeIndex = -1;
+            for(int i = 0; i < lines.size(); i++)
+            {
+                String text = lines.get(i).getString();
+                if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                {
+                    rangeIndex = i;
+                    break;
+                }
+            }
+            if(rangeIndex != -1)
+            {
+                for(int i = rangeIndex; i < lines.size(); i++)
+                {
+                    lines.set(i, new StringTextComponent(lines.get(i).getString()).mergeStyle(TextFormatting.GRAY));
+                }
+            }
+            return LanguageMap.getInstance().func_244260_a(lines);
         }
     }
 
@@ -347,6 +390,20 @@ public class ConfigScreen extends Screen
         public void replaceEntries(Collection<ConfigScreen.Entry> entries)
         {
             super.replaceEntries(entries);
+        }
+
+        @Override
+        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+        {
+            super.render(matrixStack, mouseX, mouseY, partialTicks);
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                ConfigScreen.Entry entry = this.getEntryAtPosition(mouseX, mouseY);
+                if(entry != null)
+                {
+                    ConfigScreen.this.setActiveTooltip(entry.tooltip);
+                }
+            }
         }
     }
 

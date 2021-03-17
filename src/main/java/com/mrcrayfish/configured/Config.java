@@ -1,13 +1,10 @@
 package com.mrcrayfish.configured;
 
-import com.google.common.collect.ImmutableList;
 import net.minecraft.util.Direction;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,14 +24,14 @@ public class Config
 
         public Client(ForgeConfigSpec.Builder builder)
         {
-            this.stringValue = builder.define("stringValue", "YEP");
-            this.booleanValue = builder.define("booleanValue", false);
-            this.listValue = builder.defineList("listValue", Arrays.asList("Yo", "Yes", "No"), o -> true);
-            builder.push("more_properties");
-            this.intValue = builder.defineInRange("int_Value",0, 1, 10);
-            this.doubleValue = builder.defineInRange("doubleValue", 0.0, 1.0, 10.0);
-            this.longValue = builder.defineInRange("longValue", 0L, 1L, 10L);
-            this.enumValue = builder.defineEnum("enumValue", Direction.NORTH);
+            this.stringValue = builder.comment("This is an String value").define("stringValue", "YEP");
+            this.booleanValue = builder.comment("This is a Boolean value").define("booleanValue", false);
+            this.listValue = builder.comment("This is a List of Strings").defineList("listValue", Arrays.asList("Yo", "Yes", "No"), o -> true);
+            builder.comment("YEP").push("more_properties");
+            this.intValue = builder.comment("This is an Integer value").defineInRange("int_Value",0, 1, 10);
+            this.doubleValue = builder.comment("This is a Double value").defineInRange("doubleValue", 0.0, 1.0, 10.0);
+            this.longValue = builder.comment("This is a Long value").defineInRange("longValue", 0L, 1L, 10L);
+            this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", Direction.NORTH);
             builder.pop();
         }
     }
