@@ -46,8 +46,7 @@ import java.util.stream.Collectors;
 @OnlyIn(Dist.CLIENT)
 public class ConfigScreen extends Screen
 {
-    public static final Comparator<Entry> COMPARATOR = (o1, o2) ->
-    {
+    public static final Comparator<Entry> COMPARATOR = (o1, o2) -> {
         if(o1 instanceof SubMenu && o2 instanceof SubMenu)
         {
             return o1.getLabel().compareTo(o2.getLabel());
@@ -56,7 +55,11 @@ public class ConfigScreen extends Screen
         {
             return 1;
         }
-        return -1;
+        if(o1 instanceof SubMenu)
+        {
+            return -1;
+        }
+        return o1.getLabel().compareTo(o2.getLabel());
     };
 
     private final Screen parent;
