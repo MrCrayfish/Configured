@@ -526,7 +526,10 @@ public class ConfigScreen extends Screen
             return new TranslationTextComponent(valueSpec.getTranslationKey()).getString();
         }
         String valueName = lastValue(configValue.getPath(), "");
-        String[] words = valueName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
+        String[] words = valueName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])"); // Try split by camel case
+        for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
+        valueName = Strings.join(words, " ");
+        words = valueName.split("_"); // Try split by underscores
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         return Strings.join(words, " ");
     }
