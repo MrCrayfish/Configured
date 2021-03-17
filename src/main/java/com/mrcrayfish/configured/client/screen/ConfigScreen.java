@@ -127,23 +127,23 @@ public class ConfigScreen extends Screen
                 Object value = configValue.get();
                 if(value instanceof Boolean)
                 {
-                    subEntries.add(new BooleanEntry((ForgeConfigSpec.BooleanValue) configValue, valueSpec));
+                    subEntries.add(new BooleanEntry((ForgeConfigSpec.ConfigValue<Boolean>) configValue, valueSpec));
                 }
                 else if(value instanceof Integer)
                 {
-                    subEntries.add(new IntegerEntry((ForgeConfigSpec.IntValue) configValue, valueSpec));
+                    subEntries.add(new IntegerEntry((ForgeConfigSpec.ConfigValue<Integer>) configValue, valueSpec));
                 }
                 else if(value instanceof Double)
                 {
-                    subEntries.add(new DoubleEntry((ForgeConfigSpec.DoubleValue) configValue, valueSpec));
+                    subEntries.add(new DoubleEntry((ForgeConfigSpec.ConfigValue<Double>) configValue, valueSpec));
                 }
                 else if(value instanceof Long)
                 {
-                    subEntries.add(new LongEntry((ForgeConfigSpec.LongValue) configValue, valueSpec));
+                    subEntries.add(new LongEntry((ForgeConfigSpec.ConfigValue<Long>) configValue, valueSpec));
                 }
                 else if(value instanceof Enum)
                 {
-                    subEntries.add(new EnumEntry((ForgeConfigSpec.EnumValue) configValue, valueSpec));
+                    subEntries.add(new EnumEntry((ForgeConfigSpec.ConfigValue<Enum>) configValue, valueSpec));
                 }
                 else if(value instanceof String)
                 {
@@ -449,38 +449,38 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class IntegerEntry extends NumberEntry<ForgeConfigSpec.IntValue>
+    public class IntegerEntry extends NumberEntry<ForgeConfigSpec.ConfigValue<Integer>>
     {
-        public IntegerEntry(ForgeConfigSpec.IntValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public IntegerEntry(ForgeConfigSpec.ConfigValue<Integer> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec, Integer::parseInt);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class DoubleEntry extends NumberEntry<ForgeConfigSpec.DoubleValue>
+    public class DoubleEntry extends NumberEntry<ForgeConfigSpec.ConfigValue<Double>>
     {
-        public DoubleEntry(ForgeConfigSpec.DoubleValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public DoubleEntry(ForgeConfigSpec.ConfigValue<Double> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec, Double::parseDouble);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class LongEntry extends NumberEntry<ForgeConfigSpec.LongValue>
+    public class LongEntry extends NumberEntry<ForgeConfigSpec.ConfigValue<Long>>
     {
-        public LongEntry(ForgeConfigSpec.LongValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public LongEntry(ForgeConfigSpec.ConfigValue<Long> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec, Long::parseLong);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class BooleanEntry extends ConfigEntry<ForgeConfigSpec.BooleanValue>
+    public class BooleanEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<Boolean>>
     {
         private final Button button;
 
-        public BooleanEntry(ForgeConfigSpec.BooleanValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public BooleanEntry(ForgeConfigSpec.ConfigValue<Boolean> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
             this.button = new Button(10, 5, 44, 20, DialogTexts.optionsEnabled(configValue.get()), (button) -> {
@@ -552,11 +552,11 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class EnumEntry extends ConfigEntry<ForgeConfigSpec.EnumValue<?>>
+    public class EnumEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<Enum>>
     {
         private final Button button;
 
-        public EnumEntry(ForgeConfigSpec.EnumValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public EnumEntry(ForgeConfigSpec.ConfigValue<Enum> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
             this.button = new Button(10, 5, 44, 20, new StringTextComponent(((Enum)configValue.get()).name()), (button) -> {
