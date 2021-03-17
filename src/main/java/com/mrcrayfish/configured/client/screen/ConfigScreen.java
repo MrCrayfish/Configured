@@ -8,6 +8,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -31,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -60,7 +62,8 @@ public class ConfigScreen extends Screen
     private final UnmodifiableConfig commonValues;
     private ConfigList list;
     private List<Entry> entries;
-    private TextFieldWidget searchTextField;
+    private ConfigTextFieldWidget activeTextField;
+    private ConfigTextFieldWidget searchTextField;
     private boolean subMenu = false;
 
     public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values)
@@ -73,7 +76,6 @@ public class ConfigScreen extends Screen
         this.commonSpec = null;
         this.commonValues = null;
         this.subMenu = true;
-        this.constructEntries();
     }
 
     public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable UnmodifiableConfig clientValues, @Nullable ForgeConfigSpec commonSpec, @Nullable UnmodifiableConfig commonValues)
@@ -85,7 +87,6 @@ public class ConfigScreen extends Screen
         this.clientValues = clientValues;
         this.commonSpec = commonSpec;
         this.commonValues = commonValues;
-        this.constructEntries();
     }
 
     private void constructEntries()
@@ -150,10 +151,12 @@ public class ConfigScreen extends Screen
     @Override
     protected void init()
     {
+        this.constructEntries();
+
         this.list = new ConfigList(this.entries);
         this.children.add(this.list);
 
-        this.searchTextField = new TextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
+        this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
         //It's broken
         //this.searchTextField.setSuggestion(new TranslationTextComponent("configured.gui.search").getString());
         this.searchTextField.setResponder(s ->
@@ -264,7 +267,7 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public abstract class ConfigEntry<T extends ForgeConfigSpec.ConfigValue<?>> extends Entry
+    public abstract class ConfigEntry<T extends ForgeConfigSpec.ConfigValue> extends Entry
     {
         protected T configValue;
         protected ForgeConfigSpec.ValueSpec valueSpec;
@@ -335,29 +338,73 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class IntegerEntry extends ConfigEntry<ForgeConfigSpec.IntValue>
+    public abstract class NumberEntry<T extends ForgeConfigSpec.ConfigValue> extends ConfigEntry<T>
+    {
+        private ConfigTextFieldWidget textField;
+
+        public NumberEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec, Function<String, Number> parser)
+        {
+            super(configValue, valueSpec);
+            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 42, 20, new StringTextComponent("YEP"));
+            this.textField.setText(configValue.get().toString());
+            this.textField.setResponder((s) ->
+            {
+                try
+                {
+                    Number n = parser.apply(s);
+                    if(valueSpec.test(n))
+                    {
+                        this.textField.setTextColor(14737632);
+                        //noinspection unchecked
+                        configValue.set(n);
+                    }
+                    else
+                    {
+                        this.textField.setTextColor(16711680);
+                    }
+                }
+                catch(Exception ignored)
+                {
+                    this.textField.setTextColor(16711680);
+                }
+            });
+            this.eventListeners.add(this.textField);
+        }
+
+        @Override
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
+            this.textField.x = left + width - 44;
+            this.textField.y = top;
+            this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public class IntegerEntry extends NumberEntry<ForgeConfigSpec.IntValue>
     {
         public IntegerEntry(ForgeConfigSpec.IntValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
-            super(configValue, valueSpec);
+            super(configValue, valueSpec, Integer::parseInt);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class DoubleEntry extends ConfigEntry<ForgeConfigSpec.DoubleValue>
+    public class DoubleEntry extends NumberEntry<ForgeConfigSpec.DoubleValue>
     {
         public DoubleEntry(ForgeConfigSpec.DoubleValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
-            super(configValue, valueSpec);
+            super(configValue, valueSpec, Double::parseDouble);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class LongEntry extends ConfigEntry<ForgeConfigSpec.LongValue>
+    public class LongEntry extends NumberEntry<ForgeConfigSpec.LongValue>
     {
         public LongEntry(ForgeConfigSpec.LongValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
-            super(configValue, valueSpec);
+            super(configValue, valueSpec, Long::parseLong);
         }
     }
 
@@ -384,12 +431,12 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int p_230432_7_, int p_230432_8_, boolean selected, float partialTicks)
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, p_230432_7_, p_230432_8_, selected, partialTicks);
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
             this.button.x = left + width - 45;
             this.button.y = top;
-            this.button.render(matrixStack, p_230432_7_, p_230432_8_, partialTicks);
+            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
     }
 
@@ -405,9 +452,60 @@ public class ConfigScreen extends Screen
     @OnlyIn(Dist.CLIENT)
     public class EnumEntry extends ConfigEntry<ForgeConfigSpec.EnumValue<?>>
     {
-        public EnumEntry(ForgeConfigSpec.EnumValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        private final Button button;
+
+        public EnumEntry(ForgeConfigSpec.EnumValue configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
+            this.button = new Button(10, 5, 44, 20, new StringTextComponent(((Enum)configValue.get()).name()), (button) -> {
+                Object o = configValue.get();
+                if(o instanceof Enum)
+                {
+                    Enum e = (Enum) o;
+                    Object[] values = e.getDeclaringClass().getEnumConstants();
+                    e = (Enum) values[(e.ordinal() + 1) % values.length];
+                    //noinspection unchecked
+                    configValue.set(e);
+                    button.setMessage(new StringTextComponent(e.name()));
+                }
+            });
+            this.eventListeners.add(this.button);
+        }
+
+        @Override
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
+            this.button.x = left + width - 45;
+            this.button.y = top;
+            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public class ConfigTextFieldWidget extends TextFieldWidget
+    {
+        public ConfigTextFieldWidget(FontRenderer fontRenderer, int x, int y, int width, int height, ITextComponent label)
+        {
+            super(fontRenderer, x, y, width, height, label);
+        }
+
+        @Override
+        public void setFocused2(boolean focused)
+        {
+            super.setFocused2(focused);
+            if(focused)
+            {
+                if(ConfigScreen.this.activeTextField != null && ConfigScreen.this.activeTextField != this)
+                {
+                    ConfigScreen.this.activeTextField.setFocused2(false);
+                    ConfigScreen.this.activeTextField = this;
+                }
+                else
+                {
+                    ConfigScreen.this.activeTextField = this;
+                }
+            }
         }
     }
 
