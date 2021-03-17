@@ -124,43 +124,40 @@ public class ConfigScreen extends Screen
             {
                 ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
                 ForgeConfigSpec.ValueSpec valueSpec = spec.getRaw(configValue.getPath());
-                if(configValue instanceof ForgeConfigSpec.BooleanValue)
+                Object value = configValue.get();
+                if(value instanceof Boolean)
                 {
                     subEntries.add(new BooleanEntry((ForgeConfigSpec.BooleanValue) configValue, valueSpec));
                 }
-                else if(configValue instanceof ForgeConfigSpec.IntValue)
+                else if(value instanceof Integer)
                 {
                     subEntries.add(new IntegerEntry((ForgeConfigSpec.IntValue) configValue, valueSpec));
                 }
-                else if(configValue instanceof ForgeConfigSpec.DoubleValue)
+                else if(value instanceof Double)
                 {
                     subEntries.add(new DoubleEntry((ForgeConfigSpec.DoubleValue) configValue, valueSpec));
                 }
-                else if(configValue instanceof ForgeConfigSpec.LongValue)
+                else if(value instanceof Long)
                 {
                     subEntries.add(new LongEntry((ForgeConfigSpec.LongValue) configValue, valueSpec));
                 }
-                else if(configValue instanceof ForgeConfigSpec.EnumValue)
+                else if(value instanceof Enum)
                 {
                     subEntries.add(new EnumEntry((ForgeConfigSpec.EnumValue) configValue, valueSpec));
                 }
+                else if(value instanceof String)
+                {
+                    //noinspection unchecked
+                    subEntries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
+                }
+                else if(value instanceof List<?>)
+                {
+                    //noinspection unchecked
+                    subEntries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec));
+                }
                 else
                 {
-                    Object value = configValue.get();
-                    if(value instanceof List<?>)
-                    {
-                        //noinspection unchecked
-                        subEntries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec));
-                    }
-                    else if(value instanceof String)
-                    {
-                        //noinspection unchecked
-                        subEntries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
-                    }
-                    else
-                    {
-                        Configured.LOGGER.info("Unsupported config value: " + configValue.getPath());
-                    }
+                    Configured.LOGGER.info("Unsupported config value: " + configValue.getPath());
                 }
             }
         });
