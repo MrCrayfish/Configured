@@ -181,7 +181,8 @@ public class ConfigScreen extends Screen
         else
         {
             this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) -> {
-                this.clientSpec.save();
+                if(this.clientSpec != null) this.clientSpec.save();
+                if(this.commonSpec != null) this.commonSpec.save();
                 this.minecraft.displayGuiScreen(this.parent);
             }));
             this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {

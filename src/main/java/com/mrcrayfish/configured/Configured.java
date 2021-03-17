@@ -53,7 +53,10 @@ public class Configured
             UnmodifiableConfig clientValues = clientSpec != null ? clientSpec.getValues() : null;
             UnmodifiableConfig commonValues = commonSpec != null ? commonSpec.getValues() : null;
             String displayName = container.getModInfo().getDisplayName();
-            container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientSpec, clientValues, commonSpec, commonValues));
+            if(clientSpec != null || commonSpec != null) // Only add if at least one config exists
+            {
+                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientSpec, clientValues, commonSpec, commonValues));
+            }
         });
     }
 }
