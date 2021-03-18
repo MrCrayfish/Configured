@@ -225,7 +225,7 @@ public class ConfigScreen extends Screen
         this.searchTextField.render(matrixStack, mouseX, mouseY, partialTicks);
         drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-        if(this.activeTooltip != null && mouseX < this.list.func_244736_r() - 45)
+        if(this.activeTooltip != null && mouseX < this.list.getRowLeft() + this.list.getRowWidth() - 45)
         {
             this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
         }
@@ -385,6 +385,12 @@ public class ConfigScreen extends Screen
         {
             super(ConfigScreen.this.minecraft, ConfigScreen.this.width, ConfigScreen.this.height, 50, ConfigScreen.this.height - 36, 24);
             entries.forEach(this::addEntry);
+        }
+
+        @Override
+        public int getRowLeft()
+        {
+            return super.getRowLeft();
         }
 
         @Override
