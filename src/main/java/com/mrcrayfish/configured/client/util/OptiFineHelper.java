@@ -3,8 +3,6 @@ package com.mrcrayfish.configured.client.util;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.lang.reflect.Field;
-
 /**
  * Author: MrCrayfish
  */
@@ -12,7 +10,6 @@ import java.lang.reflect.Field;
 public class OptiFineHelper
 {
     private static Boolean loaded = null;
-    private static Field programIdField;
 
     public static boolean isLoaded()
     {
