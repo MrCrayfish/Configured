@@ -27,6 +27,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class ConfigScreen extends Screen
     private ConfigTextFieldWidget searchTextField;
     private boolean subMenu = false;
     private List<IReorderingProcessor> activeTooltip;
+    private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
     public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values)
     {
@@ -83,6 +85,7 @@ public class ConfigScreen extends Screen
         this.commonSpec = null;
         this.commonValues = null;
         this.subMenu = true;
+        this.allConfigValues = null;
     }
 
     public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable ForgeConfigSpec commonSpec)
@@ -94,6 +97,39 @@ public class ConfigScreen extends Screen
         this.clientValues = clientSpec != null ? clientSpec.getValues() : null;
         this.commonSpec = commonSpec;
         this.commonValues = commonSpec != null ? commonSpec.getValues() : null;
+        this.allConfigValues = this.gatherAllConfigValues();
+    }
+
+    /**
+     * Gathers all the config values with a deep search. Used for resetting defaults
+     */
+    private List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllConfigValues()
+    {
+        List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values = new ArrayList<>();
+        if(this.clientValues != null) this.gatherValuesFromConfig(this.clientValues, this.clientSpec, values);
+        if(this.commonValues != null) this.gatherValuesFromConfig(this.commonValues, this.commonSpec, values);
+        return ImmutableList.copyOf(values);
+    }
+
+    /**
+     * Gathers all the config values from the given config and adds it's to the provided list. This
+     * will search deeper if it finds another config and recursively call itself.
+     */
+    private void gatherValuesFromConfig(UnmodifiableConfig config, ForgeConfigSpec spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
+    {
+        config.valueMap().forEach((s, o) ->
+        {
+            if(o instanceof AbstractConfig)
+            {
+                this.gatherValuesFromConfig((UnmodifiableConfig) o, spec, values);
+            }
+            else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
+            {
+                ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
+                ForgeConfigSpec.ValueSpec valueSpec = spec.getRaw(configValue.getPath());
+                values.add(Pair.of(configValue, valueSpec));
+            }
+        });
     }
 
     /**
@@ -105,12 +141,12 @@ public class ConfigScreen extends Screen
         if(this.clientValues != null && this.clientSpec != null)
         {
             if(!this.subMenu) entries.add(new TitleEntry("Client Configuration"));
-            this.addEntries(this.clientValues, this.clientSpec, entries);
+            this.createEntriesFromConfig(this.clientValues, this.clientSpec, entries);
         }
         if(this.commonValues != null && this.commonSpec != null)
         {
             entries.add(new TitleEntry("Common Configuration"));
-            this.addEntries(this.commonValues, this.commonSpec, entries);
+            this.createEntriesFromConfig(this.commonValues, this.commonSpec, entries);
         }
         this.entries = ImmutableList.copyOf(entries);
     }
@@ -123,10 +159,11 @@ public class ConfigScreen extends Screen
      * @param spec    the spec of config
      * @param entries the list to add the entries to
      */
-    private void addEntries(UnmodifiableConfig values, ForgeConfigSpec spec, List<Entry> entries)
+    private void createEntriesFromConfig(UnmodifiableConfig values, ForgeConfigSpec spec, List<Entry> entries)
     {
         List<Entry> subEntries = new ArrayList<>();
-        values.valueMap().forEach((s, o) -> {
+        values.valueMap().forEach((s, o) ->
+        {
             if(o instanceof AbstractConfig)
             {
                 subEntries.add(new SubMenu(s, spec, (AbstractConfig) o));
@@ -158,12 +195,10 @@ public class ConfigScreen extends Screen
                 }
                 else if(value instanceof String)
                 {
-                    //noinspection unchecked
                     subEntries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
                 }
                 else if(value instanceof List<?>)
                 {
-                    //noinspection unchecked
                     subEntries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec));
                 }
                 else
@@ -211,7 +246,19 @@ public class ConfigScreen extends Screen
                 this.minecraft.displayGuiScreen(this.parent);
             }));
             this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
-                //TODO
+                if(this.allConfigValues == null)
+                    return;
+
+                // Resets all config values
+                this.allConfigValues.forEach(pair -> {
+                    ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
+                    ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
+                    configValue.set(valueSpec.getDefault());
+                });
+                // Updates the current entries to process UI changes
+                this.entries.stream().filter(entry -> entry instanceof ConfigEntry).forEach(entry -> {
+                    ((ConfigEntry) entry).onResetValue();
+                });
             }));
         }
     }
@@ -325,6 +372,8 @@ public class ConfigScreen extends Screen
                 this.tooltip = this.createToolTip(configValue, valueSpec);
             }
         }
+
+        public void onResetValue() {}
 
         @Override
         public List<? extends IGuiEventListener> getEventListeners()
@@ -467,6 +516,12 @@ public class ConfigScreen extends Screen
             this.textField.y = top;
             this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
         }
+
+        @Override
+        public void onResetValue()
+        {
+            this.textField.setText(this.configValue.get().toString());
+        }
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -519,6 +574,12 @@ public class ConfigScreen extends Screen
             this.button.x = left + width - 45;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+        }
+
+        @Override
+        public void onResetValue()
+        {
+            this.button.setMessage(DialogTexts.optionsEnabled(this.configValue.get()));
         }
     }
 
@@ -602,6 +663,12 @@ public class ConfigScreen extends Screen
             this.button.x = left + width - 45;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+        }
+
+        @Override
+        public void onResetValue()
+        {
+            this.button.setMessage(new StringTextComponent(this.configValue.get().name()));
         }
     }
 
