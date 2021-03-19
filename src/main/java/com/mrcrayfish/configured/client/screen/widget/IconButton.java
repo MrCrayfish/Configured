@@ -7,7 +7,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 /**
  * Author: MrCrayfish
@@ -18,9 +18,16 @@ public class IconButton extends Button
 
     private int u, v;
 
-    public IconButton(int x, int y, int width, int height, int u, int v, ITextComponent title, IPressable pressedAction)
+    public IconButton(int x, int y, int width, int height, int u, int v, IPressable pressedAction)
     {
-        super(x, y, width, height, title, pressedAction);
+        super(x, y, width, height, StringTextComponent.EMPTY, pressedAction);
+        this.u = u;
+        this.v = v;
+    }
+
+    public IconButton(int x, int y, int width, int height, int u, int v, Button.ITooltip onTooltip, IPressable pressedAction)
+    {
+        super(x, y, width, height, StringTextComponent.EMPTY, pressedAction, onTooltip);
         this.u = u;
         this.v = v;
     }
@@ -46,9 +53,5 @@ public class IconButton extends Button
         RenderSystem.color4f(brightness, brightness, brightness, this.alpha);
         blit(matrixStack, this.x + 5, this.y + 4, this.getBlitOffset(), this.u, this.v, 11, 11, 32, 32);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.alpha);
-        if(this.isHovered())
-        {
-            this.renderToolTip(matrixStack, mouseX, mouseY);
-        }
     }
 }

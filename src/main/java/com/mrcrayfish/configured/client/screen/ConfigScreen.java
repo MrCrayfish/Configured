@@ -297,6 +297,13 @@ public class ConfigScreen extends Screen
         {
             this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
         }
+        this.getEventListeners().forEach(o ->
+        {
+            if(o instanceof Button.ITooltip)
+            {
+                ((Button.ITooltip) o).onTooltip((Button) o, matrixStack, mouseX, mouseY);
+            }
+        });
     }
 
     /**
@@ -393,7 +400,14 @@ public class ConfigScreen extends Screen
             {
                 this.tooltip = this.createToolTip(configValue, valueSpec);
             }
-            this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, StringTextComponent.EMPTY, onPress -> {
+            Button.ITooltip tooltip = (button, matrixStack, mouseX, mouseY) ->
+            {
+                if(button.active && button.isHovered())
+                {
+                    ConfigScreen.this.renderTooltip(matrixStack, ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.reset"), Math.max(ConfigScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                }
+            };
+            this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, tooltip, onPress -> {
                 configValue.set(valueSpec.getDefault());
                 this.onResetValue();
             });
@@ -506,6 +520,16 @@ public class ConfigScreen extends Screen
                     ConfigScreen.this.setActiveTooltip(entry.tooltip);
                 }
             }
+            this.getEventListeners().forEach(entry ->
+            {
+                entry.getEventListeners().forEach(o ->
+                {
+                    if(o instanceof Button)
+                    {
+                        ((Button) o).renderToolTip(matrixStack, mouseX, mouseY);
+                    }
+                });
+            });
         }
     }
 

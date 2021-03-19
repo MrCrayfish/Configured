@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
@@ -105,6 +106,22 @@ public class EditStringListScreen extends Screen
         {
             return super.removeEntry(entry);
         }
+
+        @Override
+        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+        {
+            super.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.getEventListeners().forEach(entry ->
+            {
+                entry.getEventListeners().forEach(o ->
+                {
+                    if(o instanceof Button)
+                    {
+                        ((Button)o).renderToolTip(matrixStack, mouseX, mouseY);
+                    }
+                });
+            });
+        }
     }
 
     public class StringEntry extends AbstractOptionList.Entry<StringEntry>
@@ -118,12 +135,17 @@ public class EditStringListScreen extends Screen
         {
             this.list = list;
             this.holder = holder;
-            this.editButton = new Button(0, 0, 30, 20, new StringTextComponent("Edit"), onPress -> {
+            this.editButton = new Button(0, 0, 42, 20, new StringTextComponent("Edit"), onPress -> {
                 EditStringListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
                     this.holder.setValue(s);
                 }));
             });
-            this.deleteButton = new Button(0, 0, 20, 20, new StringTextComponent("X"), onPress -> {
+            Button.ITooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
+                if(button.active && button.isHovered()) {
+                    EditStringListScreen.this.renderTooltip(matrixStack, EditStringListScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                }
+            };
+            this.deleteButton = new IconButton(0, 0, 20, 20, 11, 0, tooltip, onPress -> {
                 EditStringListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
             });
@@ -134,11 +156,11 @@ public class EditStringListScreen extends Screen
         {
             EditStringListScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, new StringTextComponent(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
             this.editButton.visible = true;
-            this.editButton.x = left + width - 60;
+            this.editButton.x = left + width - 65;
             this.editButton.y = top;
             this.editButton.render(matrixStack, mouseX, mouseY, partialTicks);
             this.deleteButton.visible = true;
-            this.deleteButton.x = left + width - 25;
+            this.deleteButton.x = left + width - 21;
             this.deleteButton.y = top;
             this.deleteButton.render(matrixStack, mouseX, mouseY, partialTicks);
         }
