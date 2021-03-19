@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.client.screen.widget.ResetButton;
 import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
@@ -249,7 +251,6 @@ public class ConfigScreen extends Screen
             this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
                 if(this.allConfigValues == null)
                     return;
-
                 // Resets all config values
                 this.allConfigValues.forEach(pair -> {
                     ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
@@ -293,7 +294,7 @@ public class ConfigScreen extends Screen
         this.searchTextField.render(matrixStack, mouseX, mouseY, partialTicks);
         drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-        if(this.activeTooltip != null && mouseX < this.list.getRowLeft() + this.list.getRowWidth() - 45)
+        if(this.activeTooltip != null && mouseX < this.list.getRowLeft() + this.list.getRowWidth() - 67)
         {
             this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
         }
@@ -382,6 +383,7 @@ public class ConfigScreen extends Screen
         protected T configValue;
         protected ForgeConfigSpec.ValueSpec valueSpec;
         protected final List<IGuiEventListener> eventListeners = Lists.newArrayList();
+        protected Button resetButton;
 
         public ConfigEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
@@ -392,6 +394,11 @@ public class ConfigScreen extends Screen
             {
                 this.tooltip = this.createToolTip(configValue, valueSpec);
             }
+            this.resetButton = new ResetButton(0, 0, 20, 20, StringTextComponent.EMPTY, onPress -> {
+                configValue.set(valueSpec.getDefault());
+                this.onResetValue();
+            });
+            this.eventListeners.add(this.resetButton);
         }
 
         public void onResetValue() {}
@@ -403,22 +410,29 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int x, int y, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float p_230432_10_)
+        public void render(MatrixStack matrixStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
+            this.resetButton.active = !this.configValue.get().equals(this.valueSpec.getDefault());
+
             ITextComponent title = new StringTextComponent(this.label);
             if(ConfigScreen.this.minecraft.fontRenderer.getStringPropertyWidth(title) > width - 50)
             {
                 String trimmed = ConfigScreen.this.minecraft.fontRenderer.func_238417_a_(title, width - 50).getString() + "...";
-                ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, new StringTextComponent(trimmed), left, y + 6, 0xFFFFFF);
+                ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, new StringTextComponent(trimmed), left, top + 6, 0xFFFFFF);
             }
             else
             {
-                ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, title, left, y + 6, 0xFFFFFF);
+                ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, title, left, top + 6, 0xFFFFFF);
             }
+
             if(this.isMouseOver(mouseX, mouseY))
             {
                 ConfigScreen.this.setActiveTooltip(this.tooltip);
             }
+
+            this.resetButton.x = left + width - 21;
+            this.resetButton.y = top;
+            this.resetButton.render(matrixStack, mouseX, mouseY, partialTicks);
         }
 
         private List<IReorderingProcessor> createToolTip(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec)
@@ -504,7 +518,7 @@ public class ConfigScreen extends Screen
         public NumberEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec, Function<String, Number> parser)
         {
             super(configValue, valueSpec);
-            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 42, 20, new StringTextComponent("YEP"));
+            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 42, 18, new StringTextComponent("YEP"));
             this.textField.setText(configValue.get().toString());
             this.textField.setResponder((s) -> {
                 try
@@ -530,11 +544,11 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
-            this.textField.x = left + width - 44;
-            this.textField.y = top;
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            this.textField.x = left + width - 66;
+            this.textField.y = top + 1;
             this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
         }
 
@@ -589,10 +603,10 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
-            this.button.x = left + width - 45;
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            this.button.x = left + width - 67;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -620,10 +634,10 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
-            this.button.x = left + width - 45;
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            this.button.x = left + width - 67;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -645,10 +659,10 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
-            this.button.x = left + width - 45;
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            this.button.x = left + width - 67;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -678,10 +692,10 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, selected, partialTicks);
-            this.button.x = left + width - 45;
+            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            this.button.x = left + width - 67;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
