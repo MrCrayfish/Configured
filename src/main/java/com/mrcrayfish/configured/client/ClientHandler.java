@@ -3,12 +3,13 @@ package com.mrcrayfish.configured.client;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.ConfigScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
-import com.mrcrayfish.configured.mixin.ModContainerMixin;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.EnumMap;
@@ -28,7 +29,7 @@ public class ClientHandler
             if(container.getCustomExtension(ExtensionPoint.CONFIGGUIFACTORY).isPresent())
                 return;
 
-            EnumMap<ModConfig.Type, ModConfig> configs = ((ModContainerMixin) container).getConfigs();
+            EnumMap<ModConfig.Type, ModConfig> configs = getConfigMap(container);
             ModConfig clientConfig = configs.get(ModConfig.Type.CLIENT);
 
             /* Optifine basically breaks Forge's client config, so it's simply not added */
@@ -48,5 +49,10 @@ public class ClientHandler
                 container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientSpec, commonSpec));
             }
         });
+    }
+
+    private static EnumMap<ModConfig.Type, ModConfig> getConfigMap(ModContainer container)
+    {
+        return ObfuscationReflectionHelper.getPrivateValue(ModContainer.class, container, "configs");
     }
 }
