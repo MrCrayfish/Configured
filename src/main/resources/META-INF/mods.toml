@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="[34,)"
-license="All rights reserved"
+license="GPL3"
 
 [[mods]]
 modId="configured"
