@@ -71,6 +71,7 @@ public class ConfigScreen extends Screen
     private List<Entry> entries;
     private ConfigTextFieldWidget activeTextField;
     private ConfigTextFieldWidget searchTextField;
+    private Button restoreDefaultsButton;
     private boolean subMenu = false;
     private List<IReorderingProcessor> activeTooltip;
     private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
@@ -245,7 +246,7 @@ public class ConfigScreen extends Screen
                 if(this.commonSpec != null) this.commonSpec.save();
                 this.minecraft.displayGuiScreen(this.parent);
             }));
-            this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
+            this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
                 if(this.allConfigValues == null)
                     return;
 
@@ -260,6 +261,26 @@ public class ConfigScreen extends Screen
                     ((ConfigEntry) entry).onResetValue();
                 });
             }));
+            // Call during init to avoid the button flashing active
+            this.updateRestoreDefaultButton();
+        }
+    }
+
+    @Override
+    public void tick()
+    {
+        this.updateRestoreDefaultButton();
+    }
+
+    /**
+     * Updates the active state of the restore default button. It will only be active if values are
+     * different from their default.
+     */
+    private void updateRestoreDefaultButton()
+    {
+        if(this.allConfigValues != null && this.restoreDefaultsButton != null)
+        {
+            this.restoreDefaultsButton.active = this.allConfigValues.stream().anyMatch(pair -> !pair.getLeft().get().equals(pair.getRight().getDefault()));
         }
     }
 
