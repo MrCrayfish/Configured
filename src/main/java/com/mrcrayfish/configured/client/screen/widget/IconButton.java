@@ -12,13 +12,17 @@ import net.minecraft.util.text.ITextComponent;
 /**
  * Author: MrCrayfish
  */
-public class ResetButton extends Button
+public class IconButton extends Button
 {
     public static final ResourceLocation ICONS = new ResourceLocation("configured:textures/gui/icons.png");
 
-    public ResetButton(int x, int y, int width, int height, ITextComponent title, IPressable pressedAction)
+    private int u, v;
+
+    public IconButton(int x, int y, int width, int height, int u, int v, ITextComponent title, IPressable pressedAction)
     {
         super(x, y, width, height, title, pressedAction);
+        this.u = u;
+        this.v = v;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class ResetButton extends Button
         mc.getTextureManager().bindTexture(ICONS);
         float brightness = this.active ? 1.0F : 0.5F;
         RenderSystem.color4f(brightness, brightness, brightness, this.alpha);
-        blit(matrixStack, this.x + 5, this.y + 4, this.getBlitOffset(), 0, 0, 11, 11, 32, 32);
+        blit(matrixStack, this.x + 5, this.y + 4, this.getBlitOffset(), this.u, this.v, 11, 11, 32, 32);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.alpha);
         if(this.isHovered())
         {

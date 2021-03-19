@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mrcrayfish.configured.Configured;
-import com.mrcrayfish.configured.client.screen.widget.ResetButton;
+import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -17,7 +17,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
@@ -394,7 +393,7 @@ public class ConfigScreen extends Screen
             {
                 this.tooltip = this.createToolTip(configValue, valueSpec);
             }
-            this.resetButton = new ResetButton(0, 0, 20, 20, StringTextComponent.EMPTY, onPress -> {
+            this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, StringTextComponent.EMPTY, onPress -> {
                 configValue.set(valueSpec.getDefault());
                 this.onResetValue();
             });
