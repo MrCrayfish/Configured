@@ -1,0 +1,9 @@
+{
+    "configured.gui.search": "探す...",
+    "configured.gui.restore_defaults": "デフォルトに戻す",
+    "configured.gui.edit": "編集",
+    "configured.gui.edit_value": "値を編集",
+    "configured.gui.add_value": "追加する...",
+    "configured.gui.reset": "リセット",
+    "configured.gui.remove": "削除"
+}
