@@ -1,0 +1,9 @@
+{
+    "configured.gui.search": "Поиск...",
+    "configured.gui.restore_defaults": "Восстановить по умолчанию",
+    "configured.gui.edit": "Изменить",
+    "configured.gui.edit_value": "Изменить значение",
+    "configured.gui.add_value": "Добавить...",
+    "configured.gui.reset": "Сбросить",
+    "configured.gui.remove": "Удалить"
+}
