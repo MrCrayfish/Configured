@@ -5,6 +5,8 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import joptsimple.internal.Strings;
@@ -16,7 +18,12 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
@@ -29,6 +36,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -68,6 +76,7 @@ public class ConfigScreen extends Screen
     private final UnmodifiableConfig clientValues;
     private final ForgeConfigSpec commonSpec;
     private final UnmodifiableConfig commonValues;
+    private final ResourceLocation background;
     private ConfigList list;
     private List<Entry> entries;
     private ConfigTextFieldWidget activeTextField;
@@ -77,7 +86,7 @@ public class ConfigScreen extends Screen
     private List<IReorderingProcessor> activeTooltip;
     private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
-    public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values)
+    public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values, ResourceLocation background)
     {
         super(new StringTextComponent(displayName));
         this.parent = parent;
@@ -88,9 +97,10 @@ public class ConfigScreen extends Screen
         this.commonValues = null;
         this.subMenu = true;
         this.allConfigValues = null;
+        this.background = background;
     }
 
-    public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable ForgeConfigSpec commonSpec)
+    public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable ForgeConfigSpec commonSpec, ResourceLocation background)
     {
         super(new StringTextComponent(displayName));
         this.parent = parent;
@@ -100,6 +110,7 @@ public class ConfigScreen extends Screen
         this.commonSpec = commonSpec;
         this.commonValues = commonSpec != null ? commonSpec.getValues() : null;
         this.allConfigValues = this.gatherAllConfigValues();
+        this.background = background;
     }
 
     /**
@@ -363,7 +374,7 @@ public class ConfigScreen extends Screen
             super(createLabel(label));
             this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
                 String newTitle = ConfigScreen.this.displayName + " > " + this.getLabel();
-                ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, spec, values));
+                ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, spec, values, background));
             });
         }
 
@@ -508,10 +519,8 @@ public class ConfigScreen extends Screen
             super.replaceEntries(entries);
         }
 
-        @Override
-        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+        private void renderToolTips(MatrixStack matrixStack, int mouseX, int mouseY)
         {
-            super.render(matrixStack, mouseX, mouseY, partialTicks);
             if(this.isMouseOver(mouseX, mouseY))
             {
                 ConfigScreen.Entry entry = this.getEntryAtPosition(mouseX, mouseY);
@@ -530,6 +539,108 @@ public class ConfigScreen extends Screen
                     }
                 });
             });
+        }
+
+        /**
+         * Literally just a copy of the original since the background can't be changed
+         *
+         * @param matrixStack  the current matrix stack
+         * @param mouseX       the current mouse x position
+         * @param mouseY       the current mouse y position
+         * @param partialTicks the partial ticks
+         */
+        @Override
+        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+        {
+            this.renderBackground(matrixStack);
+            int scrollBarStart = this.getScrollbarPosition();
+            int scrollBarEnd = scrollBarStart + 6;
+            this.minecraft.getTextureManager().bindTexture(background);
+
+            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+            buffer.pos(this.x0, this.y1, 0.0D).tex(this.x0 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x1, this.y1, 0.0D).tex(this.x1 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x1, this.y0, 0.0D).tex(this.x1 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x0, this.y0, 0.0D).tex(this.x0 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            tessellator.draw();
+
+            int rowLeft = this.getRowLeft();
+            int scrollOffset = this.y0 + 4 - (int) this.getScrollAmount();
+            this.renderList(matrixStack, rowLeft, scrollOffset, mouseX, mouseY, partialTicks);
+            this.minecraft.getTextureManager().bindTexture(background);
+
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthFunc(519);
+
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+            buffer.pos(this.x0, this.y0, -100.0D).tex(0.0F, this.y0 / 32.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos((this.x0 + this.width), this.y0, -100.0D).tex(this.width / 32.0F, this.y0 / 32.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos((this.x0 + this.width), 0.0D, -100.0D).tex(this.width / 32.0F, 0.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos(this.x0, 0.0D, -100.0D).tex(0.0F, 0.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos(this.x0, this.height, -100.0D).tex(0.0F, this.height / 32.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos((this.x0 + this.width), this.height, -100.0D).tex(this.width / 32.0F, this.height / 32.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos((this.x0 + this.width), this.y1, -100.0D).tex(this.width / 32.0F, this.y1 / 32.0F).color(64, 64, 64, 255).endVertex();
+            buffer.pos(this.x0, this.y1, -100.0D).tex(0.0F, this.y1 / 32.0F).color(64, 64, 64, 255).endVertex();
+            tessellator.draw();
+
+            RenderSystem.depthFunc(515);
+            RenderSystem.disableDepthTest();
+            RenderSystem.enableBlend();
+            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
+            RenderSystem.disableAlphaTest();
+            RenderSystem.shadeModel(7425);
+            RenderSystem.disableTexture();
+
+            buffer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+            buffer.pos((double) this.x0, (double) (this.y0 + 4), 0.0D).tex(0.0F, 1.0F).color(0, 0, 0, 0).endVertex();
+            buffer.pos((double) this.x1, (double) (this.y0 + 4), 0.0D).tex(1.0F, 1.0F).color(0, 0, 0, 0).endVertex();
+            buffer.pos((double) this.x1, (double) this.y0, 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 255).endVertex();
+            buffer.pos((double) this.x0, (double) this.y0, 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 255).endVertex();
+            buffer.pos((double) this.x0, (double) this.y1, 0.0D).tex(0.0F, 1.0F).color(0, 0, 0, 255).endVertex();
+            buffer.pos((double) this.x1, (double) this.y1, 0.0D).tex(1.0F, 1.0F).color(0, 0, 0, 255).endVertex();
+            buffer.pos((double) this.x1, (double) (this.y1 - 4), 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 0).endVertex();
+            buffer.pos((double) this.x0, (double) (this.y1 - 4), 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 0).endVertex();
+            tessellator.draw();
+
+            int maxScroll = Math.max(0, this.getMaxPosition() - (this.y1 - this.y0 - 4));
+            if(maxScroll > 0)
+            {
+                int scrollBarStartY = (int) ((float) ((this.y1 - this.y0) * (this.y1 - this.y0)) / (float) this.getMaxPosition());
+                scrollBarStartY = MathHelper.clamp(scrollBarStartY, 32, this.y1 - this.y0 - 8);
+                int scrollBarEndY = (int) this.getScrollAmount() * (this.y1 - this.y0 - scrollBarStartY) / maxScroll + this.y0;
+                if(scrollBarEndY < this.y0)
+                {
+                    scrollBarEndY = this.y0;
+                }
+
+                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+                buffer.pos((double) scrollBarStart, (double) this.y1, 0.0D).tex(0.0F, 1.0F).color(0, 0, 0, 255).endVertex();
+                buffer.pos((double) scrollBarEnd, (double) this.y1, 0.0D).tex(1.0F, 1.0F).color(0, 0, 0, 255).endVertex();
+                buffer.pos((double) scrollBarEnd, (double) this.y0, 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 255).endVertex();
+                buffer.pos((double) scrollBarStart, (double) this.y0, 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 255).endVertex();
+                buffer.pos((double) scrollBarStart, (double) (scrollBarEndY + scrollBarStartY), 0.0D).tex(0.0F, 1.0F).color(128, 128, 128, 255).endVertex();
+                buffer.pos((double) scrollBarEnd, (double) (scrollBarEndY + scrollBarStartY), 0.0D).tex(1.0F, 1.0F).color(128, 128, 128, 255).endVertex();
+                buffer.pos((double) scrollBarEnd, (double) scrollBarEndY, 0.0D).tex(1.0F, 0.0F).color(128, 128, 128, 255).endVertex();
+                buffer.pos((double) scrollBarStart, (double) scrollBarEndY, 0.0D).tex(0.0F, 0.0F).color(128, 128, 128, 255).endVertex();
+                buffer.pos((double) scrollBarStart, (double) (scrollBarEndY + scrollBarStartY - 1), 0.0D).tex(0.0F, 1.0F).color(192, 192, 192, 255).endVertex();
+                buffer.pos((double) (scrollBarEnd - 1), (double) (scrollBarEndY + scrollBarStartY - 1), 0.0D).tex(1.0F, 1.0F).color(192, 192, 192, 255).endVertex();
+                buffer.pos((double) (scrollBarEnd - 1), (double) scrollBarEndY, 0.0D).tex(1.0F, 0.0F).color(192, 192, 192, 255).endVertex();
+                buffer.pos((double) scrollBarStart, (double) scrollBarEndY, 0.0D).tex(0.0F, 0.0F).color(192, 192, 192, 255).endVertex();
+                tessellator.draw();
+            }
+
+            this.renderDecorations(matrixStack, mouseX, mouseY);
+
+            RenderSystem.enableTexture();
+            RenderSystem.shadeModel(7424);
+            RenderSystem.enableAlphaTest();
+            RenderSystem.disableBlend();
+
+            this.renderToolTips(matrixStack, mouseX, mouseY);
         }
     }
 
@@ -816,5 +927,22 @@ public class ConfigScreen extends Screen
         words = valueName.split("_");
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         return Strings.join(words, " ");
+    }
+
+    @Override
+    public void renderDirtBackground(int vOffset)
+    {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        this.minecraft.getTextureManager().bindTexture(this.background);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        float size = 32.0F;
+        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+        bufferbuilder.pos(0.0D, this.height, 0.0D).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
+        bufferbuilder.pos(this.width, this.height, 0.0D).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
+        bufferbuilder.pos(this.width, 0.0D, 0.0D).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
+        bufferbuilder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
+        tessellator.draw();
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
     }
 }

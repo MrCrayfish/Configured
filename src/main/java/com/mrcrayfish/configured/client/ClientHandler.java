@@ -3,6 +3,8 @@ package com.mrcrayfish.configured.client;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.ConfigScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -11,8 +13,10 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
 import java.util.EnumMap;
+import java.util.Optional;
 
 /**
  * Author: MrCrayfish
@@ -45,8 +49,18 @@ public class ClientHandler
             if(clientSpec != null || commonSpec != null) // Only add if at least one config exists
             {
                 Configured.LOGGER.info("Registering config factory for mod {} (client: {}, common: {})", modId, clientSpec != null, commonSpec != null);
+                ResourceLocation background = AbstractGui.BACKGROUND_LOCATION;
+                if(container.getModInfo() instanceof ModInfo)
+                {
+                    Optional<String> optional = ((ModInfo) container.getModInfo()).getConfigElement("configBackground");
+                    if(optional.isPresent())
+                    {
+                        background = new ResourceLocation(optional.get());
+                    }
+                }
                 String displayName = container.getModInfo().getDisplayName();
-                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientSpec, commonSpec));
+                final ResourceLocation finalBackground = background;
+                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientSpec, commonSpec, finalBackground));
             }
         });
     }

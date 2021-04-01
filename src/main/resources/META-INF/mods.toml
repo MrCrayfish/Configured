@@ -9,6 +9,7 @@ displayName="Configured"
 credits=""
 authors="MrCrayfish"
 description="Creates a simple GUI config for every mod!"
+configBackground="minecraft:textures/block/stone.png"
 
 [[dependencies.configured]]
     modId="forge"
