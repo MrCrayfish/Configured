@@ -7,5 +7,11 @@
 Configured is a simple and lightweight mod that dynamically creates a configuration menu for every mod. Previously mods would use Forge's built-in GUI system however that no longer exists in newer versions. This mod aims to reintroduce that system and create fresh new experience with an updated easy-to-use layout. The best part is that Configured supports every mod and doesn't require other mods to write extra code. Currently Configured allows you to change client and common configurations, server config is coming soon!
 * Configured only supports mods that use Forge's config system, anything custom will not work.
 
+## Developers
+
+This mod has support to change the background texture of the config screen. All you need to do is add `configBackground` property into your `mods.toml` under `[[mods]]` and set the value to `"minecraft:textures/block/stone.png"` or another location to a texture file. You do not need to make your mod depend on this mod, however on CurseForge I appreciate if you mark this mod as an optional dependency.
+
+## Screenshots
+
 ![Screenshot 1](https://i.imgur.com/2nGamR3.png)
 ![Screenshot 2](https://i.imgur.com/US0kaVH.png)
