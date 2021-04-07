@@ -11,6 +11,8 @@ authors="MrCrayfish"
 description="Creates a simple GUI config for every mod!"
 configBackground="minecraft:textures/block/stone.png"
 itemIcon="minecraft:book" #Support for Catalogue mod
+logoFile="configured.png"
+logoBlur=false
 
 [[dependencies.configured]]
     modId="forge"
