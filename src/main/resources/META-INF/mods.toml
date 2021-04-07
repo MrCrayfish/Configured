@@ -10,6 +10,7 @@ credits="Hatsondogs for creating icons"
 authors="MrCrayfish"
 description="Creates a simple GUI config for every mod!"
 configBackground="minecraft:textures/block/stone.png"
+itemIcon="minecraft:book" #Support for Catalogue mod
 
 [[dependencies.configured]]
     modId="forge"
