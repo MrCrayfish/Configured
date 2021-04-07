@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.client.util.ScreenUtil;
 import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -31,6 +32,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -54,6 +56,8 @@ import java.util.stream.Collectors;
 @OnlyIn(Dist.CLIENT)
 public class ConfigScreen extends Screen
 {
+    public static final ResourceLocation LOGO_TEXTURE = new ResourceLocation("configured", "textures/gui/logo.png");
+
     public static final Comparator<Entry> COMPARATOR = (o1, o2) -> {
         if(o1 instanceof SubMenu && o2 instanceof SubMenu)
         {
@@ -304,7 +308,13 @@ public class ConfigScreen extends Screen
         this.searchTextField.render(matrixStack, mouseX, mouseY, partialTicks);
         drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-        if(this.activeTooltip != null && mouseX < this.list.getRowLeft() + this.list.getRowWidth() - 67)
+        this.minecraft.getTextureManager().bindTexture(LOGO_TEXTURE);
+        blit(matrixStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+        if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
+        {
+            this.setActiveTooltip(this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.info"), 200));
+        }
+        if(this.activeTooltip != null)
         {
             this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
         }
@@ -315,6 +325,18 @@ public class ConfigScreen extends Screen
                 ((Button.ITooltip) o).onTooltip((Button) o, matrixStack, mouseX, mouseY);
             }
         });
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button)
+    {
+        if(ScreenUtil.isMouseWithin(10, 13, 23, 23, (int) mouseX, (int) mouseY))
+        {
+            Style style = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/mc-mods/configured"));
+            this.handleComponentClicked(style);
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**
@@ -449,7 +471,7 @@ public class ConfigScreen extends Screen
                 ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, title, left, top + 6, 0xFFFFFF);
             }
 
-            if(this.isMouseOver(mouseX, mouseY))
+            if(this.isMouseOver(mouseX, mouseY) && mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 67)
             {
                 ConfigScreen.this.setActiveTooltip(this.tooltip);
             }
@@ -521,7 +543,7 @@ public class ConfigScreen extends Screen
 
         private void renderToolTips(MatrixStack matrixStack, int mouseX, int mouseY)
         {
-            if(this.isMouseOver(mouseX, mouseY))
+            if(this.isMouseOver(mouseX, mouseY) && mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 67)
             {
                 ConfigScreen.Entry entry = this.getEntryAtPosition(mouseX, mouseY);
                 if(entry != null)
