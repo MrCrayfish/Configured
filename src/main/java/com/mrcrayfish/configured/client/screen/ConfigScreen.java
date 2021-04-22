@@ -948,7 +948,9 @@ public class ConfigScreen extends Screen
         // Try split by underscores
         words = valueName.split("_");
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
-        return Strings.join(words, " ");
+        // Finally join words. Some mods have inputs like "Foo_Bar" and this causes a double space.
+        // To fix this any whitespace is replaced with a single space
+        return Strings.join(words, " ").replaceAll("\\s++", " ");
     }
 
     @Override
