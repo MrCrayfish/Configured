@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[34,)"
+loaderVersion="[31,)"
 license="GPL3"
 
 [[mods]]
@@ -17,12 +17,12 @@ logoBlur=false
 [[dependencies.configured]]
     modId="forge"
     mandatory=true
-    versionRange="[34,)"
+    versionRange="[31,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.configured]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.3,1.17)"
+    versionRange="[1.15.2,1.16)"
     ordering="NONE"
     side="BOTH"

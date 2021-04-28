@@ -4,15 +4,12 @@ import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import joptsimple.internal.Strings;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
@@ -22,12 +19,10 @@ import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.LanguageMap;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
@@ -87,7 +82,7 @@ public class ConfigScreen extends Screen
     private ConfigTextFieldWidget searchTextField;
     private Button restoreDefaultsButton;
     private boolean subMenu = false;
-    private List<IReorderingProcessor> activeTooltip;
+    private List<String> activeTooltip;
     private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
     public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values, ResourceLocation background)
@@ -251,18 +246,18 @@ public class ConfigScreen extends Screen
 
         if(this.subMenu)
         {
-            this.addButton(new Button(this.width / 2 - 75, this.height - 29, 150, 20, DialogTexts.GUI_BACK, (button) -> {
+            this.addButton(new Button(this.width / 2 - 75, this.height - 29, 150, 20, I18n.format("gui.back"), (button) -> {
                 this.minecraft.displayGuiScreen(this.parent);
             }));
         }
         else
         {
-            this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) -> {
+            this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, I18n.format("gui.done"), (button) -> {
                 if(this.clientSpec != null) this.clientSpec.save();
                 if(this.commonSpec != null) this.commonSpec.save();
                 this.minecraft.displayGuiScreen(this.parent);
             }));
-            this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
+            this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, I18n.format("configured.gui.restore_defaults"), (button) -> {
                 if(this.allConfigValues == null)
                     return;
                 // Resets all config values
@@ -300,29 +295,29 @@ public class ConfigScreen extends Screen
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+    public void render(int mouseX, int mouseY, float partialTicks)
     {
         this.activeTooltip = null;
-        this.renderBackground(matrixStack);
-        this.list.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.searchTextField.render(matrixStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.renderBackground();
+        this.list.render(mouseX, mouseY, partialTicks);
+        this.searchTextField.render(mouseX, mouseY, partialTicks);
+        drawCenteredString(this.font, this.title.getFormattedText(), this.width / 2, 7, 0xFFFFFF);
+        super.render(mouseX, mouseY, partialTicks);
         this.minecraft.getTextureManager().bindTexture(LOGO_TEXTURE);
-        blit(matrixStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+        blit(10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.info"), 200));
+            this.setActiveTooltip(this.minecraft.fontRenderer.listFormattedStringToWidth(I18n.format("configured.gui.info"), 200));
         }
         if(this.activeTooltip != null)
         {
-            this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
+            this.renderTooltip(this.activeTooltip, mouseX, mouseY);
         }
-        this.getEventListeners().forEach(o ->
+        this.children().forEach(o ->
         {
-            if(o instanceof Button.ITooltip)
+            if(o instanceof IconButton.Tooltip)
             {
-                ((Button.ITooltip) o).onTooltip((Button) o, matrixStack, mouseX, mouseY);
+                ((IconButton.Tooltip) o).onTooltip((Button) o, mouseX, mouseY);
             }
         });
     }
@@ -332,8 +327,9 @@ public class ConfigScreen extends Screen
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, (int) mouseX, (int) mouseY))
         {
-            Style style = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/mc-mods/configured"));
-            this.handleComponentClicked(style);
+            Style style = new Style().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/mc-mods/configured"));
+            ITextComponent placeholder = new StringTextComponent("").setStyle(style);
+            this.handleComponentClicked(placeholder);
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -345,7 +341,7 @@ public class ConfigScreen extends Screen
      *
      * @param activeTooltip a tooltip list to show
      */
-    public void setActiveTooltip(List<IReorderingProcessor> activeTooltip)
+    public void setActiveTooltip(List<String> activeTooltip)
     {
         this.activeTooltip = activeTooltip;
     }
@@ -353,7 +349,7 @@ public class ConfigScreen extends Screen
     abstract class Entry extends AbstractOptionList.Entry<Entry>
     {
         protected String label;
-        protected List<IReorderingProcessor> tooltip;
+        protected List<String> tooltip;
 
         public Entry(String label)
         {
@@ -374,16 +370,16 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public List<? extends IGuiEventListener> getEventListeners()
+        public List<? extends IGuiEventListener> children()
         {
             return Collections.emptyList();
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int x, int top, int left, int width, int p_230432_6_, int p_230432_7_, int p_230432_8_, boolean p_230432_9_, float p_230432_10_)
+        public void render(int x, int top, int left, int width, int p_230432_6_, int p_230432_7_, int p_230432_8_, boolean p_230432_9_, float p_230432_10_)
         {
-            ITextComponent title = new StringTextComponent(this.label).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.YELLOW);
-            AbstractGui.drawCenteredString(matrixStack, ConfigScreen.this.minecraft.fontRenderer, title, left + width / 2, top + 5, 16777215);
+            ITextComponent title = new StringTextComponent(this.label).applyTextStyle(TextFormatting.BOLD).applyTextStyle(TextFormatting.YELLOW);
+            ConfigScreen.this.drawCenteredString(ConfigScreen.this.minecraft.fontRenderer, title.getFormattedText(), left + width / 2, top + 5, 16777215);
         }
     }
 
@@ -394,25 +390,25 @@ public class ConfigScreen extends Screen
         public SubMenu(String label, ForgeConfigSpec spec, AbstractConfig values)
         {
             super(createLabel(label));
-            this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
+            this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).applyTextStyle(TextFormatting.BOLD).applyTextStyle(TextFormatting.WHITE).getFormattedText(), onPress -> {
                 String newTitle = ConfigScreen.this.displayName + " > " + this.getLabel();
                 ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, spec, values, background));
             });
         }
 
         @Override
-        public List<? extends IGuiEventListener> getEventListeners()
+        public List<? extends IGuiEventListener> children()
         {
             return ImmutableList.of(this.button);
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
             this.button.x = left - 1;
             this.button.y = top;
             this.button.setWidth(width);
-            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.button.render(mouseX, mouseY, partialTicks);
         }
     }
 
@@ -433,11 +429,11 @@ public class ConfigScreen extends Screen
             {
                 this.tooltip = this.createToolTip(configValue, valueSpec);
             }
-            Button.ITooltip tooltip = (button, matrixStack, mouseX, mouseY) ->
+            IconButton.Tooltip tooltip = (button, mouseX, mouseY) ->
             {
                 if(button.active && button.isHovered())
                 {
-                    ConfigScreen.this.renderTooltip(matrixStack, ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.reset"), Math.max(ConfigScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                    ConfigScreen.this.renderTooltip(ConfigScreen.this.minecraft.fontRenderer.listFormattedStringToWidth(new TranslationTextComponent("configured.gui.reset").getFormattedText(), Math.max(ConfigScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
             this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, tooltip, onPress -> {
@@ -450,25 +446,25 @@ public class ConfigScreen extends Screen
         public void onResetValue() {}
 
         @Override
-        public List<? extends IGuiEventListener> getEventListeners()
+        public List<? extends IGuiEventListener> children()
         {
             return this.eventListeners;
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             this.resetButton.active = !this.configValue.get().equals(this.valueSpec.getDefault());
 
             ITextComponent title = new StringTextComponent(this.label);
-            if(ConfigScreen.this.minecraft.fontRenderer.getStringPropertyWidth(title) > width - 50)
+            if(ConfigScreen.this.minecraft.fontRenderer.getStringWidth(title.getUnformattedComponentText()) > width - 50)
             {
-                String trimmed = ConfigScreen.this.minecraft.fontRenderer.func_238417_a_(title, width - 50).getString() + "...";
-                ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, new StringTextComponent(trimmed), left, top + 6, 0xFFFFFF);
+                String trimmed = ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(title.getFormattedText(), width - 50) + "...";
+                ConfigScreen.this.minecraft.fontRenderer.drawStringWithShadow(new StringTextComponent(trimmed).getText(), left, top + 6, 0xFFFFFF);
             }
             else
             {
-                ConfigScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, title, left, top + 6, 0xFFFFFF);
+                ConfigScreen.this.minecraft.fontRenderer.drawStringWithShadow(title.getFormattedText(), left, top + 6, 0xFFFFFF);
             }
 
             if(this.isMouseOver(mouseX, mouseY) && mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 67)
@@ -478,19 +474,19 @@ public class ConfigScreen extends Screen
 
             this.resetButton.x = left + width - 21;
             this.resetButton.y = top;
-            this.resetButton.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.resetButton.render(mouseX, mouseY, partialTicks);
         }
 
-        private List<IReorderingProcessor> createToolTip(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec)
+        private List<String> createToolTip(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec)
         {
             FontRenderer font = ConfigScreen.this.minecraft.fontRenderer;
-            List<ITextProperties> lines = font.getCharacterManager().func_238362_b_(new StringTextComponent(spec.getComment()), 200, Style.EMPTY);
+            List<String> lines = new ArrayList<>(font.listFormattedStringToWidth(new StringTextComponent(spec.getComment()).getText(), 200));
             String name = lastValue(value.getPath(), "");
-            lines.add(0, new StringTextComponent(name).mergeStyle(TextFormatting.YELLOW));
+            lines.add(0, new StringTextComponent(name).applyTextStyle(TextFormatting.YELLOW).getFormattedText());
             int rangeIndex = -1;
             for(int i = 0; i < lines.size(); i++)
             {
-                String text = lines.get(i).getString();
+                String text = lines.get(i);
                 if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
                 {
                     rangeIndex = i;
@@ -501,10 +497,10 @@ public class ConfigScreen extends Screen
             {
                 for(int i = rangeIndex; i < lines.size(); i++)
                 {
-                    lines.set(i, new StringTextComponent(lines.get(i).getString()).mergeStyle(TextFormatting.GRAY));
+                    lines.set(i, new StringTextComponent(lines.get(i)).applyTextStyle(TextFormatting.GRAY).getFormattedText());
                 }
             }
-            return LanguageMap.getInstance().func_244260_a(lines);
+            return lines;
         }
     }
 
@@ -541,7 +537,7 @@ public class ConfigScreen extends Screen
             super.replaceEntries(entries);
         }
 
-        private void renderToolTips(MatrixStack matrixStack, int mouseX, int mouseY)
+        private void renderToolTips(int mouseX, int mouseY)
         {
             if(this.isMouseOver(mouseX, mouseY) && mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 67)
             {
@@ -551,13 +547,13 @@ public class ConfigScreen extends Screen
                     ConfigScreen.this.setActiveTooltip(entry.tooltip);
                 }
             }
-            this.getEventListeners().forEach(entry ->
+            this.children().forEach(entry ->
             {
-                entry.getEventListeners().forEach(o ->
+                entry.children().forEach(o ->
                 {
                     if(o instanceof Button)
                     {
-                        ((Button) o).renderToolTip(matrixStack, mouseX, mouseY);
+                        ((Button) o).renderToolTip(mouseX, mouseY);
                     }
                 });
             });
@@ -566,15 +562,14 @@ public class ConfigScreen extends Screen
         /**
          * Literally just a copy of the original since the background can't be changed
          *
-         * @param matrixStack  the current matrix stack
          * @param mouseX       the current mouse x position
          * @param mouseY       the current mouse y position
          * @param partialTicks the partial ticks
          */
         @Override
-        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+        public void render(int mouseX, int mouseY, float partialTicks)
         {
-            this.renderBackground(matrixStack);
+            this.renderBackground();
             int scrollBarStart = this.getScrollbarPosition();
             int scrollBarEnd = scrollBarStart + 6;
             this.minecraft.getTextureManager().bindTexture(background);
@@ -592,7 +587,7 @@ public class ConfigScreen extends Screen
 
             int rowLeft = this.getRowLeft();
             int scrollOffset = this.y0 + 4 - (int) this.getScrollAmount();
-            this.renderList(matrixStack, rowLeft, scrollOffset, mouseX, mouseY, partialTicks);
+            this.renderList(rowLeft, scrollOffset, mouseX, mouseY, partialTicks);
             this.minecraft.getTextureManager().bindTexture(background);
 
             RenderSystem.enableDepthTest();
@@ -655,14 +650,14 @@ public class ConfigScreen extends Screen
                 tessellator.draw();
             }
 
-            this.renderDecorations(matrixStack, mouseX, mouseY);
+            this.renderDecorations(mouseX, mouseY);
 
             RenderSystem.enableTexture();
             RenderSystem.shadeModel(7424);
             RenderSystem.enableAlphaTest();
             RenderSystem.disableBlend();
 
-            this.renderToolTips(matrixStack, mouseX, mouseY);
+            this.renderToolTips(mouseX, mouseY);
         }
     }
 
@@ -700,12 +695,12 @@ public class ConfigScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.textField.x = left + width - 66;
             this.textField.y = top + 1;
-            this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.textField.render(mouseX, mouseY, partialTicks);
         }
 
         @Override
@@ -750,27 +745,32 @@ public class ConfigScreen extends Screen
         public BooleanEntry(ForgeConfigSpec.ConfigValue<Boolean> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, DialogTexts.optionsEnabled(configValue.get()), (button) -> {
+            this.button = new Button(10, 5, 44, 20, this.getLabel(), (button) -> {
                 boolean flag = !configValue.get();
                 configValue.set(flag);
-                button.setMessage(DialogTexts.optionsEnabled(configValue.get()));
+                button.setMessage(this.getLabel());
             });
             this.eventListeners.add(this.button);
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.x = left + width - 67;
             this.button.y = top;
-            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.button.render(mouseX, mouseY, partialTicks);
         }
 
         @Override
         public void onResetValue()
         {
-            this.button.setMessage(DialogTexts.optionsEnabled(this.configValue.get()));
+            this.button.setMessage(this.getLabel());
+        }
+
+        public String getLabel()
+        {
+            return I18n.format(this.configValue.get() ? "options.on" : "options.off");
         }
     }
 
@@ -783,19 +783,19 @@ public class ConfigScreen extends Screen
         {
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
+            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit").getFormattedText(), (button) -> {
                 ConfigScreen.this.minecraft.displayGuiScreen(new EditStringScreen(ConfigScreen.this, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set));
             });
             this.eventListeners.add(this.button);
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.x = left + width - 67;
             this.button.y = top;
-            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.button.render(mouseX, mouseY, partialTicks);
         }
     }
 
@@ -808,19 +808,19 @@ public class ConfigScreen extends Screen
         {
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
+            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit").getFormattedText(), (button) -> {
                 ConfigScreen.this.minecraft.displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec));
             });
             this.eventListeners.add(this.button);
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.x = left + width - 67;
             this.button.y = top;
-            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.button.render(mouseX, mouseY, partialTicks);
         }
     }
 
@@ -832,7 +832,7 @@ public class ConfigScreen extends Screen
         public EnumEntry(ForgeConfigSpec.ConfigValue<Enum> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new StringTextComponent(((Enum) configValue.get()).name()), (button) -> {
+            this.button = new Button(10, 5, 44, 20, new StringTextComponent(configValue.get().name()).getText(), (button) -> {
                 Object o = configValue.get();
                 if(o instanceof Enum)
                 {
@@ -841,25 +841,25 @@ public class ConfigScreen extends Screen
                     e = (Enum) values[(e.ordinal() + 1) % values.length];
                     //noinspection unchecked
                     configValue.set(e);
-                    button.setMessage(new StringTextComponent(e.name()));
+                    button.setMessage(new StringTextComponent(e.name()).getText());
                 }
             });
             this.eventListeners.add(this.button);
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.x = left + width - 67;
             this.button.y = top;
-            this.button.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.button.render(mouseX, mouseY, partialTicks);
         }
 
         @Override
         public void onResetValue()
         {
-            this.button.setMessage(new StringTextComponent(this.configValue.get().name()));
+            this.button.setMessage(new StringTextComponent(this.configValue.get().name()).getText());
         }
     }
 
@@ -873,7 +873,7 @@ public class ConfigScreen extends Screen
     {
         public ConfigTextFieldWidget(FontRenderer fontRenderer, int x, int y, int width, int height, ITextComponent label)
         {
-            super(fontRenderer, x, y, width, height, label);
+            super(fontRenderer, x, y, width, height, label.getFormattedText());
         }
 
         @Override
@@ -967,6 +967,6 @@ public class ConfigScreen extends Screen
         bufferbuilder.pos(this.width, 0.0D, 0.0D).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
         bufferbuilder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
         tessellator.draw();
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this));
     }
 }
