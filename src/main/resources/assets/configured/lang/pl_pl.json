@@ -1,0 +1,10 @@
+{
+    "configured.gui.search": "Szukaj...",
+    "configured.gui.restore_defaults": "Przywróć domyślne",
+    "configured.gui.edit": "Edytuj",
+    "configured.gui.edit_value": "Edycja wartości",
+    "configured.gui.add_value": "Dodaj...",
+    "configured.gui.reset": "Resetuj",
+    "configured.gui.remove": "Usuń",
+    "configured.gui.info": "To menu zostało dynamicznie wygenerowane przez moda Configured. Kliknij tutaj, aby otworzyć stronę tego moda w serwisie CurseForge!"
+}
