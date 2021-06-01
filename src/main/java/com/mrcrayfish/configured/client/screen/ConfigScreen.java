@@ -457,9 +457,9 @@ public class ConfigScreen extends Screen
             this.resetButton.active = !this.configValue.get().equals(this.valueSpec.getDefault());
 
             ITextComponent title = new StringTextComponent(this.label);
-            if(ConfigScreen.this.minecraft.fontRenderer.getStringWidth(title.getUnformattedComponentText()) > width - 50)
+            if(ConfigScreen.this.minecraft.fontRenderer.getStringWidth(title.getUnformattedComponentText()) > width - 75)
             {
-                String trimmed = ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(title.getFormattedText(), width - 50) + "...";
+                String trimmed = ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(title.getFormattedText(), width - 75).trim() + "...";
                 ConfigScreen.this.minecraft.fontRenderer.drawStringWithShadow(new StringTextComponent(trimmed).getText(), left, top + 6, 0xFFFFFF);
             }
             else
