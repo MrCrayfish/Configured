@@ -24,6 +24,7 @@ import java.util.Optional;
 @OnlyIn(Dist.CLIENT)
 public class ClientHandler
 {
+    // This is where the magic happens
     public static void onFinishedLoading()
     {
         Configured.LOGGER.info("Creating config GUI factories...");
@@ -52,10 +53,19 @@ public class ClientHandler
                 ResourceLocation background = AbstractGui.BACKGROUND_LOCATION;
                 if(container.getModInfo() instanceof ModInfo)
                 {
-                    Optional<String> optional = ((ModInfo) container.getModInfo()).getConfigElement("configBackground");
-                    if(optional.isPresent())
+                    String configBackground = (String) container.getModInfo().getModProperties().get("configuredBackground");
+                    if(configBackground == null)
                     {
-                        background = new ResourceLocation(optional.get());
+                        // Fallback to old method to getting config background (since mods might not have updated)
+                        Optional<String> optional = ((ModInfo) container.getModInfo()).getConfigElement("configBackground");
+                        if(optional.isPresent())
+                        {
+                            configBackground = optional.get();
+                        }
+                    }
+                    if(configBackground != null)
+                    {
+                        background = new ResourceLocation(configBackground);
                     }
                 }
                 String displayName = container.getModInfo().getDisplayName();
