@@ -1,0 +1,10 @@
+{
+    "configured.gui.search": "Buscar...",
+    "configured.gui.restore_defaults": "Restaurar predeterminados",
+    "configured.gui.edit": "Editar",
+    "configured.gui.edit_value": "Editar valor",
+    "configured.gui.add_value": "Añadir...",
+    "configured.gui.reset": "Restablecer",
+    "configured.gui.remove": "Remover",
+    "configured.gui.info": "Este menú fue generado dinámicamente por Configured. Haz clic aquí para abrir la página de CurseForge de este mod."
+}

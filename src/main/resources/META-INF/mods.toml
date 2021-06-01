@@ -4,12 +4,11 @@ license="GPL3"
 
 [[mods]]
 modId="configured"
-version="0.4.2"
+version="1.0.0"
 displayName="Configured"
 credits="Hatsondogs for creating icons. LizterZapZap for creating mod logo"
 authors="MrCrayfish"
 description="Creates a simple GUI config for every mod!"
-configBackground="minecraft:textures/block/stone.png"
 itemIcon="minecraft:book" #Support for Catalogue mod
 logoFile="configured.png"
 logoBlur=false
@@ -26,3 +25,6 @@ logoBlur=false
     versionRange="[1.15.2,1.16)"
     ordering="NONE"
     side="BOTH"
+
+[modproperties.configured]
+    configuredBackground="minecraft:textures/block/stone.png"
