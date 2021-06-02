@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="[34,)"
 license="GPL3"
+issueTrackerURL="https://github.com/MrCrayfish/Configured/issues"
 
 [[mods]]
 modId="configured"
@@ -11,6 +12,8 @@ authors="MrCrayfish"
 description="Creates a simple GUI config for every mod!"
 logoFile="configured_logo.png"
 logoBlur=false
+updateJSONURL="https://mrcrayfish.com/modupdatejson?id=configured"
+displayURL="https://mrcrayfish.com/mods?id=configured"
 
 [[dependencies.configured]]
     modId="forge"
