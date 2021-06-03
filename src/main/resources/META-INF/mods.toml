@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="[31,)"
 license="GPL3"
+issueTrackerURL="https://github.com/MrCrayfish/Configured/issues"
 
 [[mods]]
 modId="configured"
@@ -12,6 +13,8 @@ description="Creates a simple GUI config for every mod!"
 itemIcon="minecraft:book" #Support for Catalogue mod
 logoFile="configured.png"
 logoBlur=false
+updateJSONURL="https://mrcrayfish.com/modupdatejson?id=configured"
+displayURL="https://mrcrayfish.com/mods?id=configured"
 
 [[dependencies.configured]]
     modId="forge"
