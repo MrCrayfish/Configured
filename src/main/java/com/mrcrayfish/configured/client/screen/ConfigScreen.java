@@ -1,7 +1,6 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.electronwill.nightconfig.core.AbstractConfig;
-import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

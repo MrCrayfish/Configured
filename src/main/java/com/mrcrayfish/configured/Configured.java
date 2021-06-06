@@ -2,7 +2,6 @@ package com.mrcrayfish.configured;
 
 import com.mrcrayfish.configured.client.ClientHandler;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;

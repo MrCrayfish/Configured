@@ -7,7 +7,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
