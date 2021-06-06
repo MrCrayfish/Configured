@@ -22,6 +22,7 @@ import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
@@ -920,7 +921,7 @@ public class ConfigScreen extends Screen
      */
     private static String createLabelFromConfig(ForgeConfigSpec.ConfigValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
-        if(valueSpec.getTranslationKey() != null)
+        if(valueSpec.getTranslationKey() != null && I18n.hasKey(valueSpec.getTranslationKey()))
         {
             return new TranslationTextComponent(valueSpec.getTranslationKey()).getString();
         }
