@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.electronwill.nightconfig.core.AbstractConfig;
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -76,10 +77,8 @@ public class ConfigScreen extends Screen
 
     private final Screen parent;
     private final String displayName;
-    private final ForgeConfigSpec clientSpec;
-    private final UnmodifiableConfig clientValues;
-    private final ForgeConfigSpec commonSpec;
-    private final UnmodifiableConfig commonValues;
+    private final List<ConfigFileEntry> clientConfigFileEntries;
+    private final List<ConfigFileEntry> commonConfigFileEntries;
     private final ResourceLocation background;
     private ConfigList list;
     private List<Entry> entries;
@@ -90,29 +89,25 @@ public class ConfigScreen extends Screen
     private List<IReorderingProcessor> activeTooltip;
     private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
-    public ConfigScreen(Screen parent, String displayName, ForgeConfigSpec spec, UnmodifiableConfig values, ResourceLocation background)
+    public ConfigScreen(Screen parent, String displayName, ConfigFileEntry entry, ResourceLocation background)
     {
         super(new StringTextComponent(displayName));
         this.parent = parent;
         this.displayName = displayName;
-        this.clientSpec = spec;
-        this.clientValues = values;
-        this.commonSpec = null;
-        this.commonValues = null;
+        this.clientConfigFileEntries = Collections.singletonList(entry);
+        this.commonConfigFileEntries = null;
         this.subMenu = true;
         this.allConfigValues = null;
         this.background = background;
     }
 
-    public ConfigScreen(Screen parent, String displayName, @Nullable ForgeConfigSpec clientSpec, @Nullable ForgeConfigSpec commonSpec, ResourceLocation background)
+    public ConfigScreen(Screen parent, String displayName, @Nullable List<ConfigFileEntry> clientConfigFileEntries, @Nullable List<ConfigFileEntry> commonConfigFileEntries, ResourceLocation background)
     {
         super(new StringTextComponent(displayName));
         this.parent = parent;
         this.displayName = displayName;
-        this.clientSpec = clientSpec;
-        this.clientValues = clientSpec != null ? clientSpec.getValues() : null;
-        this.commonSpec = commonSpec;
-        this.commonValues = commonSpec != null ? commonSpec.getValues() : null;
+        this.clientConfigFileEntries = clientConfigFileEntries;
+        this.commonConfigFileEntries = commonConfigFileEntries;
         this.allConfigValues = this.gatherAllConfigValues();
         this.background = background;
     }
@@ -123,8 +118,8 @@ public class ConfigScreen extends Screen
     private List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllConfigValues()
     {
         List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values = new ArrayList<>();
-        if(this.clientValues != null) this.gatherValuesFromConfig(this.clientValues, this.clientSpec, values);
-        if(this.commonValues != null) this.gatherValuesFromConfig(this.commonValues, this.commonSpec, values);
+        if(this.clientConfigFileEntries != null) this.clientConfigFileEntries.forEach(entry -> this.gatherValuesFromConfig(entry.config, entry.spec, values));
+        if(this.commonConfigFileEntries != null) this.commonConfigFileEntries.forEach(entry -> this.gatherValuesFromConfig(entry.config, entry.spec, values));
         return ImmutableList.copyOf(values);
     }
 
@@ -155,15 +150,21 @@ public class ConfigScreen extends Screen
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        if(this.clientValues != null && this.clientSpec != null)
+        if(this.clientConfigFileEntries != null)
         {
             if(!this.subMenu) entries.add(new TitleEntry("Client Configuration"));
-            this.createEntriesFromConfig(this.clientValues, this.clientSpec, entries);
+            List<Entry> clientEntries = new ArrayList<>();
+            this.clientConfigFileEntries.forEach(entry -> this.createEntriesFromConfig(entry.config, entry.spec, clientEntries));
+            clientEntries.sort(COMPARATOR);
+            entries.addAll(clientEntries);
         }
-        if(this.commonValues != null && this.commonSpec != null)
+        if(this.commonConfigFileEntries != null)
         {
             entries.add(new TitleEntry("Common Configuration"));
-            this.createEntriesFromConfig(this.commonValues, this.commonSpec, entries);
+            List<Entry> commonEntries = new ArrayList<>();
+            this.commonConfigFileEntries.forEach(entry -> this.createEntriesFromConfig(entry.config, entry.spec, commonEntries));
+            commonEntries.sort(COMPARATOR);
+            entries.addAll(commonEntries);
         }
         this.entries = ImmutableList.copyOf(entries);
     }
@@ -178,12 +179,11 @@ public class ConfigScreen extends Screen
      */
     private void createEntriesFromConfig(UnmodifiableConfig values, ForgeConfigSpec spec, List<Entry> entries)
     {
-        List<Entry> subEntries = new ArrayList<>();
         values.valueMap().forEach((s, o) ->
         {
             if(o instanceof AbstractConfig)
             {
-                subEntries.add(new SubMenu(s, spec, (AbstractConfig) o));
+                entries.add(new SubMenu(s, spec, (AbstractConfig) o));
             }
             else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
             {
@@ -192,31 +192,31 @@ public class ConfigScreen extends Screen
                 Object value = configValue.get();
                 if(value instanceof Boolean)
                 {
-                    subEntries.add(new BooleanEntry((ForgeConfigSpec.ConfigValue<Boolean>) configValue, valueSpec));
+                    entries.add(new BooleanEntry((ForgeConfigSpec.ConfigValue<Boolean>) configValue, valueSpec));
                 }
                 else if(value instanceof Integer)
                 {
-                    subEntries.add(new IntegerEntry((ForgeConfigSpec.ConfigValue<Integer>) configValue, valueSpec));
+                    entries.add(new IntegerEntry((ForgeConfigSpec.ConfigValue<Integer>) configValue, valueSpec));
                 }
                 else if(value instanceof Double)
                 {
-                    subEntries.add(new DoubleEntry((ForgeConfigSpec.ConfigValue<Double>) configValue, valueSpec));
+                    entries.add(new DoubleEntry((ForgeConfigSpec.ConfigValue<Double>) configValue, valueSpec));
                 }
                 else if(value instanceof Long)
                 {
-                    subEntries.add(new LongEntry((ForgeConfigSpec.ConfigValue<Long>) configValue, valueSpec));
+                    entries.add(new LongEntry((ForgeConfigSpec.ConfigValue<Long>) configValue, valueSpec));
                 }
                 else if(value instanceof Enum)
                 {
-                    subEntries.add(new EnumEntry((ForgeConfigSpec.ConfigValue<Enum>) configValue, valueSpec));
+                    entries.add(new EnumEntry((ForgeConfigSpec.ConfigValue<Enum>) configValue, valueSpec));
                 }
                 else if(value instanceof String)
                 {
-                    subEntries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
+                    entries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
                 }
                 else if(value instanceof List<?>)
                 {
-                    subEntries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec));
+                    entries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec));
                 }
                 else
                 {
@@ -224,8 +224,6 @@ public class ConfigScreen extends Screen
                 }
             }
         });
-        subEntries.sort(COMPARATOR);
-        entries.addAll(subEntries);
     }
 
     @Override
@@ -258,8 +256,8 @@ public class ConfigScreen extends Screen
         else
         {
             this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) -> {
-                if(this.clientSpec != null) this.clientSpec.save();
-                if(this.commonSpec != null) this.commonSpec.save();
+                if(this.clientConfigFileEntries != null) this.clientConfigFileEntries.forEach(entry -> entry.spec.save());
+                if(this.commonConfigFileEntries != null) this.commonConfigFileEntries.forEach(entry -> entry.spec.save());
                 this.minecraft.displayGuiScreen(this.parent);
             }));
             this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
@@ -396,7 +394,7 @@ public class ConfigScreen extends Screen
             super(createLabel(label));
             this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
                 String newTitle = ConfigScreen.this.displayName + " > " + this.getLabel();
-                ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, spec, values, background));
+                ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, new ConfigFileEntry(spec, values), background));
             });
         }
 
@@ -968,5 +966,17 @@ public class ConfigScreen extends Screen
         bufferbuilder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
         tessellator.draw();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
+    }
+
+    public static class ConfigFileEntry
+    {
+        private ForgeConfigSpec spec;
+        private UnmodifiableConfig config;
+
+        public ConfigFileEntry(ForgeConfigSpec spec, UnmodifiableConfig config)
+        {
+            this.spec = spec;
+            this.config = config;
+        }
     }
 }

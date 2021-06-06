@@ -12,11 +12,18 @@ import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
@@ -27,6 +34,18 @@ public class ClientHandler
     // This is where the magic happens
     public static void onFinishedLoading()
     {
+        // Constructs a map to get all configs registered by a mod
+        Map<String, Map<ModConfig.Type, Set<ModConfig>>> idToConfigs = new HashMap<>();
+        getConfigSets().forEach((type, modConfigs) ->
+        {
+            modConfigs.forEach(modConfig ->
+            {
+                Map<ModConfig.Type, Set<ModConfig>> typeToConfigSet = idToConfigs.computeIfAbsent(modConfig.getModId(), s -> new HashMap<>());
+                Set<ModConfig> configSet = typeToConfigSet.computeIfAbsent(type, t -> new HashSet<>());
+                configSet.add(modConfig);
+            });
+        });
+
         Configured.LOGGER.info("Creating config GUI factories...");
         ModList.get().forEachModContainer((modId, container) ->
         {
@@ -34,22 +53,25 @@ public class ClientHandler
             if(container.getCustomExtension(ExtensionPoint.CONFIGGUIFACTORY).isPresent())
                 return;
 
-            EnumMap<ModConfig.Type, ModConfig> configs = getConfigMap(container);
-            ModConfig clientConfig = configs.get(ModConfig.Type.CLIENT);
+            Map<ModConfig.Type, Set<ModConfig>> typeToConfigSet = idToConfigs.get(modId);
+            if(typeToConfigSet == null)
+                return;
+
+            Set<ModConfig> clientConfigs = typeToConfigSet.get(ModConfig.Type.CLIENT);
+            Set<ModConfig> commonConfigs = typeToConfigSet.get(ModConfig.Type.COMMON);
 
             /* Optifine basically breaks Forge's client config, so it's simply not added */
             if(OptiFineHelper.isLoaded() && modId.equals("forge"))
             {
                 Configured.LOGGER.info("Ignoring Forge's client config since OptiFine was detected");
-                clientConfig = null;
+                clientConfigs = null;
             }
 
-            ModConfig commonConfig = configs.get(ModConfig.Type.COMMON);
-            ForgeConfigSpec clientSpec = clientConfig != null ? clientConfig.getSpec() : null;
-            ForgeConfigSpec commonSpec = commonConfig != null ? commonConfig.getSpec() : null;
-            if(clientSpec != null || commonSpec != null) // Only add if at least one config exists
+            List<ConfigScreen.ConfigFileEntry> clientConfigFileEntries = clientConfigs != null && clientConfigs.size() > 0 ? clientConfigs.stream().map(config -> new ConfigScreen.ConfigFileEntry(config.getSpec(), config.getSpec().getValues())).collect(Collectors.toList()) : null;
+            List<ConfigScreen.ConfigFileEntry> commonConfigFileEntries = commonConfigs != null && commonConfigs.size() > 0 ? commonConfigs.stream().map(config -> new ConfigScreen.ConfigFileEntry(config.getSpec(), config.getSpec().getValues())).collect(Collectors.toList()) : null;
+            if(clientConfigFileEntries != null || commonConfigFileEntries != null) // Only add if at least one config exists
             {
-                Configured.LOGGER.info("Registering config factory for mod {} (client: {}, common: {})", modId, clientSpec != null, commonSpec != null);
+                Configured.LOGGER.info("Registering config factory for mod {} (client: {}, common: {})", modId, clientConfigFileEntries != null, commonConfigFileEntries != null);
                 ResourceLocation background = AbstractGui.BACKGROUND_LOCATION;
                 if(container.getModInfo() instanceof ModInfo)
                 {
@@ -70,13 +92,13 @@ public class ClientHandler
                 }
                 String displayName = container.getModInfo().getDisplayName();
                 final ResourceLocation finalBackground = background;
-                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientSpec, commonSpec, finalBackground));
+                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientConfigFileEntries, commonConfigFileEntries, finalBackground));
             }
         });
     }
 
-    private static EnumMap<ModConfig.Type, ModConfig> getConfigMap(ModContainer container)
+    private static EnumMap<ModConfig.Type, Set<ModConfig>> getConfigSets()
     {
-        return ObfuscationReflectionHelper.getPrivateValue(ModContainer.class, container, "configs");
+        return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
     }
 }
