@@ -17,7 +17,6 @@ import com.mrcrayfish.configured.client.util.ScreenUtil;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;

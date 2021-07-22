@@ -1,14 +1,10 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.mojang.blaze3d.vertex.BufferVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.client.gui.screens.PresetFlatWorldScreen;
-import net.minecraft.client.gui.components.ComponentRenderUtils;
-import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 

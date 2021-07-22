@@ -1,21 +1,15 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.vertex.BufferVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
-import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.client.gui.components.Widget;
-import net.minecraft.client.gui.screens.PresetFlatWorldScreen;
-import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.client.gui.components.Checkbox;
-import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -25,7 +19,6 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
