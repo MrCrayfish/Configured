@@ -1,23 +1,31 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.BufferVertexConsumer;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
-import net.minecraft.client.gui.DialogTexts;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.gui.widget.list.AbstractOptionList;
-import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.screens.PresetFlatWorldScreen;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.gui.components.LerpingBossEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +39,7 @@ public class EditStringListScreen extends Screen
     private final ForgeConfigSpec.ValueSpec valueSpec;
     private StringList list;
 
-    public EditStringListScreen(Screen parent, ITextComponent titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec)
+    public EditStringListScreen(Screen parent, Component titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
         super(titleIn);
         this.parent = parent;
@@ -44,36 +52,36 @@ public class EditStringListScreen extends Screen
     protected void init()
     {
         this.list = new StringList();
-        this.children.add(this.list);
-        this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, DialogTexts.GUI_DONE, (button) -> {
+        this.addWidget(this.list);
+        this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
             List<String> newValues = this.values.stream().map(StringHolder::getValue).collect(Collectors.toList());
             this.valueSpec.correct(newValues);
             this.listValue.set(newValues);
-            this.minecraft.displayGuiScreen(this.parent);
+            this.minecraft.setScreen(this.parent);
         }));
-        this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), "", o -> true, s -> {
+        this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
+            this.minecraft.setScreen(new EditStringScreen(EditStringListScreen.this, new TranslatableComponent("configured.gui.edit_value"), "", o -> true, s -> {
                 StringHolder holder = new StringHolder(s);
                 this.values.add(holder);
                 this.list.addEntry(new StringEntry(this.list, holder));
             }));
         }));
-        this.addButton(new Button(this.width / 2 + 50, this.height - 29, 90, 20, DialogTexts.GUI_CANCEL, (button) -> {
-            this.minecraft.displayGuiScreen(this.parent);
+        this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) -> {
+            this.minecraft.setScreen(this.parent);
         }));
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
-        this.renderBackground(matrixStack);
-        this.list.render(matrixStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 14, 0xFFFFFF);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.renderBackground(poseStack);
+        this.list.render(poseStack, mouseX, mouseY, partialTicks);
+        drawCenteredString(poseStack, this.font, this.title, this.width / 2, 14, 0xFFFFFF);
+        super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class StringList extends ExtendedList<StringEntry>
+    public class StringList extends ContainerObjectSelectionList<StringEntry>
     {
         public StringList()
         {
@@ -108,23 +116,23 @@ public class EditStringListScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+        public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
         {
-            super.render(matrixStack, mouseX, mouseY, partialTicks);
-            this.getEventListeners().forEach(entry ->
+            super.render(poseStack, mouseX, mouseY, partialTicks);
+            this.children().forEach(entry ->
             {
-                entry.getEventListeners().forEach(o ->
+                entry.children().forEach(o ->
                 {
-                    if(o instanceof Button)
+                    if(o instanceof AbstractSliderButton)
                     {
-                        ((Button)o).renderToolTip(matrixStack, mouseX, mouseY);
+                        ((AbstractSliderButton)o).renderToolTip(poseStack, mouseX, mouseY);
                     }
                 });
             });
         }
     }
 
-    public class StringEntry extends AbstractOptionList.Entry<StringEntry>
+    public class StringEntry extends ContainerObjectSelectionList.Entry<StringEntry>
     {
         private StringHolder holder;
         private final StringList list;
@@ -135,14 +143,14 @@ public class EditStringListScreen extends Screen
         {
             this.list = list;
             this.holder = holder;
-            this.editButton = new Button(0, 0, 42, 20, new StringTextComponent("Edit"), onPress -> {
-                EditStringListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
+            this.editButton = new Button(0, 0, 42, 20, new TextComponent("Edit"), onPress -> {
+                EditStringListScreen.this.minecraft.setScreen(new EditStringScreen(EditStringListScreen.this, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
                     this.holder.setValue(s);
                 }));
             });
-            Button.ITooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
+            Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHovered()) {
-                    EditStringListScreen.this.renderTooltip(matrixStack, EditStringListScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                    EditStringListScreen.this.renderTooltip(matrixStack, EditStringListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
             this.deleteButton = new IconButton(0, 0, 20, 20, 11, 0, tooltip, onPress -> {
@@ -152,23 +160,29 @@ public class EditStringListScreen extends Screen
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            EditStringListScreen.this.minecraft.fontRenderer.func_243246_a(matrixStack, new StringTextComponent(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
+            EditStringListScreen.this.minecraft.font.drawShadow(poseStack, new TextComponent(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
             this.editButton.visible = true;
             this.editButton.x = left + width - 65;
             this.editButton.y = top;
-            this.editButton.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.editButton.render(poseStack, mouseX, mouseY, partialTicks);
             this.deleteButton.visible = true;
             this.deleteButton.x = left + width - 21;
             this.deleteButton.y = top;
-            this.deleteButton.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.deleteButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
         @Override
-        public List<? extends IGuiEventListener> getEventListeners()
+        public List<? extends GuiEventListener> children()
         {
             return ImmutableList.of(this.editButton, this.deleteButton);
+        }
+
+        @Override
+        public List<? extends NarratableEntry> narratables()
+        {
+            return null;
         }
     }
 
