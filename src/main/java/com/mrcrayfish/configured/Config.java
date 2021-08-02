@@ -28,7 +28,7 @@ public class Config
             this.booleanValue = builder.comment("This is a Boolean value").define("booleanValue", false);
             this.listValue = builder.comment("This is a List of Strings").defineList("listValue", Collections.emptyList(), o -> true);
             builder.comment("YEP").push("more_properties");
-            this.intValue = builder.comment("This is an Integer value").defineInRange("int_Value", 0, 0, 10);
+            this.intValue = builder.comment("This is an Integer value").defineInRange("intValue", 0, 0, 10);
             this.doubleValue = builder.comment("This is a Double value").defineInRange("doubleValue", 0.0, 0.0, 10.0);
             this.longValue = builder.comment("This is a Long value").defineInRange("longValue", 0L, 0L, 10L);
             this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", Direction.NORTH);
