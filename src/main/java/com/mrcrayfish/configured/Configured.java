@@ -34,7 +34,7 @@ public class Configured
             ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
         }
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onConstructEvent);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onProcessMessage);
+        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onProcessMessage);
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
     }
 
