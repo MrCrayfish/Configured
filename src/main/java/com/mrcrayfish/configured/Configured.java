@@ -49,7 +49,7 @@ public class Configured
     /**
      * Allows modders to pass
      */
-    private void onProcessMessage(InterModProcessEvent event)
+    /*private void onProcessMessage(InterModProcessEvent event)
     {
         ImmutableMap.Builder<ForgeConfigSpec.ConfigValue<?>, Function<?, ?>> builder = new ImmutableMap.Builder<>();
         event.getIMCStream(s -> s.equals("parser")).forEach(message ->
@@ -66,5 +66,5 @@ public class Configured
 
             builder.put(configValue, parser);
         });
-    }
+    }*/
 }
