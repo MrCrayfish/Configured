@@ -8,7 +8,10 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.controls.ControlList;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
@@ -175,7 +178,18 @@ public class EditStringListScreen extends Screen
         @Override
         public List<? extends NarratableEntry> narratables()
         {
-            return null;
+            return ImmutableList.of(new NarratableEntry()
+            {
+                public NarratableEntry.NarrationPriority narrationPriority()
+                {
+                    return NarratableEntry.NarrationPriority.HOVERED;
+                }
+
+                public void updateNarration(NarrationElementOutput output)
+                {
+                    output.add(NarratedElementType.TITLE, StringEntry.this.holder.getValue());
+                }
+            }, StringEntry.this.editButton, StringEntry.this.deleteButton);
         }
     }
 

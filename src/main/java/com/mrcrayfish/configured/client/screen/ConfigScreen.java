@@ -19,6 +19,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.EditBox;
@@ -47,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -350,7 +352,7 @@ public class ConfigScreen extends Screen
      *
      * @param activeTooltip a tooltip list to show
      */
-    public void setActiveTooltip(List<? extends FormattedCharSequence> activeTooltip)
+    public void setActiveTooltip(@Nullable List<? extends FormattedCharSequence> activeTooltip)
     {
         this.activeTooltip = activeTooltip;
     }
@@ -358,6 +360,7 @@ public class ConfigScreen extends Screen
     abstract class Entry extends ContainerObjectSelectionList.Entry<ConfigScreen.Entry>
     {
         protected String label;
+        @Nullable
         protected List<? extends FormattedCharSequence> tooltip;
 
         public Entry(String label)
@@ -438,6 +441,25 @@ public class ConfigScreen extends Screen
             this.button.setWidth(width);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
+
+        @Override
+        public List<? extends NarratableEntry> narratables()
+        {
+            return ImmutableList.of(new NarratableEntry()
+            {
+                @Override
+                public NarratableEntry.NarrationPriority narrationPriority()
+                {
+                    return NarratableEntry.NarrationPriority.HOVERED;
+                }
+
+                @Override
+                public void updateNarration(NarrationElementOutput output)
+                {
+                    output.add(NarratedElementType.TITLE, SubMenu.this.label);
+                }
+            }, SubMenu.this.button);
+        }
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -445,7 +467,7 @@ public class ConfigScreen extends Screen
     {
         protected T configValue;
         protected ForgeConfigSpec.ValueSpec valueSpec;
-        protected final List<GuiEventListener> children = Lists.newArrayList();
+        protected final List<AbstractWidget> children = Lists.newArrayList();
         protected Button resetButton;
 
         public ConfigEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec)
@@ -530,10 +552,40 @@ public class ConfigScreen extends Screen
             }
             return Language.getInstance().getVisualOrder(lines);
         }
+
+        @Override
+        public List<? extends NarratableEntry> narratables()
+        {
+            ImmutableList.Builder<NarratableEntry> builder = ImmutableList.builder();
+            builder.add(new NarratableEntry()
+            {
+                @Override
+                public NarratableEntry.NarrationPriority narrationPriority()
+                {
+                    return NarratableEntry.NarrationPriority.HOVERED;
+                }
+
+                @Override
+                public void updateNarration(NarrationElementOutput output)
+                {
+                    String comment = ConfigEntry.this.valueSpec.getComment();
+                    if(comment != null)
+                    {
+                        output.add(NarratedElementType.TITLE, ConfigEntry.this.label + ", " + comment);
+                    }
+                    else
+                    {
+                        output.add(NarratedElementType.TITLE, ConfigEntry.this.label);
+                    }
+                }
+            });
+            builder.addAll(ConfigEntry.this.children);
+            return builder.build();
+        }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class ConfigList extends AbstractSelectionList<Entry>
+    public class ConfigList extends ContainerObjectSelectionList<Entry>
     {
         public ConfigList(List<ConfigScreen.Entry> entries)
         {
@@ -690,12 +742,6 @@ public class ConfigScreen extends Screen
             RenderSystem.disableBlend();
 
             this.renderToolTips(poseStack, mouseX, mouseY);
-        }
-
-        @Override
-        public void updateNarration(NarrationElementOutput output)
-        {
-
         }
     }
 
