@@ -35,8 +35,8 @@ public class EditStringScreen extends Screen
     protected void init()
     {
         this.textField = new EditBox(this.font, this.width / 2 - 150, this.height / 2 - 25, 300, 20, TextComponent.EMPTY);
-        this.textField.setValue(this.value);
         this.textField.setMaxLength(32500);
+        this.textField.setValue(this.value);
         this.addRenderableWidget(this.textField);
 
         this.addRenderableWidget(new Button(this.width / 2 - 1 - 150, this.height / 2 + 3, 148, 20, CommonComponents.GUI_DONE, (button) -> {
