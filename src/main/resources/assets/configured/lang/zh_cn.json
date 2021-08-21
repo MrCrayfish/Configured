@@ -1,0 +1,10 @@
+{
+    "configured.gui.search": "搜索...",
+    "configured.gui.restore_defaults": "恢复默认设置",
+    "configured.gui.edit": "编辑",
+    "configured.gui.edit_value": "编辑值",
+    "configured.gui.add_value": "添加...",
+    "configured.gui.reset": "重置",
+    "configured.gui.remove": "删除",
+    "configured.gui.info": "此菜单是由Configured动态生成的。单击此处打开此mod的CurseForge页面!"
+}
