@@ -11,7 +11,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.1.2-1.17.1'
+version = '1.2.0-1.17.1'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
@@ -59,7 +59,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.17.1-37.0.0'
+    minecraft 'net.minecraftforge:forge:1.17.1-37.0.40'
 }
 
 jar {
