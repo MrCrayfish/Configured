@@ -261,18 +261,22 @@ public class ConfigScreen extends Screen
                 this.minecraft.displayGuiScreen(this.parent);
             }));
             this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
-                if(this.allConfigValues == null)
-                    return;
-                // Resets all config values
-                this.allConfigValues.forEach(pair -> {
-                    ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
-                    ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                    configValue.set(valueSpec.getDefault());
+                ConfirmationScreen confirmScreen = new ConfirmationScreen(this, new TranslationTextComponent("configured.gui.restore_message"), result -> {
+                    if(!result || this.allConfigValues == null)
+                        return;
+                    // Resets all config values
+                    this.allConfigValues.forEach(pair -> {
+                        ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
+                        ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
+                        configValue.set(valueSpec.getDefault());
+                    });
+                    // Updates the current entries to process UI changes
+                    this.entries.stream().filter(entry -> entry instanceof ConfigEntry).forEach(entry -> {
+                        ((ConfigEntry) entry).onResetValue();
+                    });
                 });
-                // Updates the current entries to process UI changes
-                this.entries.stream().filter(entry -> entry instanceof ConfigEntry).forEach(entry -> {
-                    ((ConfigEntry) entry).onResetValue();
-                });
+                confirmScreen.setBackground(this.background);
+                this.minecraft.displayGuiScreen(confirmScreen);
             }));
             // Call during init to avoid the button flashing active
             this.updateRestoreDefaultButton();
