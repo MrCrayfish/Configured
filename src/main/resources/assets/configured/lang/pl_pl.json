@@ -6,5 +6,6 @@
     "configured.gui.add_value": "Dodaj...",
     "configured.gui.reset": "Resetuj",
     "configured.gui.remove": "Usuń",
-    "configured.gui.info": "To menu zostało dynamicznie wygenerowane przez moda Configured. Kliknij tutaj, aby otworzyć stronę tego moda w serwisie CurseForge!"
+    "configured.gui.info": "To menu zostało dynamicznie wygenerowane przez moda Configured. Kliknij tutaj, aby otworzyć stronę tego moda w serwisie CurseForge!",
+    "configured.gui.restore_message": "Czy na pewno chcesz przywrócić ustawienia domyślne?"
 }
