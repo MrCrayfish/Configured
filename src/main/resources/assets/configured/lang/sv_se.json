@@ -1,0 +1,11 @@
+{
+    "configured.gui.search": "Sök...",
+    "configured.gui.restore_defaults": "Standardvärden",
+    "configured.gui.edit": "Redigera",
+    "configured.gui.edit_value": "Redigera värde",
+    "configured.gui.add_value": "Lägg till...",
+    "configured.gui.reset": "Återställ",
+    "configured.gui.remove": "Ta bort",
+    "configured.gui.info": "Denna meny genererades dynamiskt av Configured. Klicka här för att öppna CurseForges sida för denna mod!",
+    "configured.gui.restore_message": "Är du säker på att du vill återställa till standardvärden?"
+}
