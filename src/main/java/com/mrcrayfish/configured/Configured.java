@@ -36,7 +36,7 @@ public class Configured
     {
         if(FMLLoader.getDist() == Dist.CLIENT)
         {
-            ClientHandler.onFinishedLoading();
+            ClientHandler.generateConfigFactories();
         }
     }
 }

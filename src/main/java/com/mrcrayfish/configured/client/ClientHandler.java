@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class ClientHandler
 {
     // This is where the magic happens
-    public static void onFinishedLoading()
+    public static void generateConfigFactories()
     {
         Configured.LOGGER.info("Creating config GUI factories...");
         ModList.get().forEachModContainer((modId, container) ->
