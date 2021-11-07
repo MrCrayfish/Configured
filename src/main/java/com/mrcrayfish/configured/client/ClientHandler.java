@@ -13,7 +13,10 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
+import net.minecraftforge.forgespi.language.IModInfo;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,18 +35,6 @@ public class ClientHandler
     // This is where the magic happens
     public static void onFinishedLoading()
     {
-        // Constructs a map to get all configs registered by a mod
-        Map<String, Map<ModConfig.Type, Set<ModConfig>>> idToConfigs = new HashMap<>();
-        getConfigSets().forEach((type, modConfigs) ->
-        {
-            modConfigs.forEach(modConfig ->
-            {
-                Map<ModConfig.Type, Set<ModConfig>> typeToConfigSet = idToConfigs.computeIfAbsent(modConfig.getModId(), s -> new HashMap<>());
-                Set<ModConfig> configSet = typeToConfigSet.computeIfAbsent(type, t -> new HashSet<>());
-                configSet.add(modConfig);
-            });
-        });
-
         Configured.LOGGER.info("Creating config GUI factories...");
         ModList.get().forEachModContainer((modId, container) ->
         {
@@ -51,46 +42,14 @@ public class ClientHandler
             if(container.getCustomExtension(ExtensionPoint.CONFIGGUIFACTORY).isPresent())
                 return;
 
-            Map<ModConfig.Type, Set<ModConfig>> typeToConfigSet = idToConfigs.get(modId);
-            if(typeToConfigSet == null)
-                return;
-
-            Set<ModConfig> clientConfigs = typeToConfigSet.get(ModConfig.Type.CLIENT);
-            Set<ModConfig> commonConfigs = typeToConfigSet.get(ModConfig.Type.COMMON);
-
-            /* Optifine basically breaks Forge's client config, so it's simply not added */
-            if(OptiFineHelper.isLoaded() && modId.equals("forge"))
-            {
-                Configured.LOGGER.info("Ignoring Forge's client config since OptiFine was detected");
-                clientConfigs = null;
-            }
-
-            List<ConfigScreen.ConfigFileEntry> clientConfigFileEntries = clientConfigs != null && clientConfigs.size() > 0 ? clientConfigs.stream().map(config -> new ConfigScreen.ConfigFileEntry(config.getSpec(), config.getSpec().getValues())).collect(Collectors.toList()) : null;
-            List<ConfigScreen.ConfigFileEntry> commonConfigFileEntries = commonConfigs != null && commonConfigs.size() > 0 ? commonConfigs.stream().map(config -> new ConfigScreen.ConfigFileEntry(config.getSpec(), config.getSpec().getValues())).collect(Collectors.toList()) : null;
+            List<ConfigScreen.ConfigFileEntry> clientConfigFileEntries = getConfigFileEntries(modId, ModConfig.Type.CLIENT);
+            List<ConfigScreen.ConfigFileEntry> commonConfigFileEntries = getConfigFileEntries(modId, ModConfig.Type.COMMON);
             if(clientConfigFileEntries != null || commonConfigFileEntries != null) // Only add if at least one config exists
             {
                 Configured.LOGGER.info("Registering config factory for mod {} (client: {}, common: {})", modId, clientConfigFileEntries != null, commonConfigFileEntries != null);
-                ResourceLocation background = AbstractGui.BACKGROUND_LOCATION;
-                if(container.getModInfo() instanceof ModInfo)
-                {
-                    String configBackground = (String) container.getModInfo().getModProperties().get("configuredBackground");
-                    if(configBackground == null)
-                    {
-                        // Fallback to old method to getting config background (since mods might not have updated)
-                        Optional<String> optional = ((ModInfo) container.getModInfo()).getConfigElement("configBackground");
-                        if(optional.isPresent())
-                        {
-                            configBackground = optional.get();
-                        }
-                    }
-                    if(configBackground != null)
-                    {
-                        background = new ResourceLocation(configBackground);
-                    }
-                }
                 String displayName = container.getModInfo().getDisplayName();
-                final ResourceLocation finalBackground = background;
-                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientConfigFileEntries, commonConfigFileEntries, finalBackground));
+                ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
+                container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ConfigScreen(screen, displayName, clientConfigFileEntries, commonConfigFileEntries, backgroundTexture));
             }
         });
     }
@@ -98,5 +57,42 @@ public class ClientHandler
     private static EnumMap<ModConfig.Type, Set<ModConfig>> getConfigSets()
     {
         return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
+    }
+
+    @Nullable
+    private static List<ConfigScreen.ConfigFileEntry> getConfigFileEntries(String modId, ModConfig.Type type)
+    {
+        Set<ModConfig> configSet = getConfigSets().getOrDefault(type, Collections.emptySet()).stream().filter(config -> config.getModId().equals(modId)).collect(Collectors.toSet());
+
+        /* Optifine basically breaks Forge's client config, so it's simply not added */
+        if(type == ModConfig.Type.CLIENT && OptiFineHelper.isLoaded() && modId.equals("forge"))
+        {
+            Configured.LOGGER.info("Ignoring Forge's client config since OptiFine was detected");
+            return null;
+        }
+
+        return configSet.size() > 0 ? configSet.stream().map(config -> new ConfigScreen.ConfigFileEntry(config.getSpec(), config.getSpec().getValues())).collect(Collectors.toList()) : null;
+    }
+
+    private static ResourceLocation getBackgroundTexture(IModInfo info)
+    {
+        String configBackground = (String) info.getModProperties().get("configuredBackground");
+
+        if(configBackground != null)
+        {
+            return new ResourceLocation(configBackground);
+        }
+
+        if(info instanceof ModInfo)
+        {
+            // Fallback to old method to getting config background (since mods might not have updated)
+            Optional<String> optional = ((ModInfo) info).getConfigElement("configBackground");
+            if(optional.isPresent())
+            {
+                return new ResourceLocation(optional.get());
+            }
+        }
+
+        return AbstractGui.BACKGROUND_LOCATION;
     }
 }
