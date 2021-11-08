@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.client.util.ConfigUtil;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import joptsimple.internal.Strings;
 import net.minecraft.client.gui.AbstractGui;
@@ -37,8 +38,8 @@ import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -49,6 +50,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +61,8 @@ public class ConfigScreen extends Screen
 {
     public static final ResourceLocation LOGO_TEXTURE = new ResourceLocation("configured", "textures/gui/logo.png");
 
-    public static final Comparator<Entry> COMPARATOR = (o1, o2) -> {
+    public static final Comparator<Entry> SORT_ALPHABETICALLY = (o1, o2) ->
+    {
         if(o1 instanceof SubMenu && o2 instanceof SubMenu)
         {
             return o1.getLabel().compareTo(o2.getLabel());
@@ -75,96 +78,55 @@ public class ConfigScreen extends Screen
         return o1.getLabel().compareTo(o2.getLabel());
     };
 
-    private final Screen parent;
+    protected final Screen parent;
     private final String displayName;
-    private final List<ConfigFileEntry> clientConfigFileEntries;
-    private final List<ConfigFileEntry> commonConfigFileEntries;
-    private final ResourceLocation background;
-    private ConfigList list;
-    private List<Entry> entries;
+    @Nullable
+    private final ConfigFileEntry configFileEntry;
+    protected final ResourceLocation background;
+    private final boolean rootMenu;
+    private final boolean configFileMenu;
+    private ModConfig config;
+    private EntryList list;
+    protected List<Entry> entries;
     private ConfigTextFieldWidget activeTextField;
     private ConfigTextFieldWidget searchTextField;
-    private Button restoreDefaultsButton;
-    private boolean subMenu = false;
+    private Button restoreButton;
     private List<IReorderingProcessor> activeTooltip;
-    private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
-    public ConfigScreen(Screen parent, String displayName, ConfigFileEntry entry, ResourceLocation background)
+    protected ConfigScreen(Screen parent, String displayName, ResourceLocation background, @Nullable ConfigFileEntry configFileEntry, boolean rootMenu, boolean configFileMenu)
     {
         super(new StringTextComponent(displayName));
         this.parent = parent;
         this.displayName = displayName;
-        this.clientConfigFileEntries = Collections.singletonList(entry);
-        this.commonConfigFileEntries = null;
-        this.subMenu = true;
-        this.allConfigValues = null;
         this.background = background;
+        this.configFileEntry = configFileEntry;
+        this.rootMenu = rootMenu;
+        this.configFileMenu = configFileMenu;
     }
 
-    public ConfigScreen(Screen parent, String displayName, @Nullable List<ConfigFileEntry> clientConfigFileEntries, @Nullable List<ConfigFileEntry> commonConfigFileEntries, ResourceLocation background)
+    public ConfigScreen(Screen parent, String displayName, @Nullable ConfigFileEntry entry, ResourceLocation background)
     {
-        super(new StringTextComponent(displayName));
-        this.parent = parent;
-        this.displayName = displayName;
-        this.clientConfigFileEntries = clientConfigFileEntries;
-        this.commonConfigFileEntries = commonConfigFileEntries;
-        this.allConfigValues = this.gatherAllConfigValues();
-        this.background = background;
+        this(parent, displayName, background, entry, false, false);
     }
 
-    /**
-     * Gathers all the config values with a deep search. Used for resetting defaults
-     */
-    private List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllConfigValues()
+    public ConfigScreen(Screen parent, String displayName, ModConfig config, ResourceLocation background)
     {
-        List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values = new ArrayList<>();
-        if(this.clientConfigFileEntries != null) this.clientConfigFileEntries.forEach(entry -> this.gatherValuesFromConfig(entry.config, entry.spec, values));
-        if(this.commonConfigFileEntries != null) this.commonConfigFileEntries.forEach(entry -> this.gatherValuesFromConfig(entry.config, entry.spec, values));
-        return ImmutableList.copyOf(values);
-    }
-
-    /**
-     * Gathers all the config values from the given config and adds it's to the provided list. This
-     * will search deeper if it finds another config and recursively call itself.
-     */
-    private void gatherValuesFromConfig(UnmodifiableConfig config, ForgeConfigSpec spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
-    {
-        config.valueMap().forEach((s, o) ->
-        {
-            if(o instanceof AbstractConfig)
-            {
-                this.gatherValuesFromConfig((UnmodifiableConfig) o, spec, values);
-            }
-            else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
-            {
-                ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
-                ForgeConfigSpec.ValueSpec valueSpec = spec.getRaw(configValue.getPath());
-                values.add(Pair.of(configValue, valueSpec));
-            }
-        });
+        this(parent, displayName, background, new ConfigFileEntry(config.getSpec(), config.getSpec().getValues()), true, false);
+        this.config = config;
     }
 
     /**
      * Gathers the entries for each config spec to be later added to the option list
      */
-    private void constructEntries()
+    protected void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        if(this.clientConfigFileEntries != null)
+        if(this.configFileEntry != null)
         {
-            if(!this.subMenu) entries.add(new TitleEntry("Client Configuration"));
             List<Entry> clientEntries = new ArrayList<>();
-            this.clientConfigFileEntries.forEach(entry -> this.createEntriesFromConfig(entry.config, entry.spec, clientEntries));
-            clientEntries.sort(COMPARATOR);
+            this.createEntriesFromConfig(this.configFileEntry.config, this.configFileEntry.spec, clientEntries);
+            clientEntries.sort(SORT_ALPHABETICALLY);
             entries.addAll(clientEntries);
-        }
-        if(this.commonConfigFileEntries != null)
-        {
-            entries.add(new TitleEntry("Common Configuration"));
-            List<Entry> commonEntries = new ArrayList<>();
-            this.commonConfigFileEntries.forEach(entry -> this.createEntriesFromConfig(entry.config, entry.spec, commonEntries));
-            commonEntries.sort(COMPARATOR);
-            entries.addAll(commonEntries);
         }
         this.entries = ImmutableList.copyOf(entries);
     }
@@ -231,74 +193,64 @@ public class ConfigScreen extends Screen
     {
         this.constructEntries();
 
-        this.list = new ConfigList(this.entries);
+        this.list = new EntryList(this.entries);
         this.children.add(this.list);
 
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
-        this.searchTextField.setResponder(s -> {
-            if(!s.isEmpty())
-            {
-                this.list.replaceEntries(this.entries.stream().filter(entry -> (entry instanceof SubMenu || entry instanceof ConfigEntry<?>) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH))).collect(Collectors.toList()));
-            }
-            else
-            {
-                this.list.replaceEntries(this.entries);
-            }
-        });
+        this.searchTextField.setResponder(s -> this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchPredicate(s)).collect(Collectors.toList())));
         this.children.add(this.searchTextField);
 
-        if(this.subMenu)
+        if(this.rootMenu)
         {
-            this.addButton(new Button(this.width / 2 - 75, this.height - 29, 150, 20, DialogTexts.GUI_BACK, (button) -> {
-                this.minecraft.displayGuiScreen(this.parent);
-            }));
-        }
-        else
-        {
-            this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) -> {
-                if(this.clientConfigFileEntries != null) this.clientConfigFileEntries.forEach(entry -> entry.spec.save());
-                if(this.commonConfigFileEntries != null) this.commonConfigFileEntries.forEach(entry -> entry.spec.save());
-                this.minecraft.displayGuiScreen(this.parent);
-            }));
-            this.restoreDefaultsButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
-                ConfirmationScreen confirmScreen = new ConfirmationScreen(this, new TranslationTextComponent("configured.gui.restore_message"), result -> {
-                    if(!result || this.allConfigValues == null)
+            this.restoreButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
+                if(this.config == null) return;
+                ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result -> {
+                    if(!result || this.config == null)
                         return;
                     // Resets all config values
-                    this.allConfigValues.forEach(pair -> {
+                    ConfigUtil.gatherAllConfigValues(this.config).forEach(pair -> {
                         ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
                         ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
                         configValue.set(valueSpec.getDefault());
                     });
-                    // Updates the current entries to process UI changes
-                    this.entries.stream().filter(entry -> entry instanceof ConfigEntry).forEach(entry -> {
-                        ((ConfigEntry) entry).onResetValue();
-                    });
                 });
-                confirmScreen.setBackground(this.background);
-                this.minecraft.displayGuiScreen(confirmScreen);
+                confirmScreen.setBackground(background);
+                confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
+                confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
+                ConfigScreen.this.minecraft.displayGuiScreen(confirmScreen);
+                this.updateRestoreDefaultButton();
+                this.config.save();
             }));
-            // Call during init to avoid the button flashing active
             this.updateRestoreDefaultButton();
+            this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) ->
+            {
+                this.minecraft.displayGuiScreen(this.parent);
+                if(this.config != null)
+                {
+                    this.config.save();
+                }
+            }));
+        }
+        else
+        {
+            this.addButton(new Button(this.width / 2 - 75, this.height - 29, 150, 20, DialogTexts.GUI_BACK, (button) ->
+            {
+                this.minecraft.displayGuiScreen(this.parent);
+            }));
         }
     }
 
-    @Override
-    public void tick()
-    {
-        this.updateRestoreDefaultButton();
-    }
-
-    /**
-     * Updates the active state of the restore default button. It will only be active if values are
-     * different from their default.
-     */
     private void updateRestoreDefaultButton()
     {
-        if(this.allConfigValues != null && this.restoreDefaultsButton != null)
+        if(this.config != null && this.restoreButton != null)
         {
-            this.restoreDefaultsButton.active = this.allConfigValues.stream().anyMatch(pair -> !pair.getLeft().get().equals(pair.getRight().getDefault()));
+            this.restoreButton.active = ConfigUtil.isModified(this.config);
         }
+    }
+
+    protected Predicate<Entry> getSearchPredicate(String s)
+    {
+        return entry -> (entry instanceof SubMenu || entry instanceof ConfigEntry<?>) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
     }
 
     @Override
@@ -366,6 +318,12 @@ public class ConfigScreen extends Screen
         {
             return this.label;
         }
+
+        @Override
+        public List<? extends IGuiEventListener> getEventListeners()
+        {
+            return Collections.emptyList();
+        }
     }
 
     public class TitleEntry extends Entry
@@ -373,12 +331,6 @@ public class ConfigScreen extends Screen
         public TitleEntry(String title)
         {
             super(title);
-        }
-
-        @Override
-        public List<? extends IGuiEventListener> getEventListeners()
-        {
-            return Collections.emptyList();
         }
 
         @Override
@@ -511,11 +463,11 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class ConfigList extends AbstractOptionList<ConfigScreen.Entry>
+    public class EntryList extends AbstractOptionList<ConfigScreen.Entry>
     {
-        public ConfigList(List<ConfigScreen.Entry> entries)
+        public EntryList(List<ConfigScreen.Entry> entries)
         {
-            super(ConfigScreen.this.minecraft, ConfigScreen.this.width, ConfigScreen.this.height, 50, ConfigScreen.this.height - 36, 24);
+            super(ConfigScreen.this.minecraft, ConfigScreen.this.width, ConfigScreen.this.height, 50, ConfigScreen.this.height - 36, ConfigScreen.this.configFileMenu ? 30 : 24);
             entries.forEach(this::addEntry);
         }
 
@@ -534,7 +486,7 @@ public class ConfigScreen extends Screen
         @Override
         public int getRowWidth()
         {
-            return 260;
+            return 260; //TODO maybe make wider for file entries
         }
 
         @Override
@@ -586,10 +538,10 @@ public class ConfigScreen extends Screen
             BufferBuilder buffer = tessellator.getBuffer();
 
             buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-            buffer.pos(this.x0, this.y1, 0.0D).tex(this.x0 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            buffer.pos(this.x1, this.y1, 0.0D).tex(this.x1 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            buffer.pos(this.x1, this.y0, 0.0D).tex(this.x1 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            buffer.pos(this.x0, this.y0, 0.0D).tex(this.x0 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x0, this.y1, 0.0).tex(this.x0 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x1, this.y1, 0.0).tex(this.x1 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x1, this.y0, 0.0).tex(this.x1 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.pos(this.x0, this.y0, 0.0).tex(this.x0 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
             tessellator.draw();
 
             int rowLeft = this.getRowLeft();
@@ -600,15 +552,15 @@ public class ConfigScreen extends Screen
             RenderSystem.enableDepthTest();
             RenderSystem.depthFunc(519);
 
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-            buffer.pos(this.x0, this.y0, -100.0D).tex(0.0F, this.y0 / 32.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos((this.x0 + this.width), this.y0, -100.0D).tex(this.width / 32.0F, this.y0 / 32.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos((this.x0 + this.width), 0.0D, -100.0D).tex(this.width / 32.0F, 0.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos(this.x0, 0.0D, -100.0D).tex(0.0F, 0.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos(this.x0, this.height, -100.0D).tex(0.0F, this.height / 32.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos((this.x0 + this.width), this.height, -100.0D).tex(this.width / 32.0F, this.height / 32.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos((this.x0 + this.width), this.y1, -100.0D).tex(this.width / 32.0F, this.y1 / 32.0F).color(64, 64, 64, 255).endVertex();
-            buffer.pos(this.x0, this.y1, -100.0D).tex(0.0F, this.y1 / 32.0F).color(64, 64, 64, 255).endVertex();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+            buffer.pos(this.x0, this.y0, -100).color(64, 64, 64, 255).tex(0.0F, this.y0 / 32.0F).endVertex();
+            buffer.pos((this.x0 + this.width), this.y0, -100.0D).color(64, 64, 64, 255).tex(this.width / 32.0F, this.y0 / 32.0F).endVertex();
+            buffer.pos((this.x0 + this.width), 0.0, -100.0D).color(64, 64, 64, 255).tex(this.width / 32.0F, 0.0F).endVertex();
+            buffer.pos(this.x0, 0.0, -100.0).color(64, 64, 64, 255).tex(0.0F, 0.0F).endVertex();
+            buffer.pos(this.x0, this.height, -100.0).color(64, 64, 64, 255).tex(0.0F, this.height / 32.0F).endVertex();
+            buffer.pos((this.x0 + this.width), this.height, -100.0).color(64, 64, 64, 255).tex(this.width / 32.0F, this.height / 32.0F).endVertex();
+            buffer.pos((this.x0 + this.width), this.y1, -100.0).color(64, 64, 64, 255).tex(this.width / 32.0F, this.y1 / 32.0F).endVertex();
+            buffer.pos(this.x0, this.y1, -100.0).color(64, 64, 64, 255).tex(0.0F, this.y1 / 32.0F).endVertex();
             tessellator.draw();
 
             RenderSystem.depthFunc(515);
@@ -619,15 +571,15 @@ public class ConfigScreen extends Screen
             RenderSystem.shadeModel(7425);
             RenderSystem.disableTexture();
 
-            buffer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            buffer.pos((double) this.x0, (double) (this.y0 + 4), 0.0D).tex(0.0F, 1.0F).color(0, 0, 0, 0).endVertex();
-            buffer.pos((double) this.x1, (double) (this.y0 + 4), 0.0D).tex(1.0F, 1.0F).color(0, 0, 0, 0).endVertex();
-            buffer.pos((double) this.x1, (double) this.y0, 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 255).endVertex();
-            buffer.pos((double) this.x0, (double) this.y0, 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 255).endVertex();
-            buffer.pos((double) this.x0, (double) this.y1, 0.0D).tex(0.0F, 1.0F).color(0, 0, 0, 255).endVertex();
-            buffer.pos((double) this.x1, (double) this.y1, 0.0D).tex(1.0F, 1.0F).color(0, 0, 0, 255).endVertex();
-            buffer.pos((double) this.x1, (double) (this.y1 - 4), 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 0).endVertex();
-            buffer.pos((double) this.x0, (double) (this.y1 - 4), 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 0).endVertex();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+            buffer.pos(this.x0, (this.y0 + 4), 0.0).color(0, 0, 0, 0).tex(0.0F, 1.0F).endVertex();
+            buffer.pos(this.x1, (this.y0 + 4), 0.0).color(0, 0, 0, 0).tex(1.0F, 1.0F).endVertex();
+            buffer.pos(this.x1, this.y0, 0.0).color(0, 0, 0, 255).tex(1.0F, 0.0F).endVertex();
+            buffer.pos(this.x0, this.y0, 0.0).color(0, 0, 0, 255).tex(0.0F, 0.0F).endVertex();
+            buffer.pos(this.x0, this.y1, 0.0).color(0, 0, 0, 255).tex(0.0F, 1.0F).endVertex();
+            buffer.pos(this.x1, this.y1, 0.0).color(0, 0, 0, 255).tex(1.0F, 1.0F).endVertex();
+            buffer.pos(this.x1, (this.y1 - 4), 0.0).color(0, 0, 0, 0).tex(1.0F, 0.0F).endVertex();
+            buffer.pos(this.x0, (this.y1 - 4), 0.0).color(0, 0, 0, 0).tex(0.0F, 0.0F).endVertex();
             tessellator.draw();
 
             int maxScroll = Math.max(0, this.getMaxPosition() - (this.y1 - this.y0 - 4));
@@ -641,19 +593,19 @@ public class ConfigScreen extends Screen
                     scrollBarEndY = this.y0;
                 }
 
-                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-                buffer.pos((double) scrollBarStart, (double) this.y1, 0.0D).tex(0.0F, 1.0F).color(0, 0, 0, 255).endVertex();
-                buffer.pos((double) scrollBarEnd, (double) this.y1, 0.0D).tex(1.0F, 1.0F).color(0, 0, 0, 255).endVertex();
-                buffer.pos((double) scrollBarEnd, (double) this.y0, 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 255).endVertex();
-                buffer.pos((double) scrollBarStart, (double) this.y0, 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 255).endVertex();
-                buffer.pos((double) scrollBarStart, (double) (scrollBarEndY + scrollBarStartY), 0.0D).tex(0.0F, 1.0F).color(128, 128, 128, 255).endVertex();
-                buffer.pos((double) scrollBarEnd, (double) (scrollBarEndY + scrollBarStartY), 0.0D).tex(1.0F, 1.0F).color(128, 128, 128, 255).endVertex();
-                buffer.pos((double) scrollBarEnd, (double) scrollBarEndY, 0.0D).tex(1.0F, 0.0F).color(128, 128, 128, 255).endVertex();
-                buffer.pos((double) scrollBarStart, (double) scrollBarEndY, 0.0D).tex(0.0F, 0.0F).color(128, 128, 128, 255).endVertex();
-                buffer.pos((double) scrollBarStart, (double) (scrollBarEndY + scrollBarStartY - 1), 0.0D).tex(0.0F, 1.0F).color(192, 192, 192, 255).endVertex();
-                buffer.pos((double) (scrollBarEnd - 1), (double) (scrollBarEndY + scrollBarStartY - 1), 0.0D).tex(1.0F, 1.0F).color(192, 192, 192, 255).endVertex();
-                buffer.pos((double) (scrollBarEnd - 1), (double) scrollBarEndY, 0.0D).tex(1.0F, 0.0F).color(192, 192, 192, 255).endVertex();
-                buffer.pos((double) scrollBarStart, (double) scrollBarEndY, 0.0D).tex(0.0F, 0.0F).color(192, 192, 192, 255).endVertex();
+                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+                buffer.pos(scrollBarStart, this.y1, 0.0).color(0, 0, 0, 255).tex(0.0F, 1.0F).endVertex();
+                buffer.pos(scrollBarEnd, this.y1, 0.0).color(0, 0, 0, 255).tex(1.0F, 1.0F).endVertex();
+                buffer.pos(scrollBarEnd, this.y0, 0.0).color(0, 0, 0, 255).tex(1.0F, 0.0F).endVertex();
+                buffer.pos(scrollBarStart, this.y0, 0.0).color(0, 0, 0, 255).tex(0.0F, 0.0F).endVertex();
+                buffer.pos(scrollBarStart, (scrollBarEndY + scrollBarStartY), 0.0).color(128, 128, 128, 255).tex(0.0F, 1.0F).endVertex();
+                buffer.pos(scrollBarEnd, (scrollBarEndY + scrollBarStartY), 0.0).color(128, 128, 128, 255).tex(1.0F, 1.0F).endVertex();
+                buffer.pos(scrollBarEnd, scrollBarEndY, 0.0).color(128, 128, 128, 255).tex(1.0F, 0.0F).endVertex();
+                buffer.pos(scrollBarStart, scrollBarEndY, 0.0).color(128, 128, 128, 255).tex(0.0F, 0.0F).endVertex();
+                buffer.pos(scrollBarStart, (scrollBarEndY + scrollBarStartY - 1), 0.0).color(192, 192, 192, 255).tex(0.0F, 1.0F).endVertex();
+                buffer.pos((scrollBarEnd - 1), (scrollBarEndY + scrollBarStartY - 1), 0.0).color(192, 192, 192, 255).tex(1.0F, 1.0F).endVertex();
+                buffer.pos((scrollBarEnd - 1), scrollBarEndY, 0.0).color(192, 192, 192, 255).tex(1.0F, 0.0F).endVertex();
+                buffer.pos(scrollBarStart, scrollBarEndY, 0.0).color(192, 192, 192, 255).tex(0.0F, 0.0F).endVertex();
                 tessellator.draw();
             }
 
@@ -940,7 +892,7 @@ public class ConfigScreen extends Screen
      * @param input the config value name
      * @return a readable label string
      */
-    private static String createLabel(String input)
+    public static String createLabel(String input)
     {
         String valueName = input;
         // Try split by camel case
@@ -974,8 +926,8 @@ public class ConfigScreen extends Screen
 
     public static class ConfigFileEntry
     {
-        private ForgeConfigSpec spec;
-        private UnmodifiableConfig config;
+        private final ForgeConfigSpec spec;
+        private final UnmodifiableConfig config;
 
         public ConfigFileEntry(ForgeConfigSpec spec, UnmodifiableConfig config)
         {

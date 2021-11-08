@@ -25,6 +25,8 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 configured {
                     source sourceSets.main
@@ -36,6 +38,8 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 configured {
                     source sourceSets.main
@@ -59,8 +63,21 @@ minecraft {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+repositories {
+    maven {
+        url = "https://www.cursemaven.com"
+    }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.0'
+    runtimeOnly fg.deobf('curse.maven:catalogue-459701:3399554')
+    runtimeOnly fg.deobf('curse.maven:controllable-317269:3519272')
+    runtimeOnly fg.deobf('curse.maven:backpacked-352835:3336026')
+    runtimeOnly fg.deobf('curse.maven:obfuscate-289380:3336021')
+    runtimeOnly fg.deobf('curse.maven:mrcrayfishsgunmod-289479:3224957')
+    runtimeOnly fg.deobf('curse.maven:mrcrayfishsvehiclemod-286660:3103940')
+    runtimeOnly fg.deobf('curse.maven:repurposedstructures-368293:3513422')
 }
 
 jar {

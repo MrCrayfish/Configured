@@ -9,9 +9,11 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -39,11 +41,13 @@ public class ConfirmationScreen extends Screen
     @Override
     protected void init()
     {
-        this.addButton(new Button(this.width / 2 - 105, this.height / 2, 100, 20, this.positiveText, button -> {
+        List<IReorderingProcessor> lines = this.font.trimStringToWidth(this.message, 300);
+        int messageOffset = (lines.size() * (this.font.FONT_HEIGHT + 2)) / 2;
+        this.addButton(new Button(this.width / 2 - 105, this.height / 2 + messageOffset, 100, 20, this.positiveText, button -> {
             this.handler.accept(true);
             this.minecraft.displayGuiScreen(this.parent);
         }));
-        this.addButton(new Button(this.width / 2 + 5, this.height / 2, 100, 20, this.negativeText, button -> {
+        this.addButton(new Button(this.width / 2 + 5, this.height / 2 + messageOffset, 100, 20, this.negativeText, button -> {
             this.handler.accept(false);
             this.minecraft.displayGuiScreen(this.parent);
         }));
@@ -54,7 +58,12 @@ public class ConfirmationScreen extends Screen
     {
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(matrixStack, this.font, this.message, this.width / 2, this.height / 2 - 20, 0xFFFFFF);
+        List<IReorderingProcessor> lines = this.font.trimStringToWidth(this.message, 300);
+        for(int i = 0; i < lines.size(); i++)
+        {
+            int lineWidth = this.font.func_243245_a(lines.get(i));
+            this.font.func_238422_b_(matrixStack, lines.get(i), this.width / 2 - lineWidth / 2, this.height / 2 - 20 - (lines.size() * (this.font.FONT_HEIGHT + 2)) / 2 + i * (this.font.FONT_HEIGHT + 2), 0xFFFFFF);
+        }
     }
 
     @Override

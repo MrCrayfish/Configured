@@ -39,10 +39,17 @@ public class Config
     static final ForgeConfigSpec clientSpec;
     public static final Config.Client CLIENT;
 
+    static final ForgeConfigSpec customSpec;
+    public static final Config.Client CUSTOM;
+
     static
     {
         final Pair<Client, ForgeConfigSpec> clientSpecPair = new ForgeConfigSpec.Builder().configure(Config.Client::new);
         clientSpec = clientSpecPair.getRight();
         CLIENT = clientSpecPair.getLeft();
+
+        final Pair<Client, ForgeConfigSpec> customSpecPair = new ForgeConfigSpec.Builder().configure(Config.Client::new);
+        customSpec = customSpecPair.getRight();
+        CUSTOM = customSpecPair.getLeft();
     }
 }
