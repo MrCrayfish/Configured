@@ -39,6 +39,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -49,6 +50,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -198,6 +200,7 @@ public class ConfigScreen extends Screen
 
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
         this.searchTextField.setResponder(s -> {
+            this.updateSearchField(s);
             this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchPredicate(s)).collect(Collectors.toList()));
             if(!s.isEmpty())
             {
@@ -205,6 +208,7 @@ public class ConfigScreen extends Screen
             }
         });
         this.children.add(this.searchTextField);
+        this.updateSearchField(this.searchTextField.getText());
 
         if(this.rootMenu)
         {
@@ -940,6 +944,30 @@ public class ConfigScreen extends Screen
         bufferbuilder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
         tessellator.draw();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
+    }
+
+    private void updateSearchField(String value)
+    {
+        if(value.isEmpty())
+        {
+            this.searchTextField.setSuggestion(new TranslationTextComponent("configured.gui.search").getString());
+        }
+        else
+        {
+            Optional<Entry> optional = this.entries.stream().filter(info -> {
+                return info.getLabel().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH));
+            }).min(Comparator.comparing(Entry::getLabel));
+            if(optional.isPresent())
+            {
+                int length = value.length();
+                String displayName = optional.get().getLabel();
+                this.searchTextField.setSuggestion(displayName.substring(length));
+            }
+            else
+            {
+                this.searchTextField.setSuggestion("");
+            }
+        }
     }
 
     @Override
