@@ -1,12 +1,17 @@
 package com.mrcrayfish.configured.client.util;
 
 import com.electronwill.nightconfig.core.AbstractConfig;
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,5 +68,22 @@ public class ConfigUtil
                 values.add(Pair.of(configValue, valueSpec));
             }
         });
+    }
+
+    public static void setConfigData(ModConfig config, @Nullable CommentedConfig configData)
+    {
+        try
+        {
+            Method method = ObfuscationReflectionHelper.findMethod(ModConfig.class, "setConfigData", CommentedConfig.class);
+            method.invoke(config, configData);
+            if(configData != null)
+            {
+                config.save();
+            }
+        }
+        catch(InvocationTargetException | IllegalAccessException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

@@ -153,7 +153,7 @@ public class ModConfigSelectionScreen extends ConfigScreen
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
             Button button = new Button(0, 0, serverConfig ? 72 : 50, 20, new TranslationTextComponent(langKey), onPress -> {
                 if(serverConfig) {
-                    ModConfigSelectionScreen.this.minecraft.displayGuiScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this.parent, ModConfigSelectionScreen.this.background));
+                    ModConfigSelectionScreen.this.minecraft.displayGuiScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
                 } else {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
                         ModConfigSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, container.getModInfo().getDisplayName(), config, ModConfigSelectionScreen.this.background));

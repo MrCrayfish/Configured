@@ -228,6 +228,13 @@ public class ConfigScreen extends Screen
                 if(this.config != null)
                 {
                     this.config.save();
+
+                    // Unload server configs since they are per world
+                    if(this.config.getType() == ModConfig.Type.SERVER)
+                    {
+                        this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
+                        ConfigUtil.setConfigData(this.config, null);
+                    }
                 }
             }));
         }
@@ -264,10 +271,7 @@ public class ConfigScreen extends Screen
         super.render(matrixStack, mouseX, mouseY, partialTicks);
         this.minecraft.getTextureManager().bindTexture(LOGO_TEXTURE);
         blit(matrixStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
-        if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
-        {
-            this.setActiveTooltip(this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.info"), 200));
-        }
+        this.updateTooltip(mouseX, mouseY);
         if(this.activeTooltip != null)
         {
             this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
@@ -279,6 +283,14 @@ public class ConfigScreen extends Screen
                 ((Button.ITooltip) o).onTooltip((Button) o, matrixStack, mouseX, mouseY);
             }
         });
+    }
+
+    protected void updateTooltip(int mouseX, int mouseY)
+    {
+        if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
+        {
+            this.setActiveTooltip(this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.info"), 200));
+        }
     }
 
     @Override
@@ -922,6 +934,12 @@ public class ConfigScreen extends Screen
         bufferbuilder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
         tessellator.draw();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc()
+    {
+        return this.config == null || this.config.getType() != ModConfig.Type.SERVER;
     }
 
     public static class ConfigFileEntry
