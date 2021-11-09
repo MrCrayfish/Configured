@@ -6,18 +6,26 @@ import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.list.AbstractList;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.client.gui.screen.ModListScreen;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
 import java.util.EnumMap;
@@ -31,8 +39,16 @@ import java.util.stream.Collectors;
  * Author: MrCrayfish
  */
 @OnlyIn(Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "configured", value = Dist.CLIENT)
 public class ClientHandler
 {
+    public static final KeyBinding KEY_OPEN_MOD_LIST = new KeyBinding("key.configured.open_mod_list", -1, "key.categories.configured");
+
+    public static void registerKeyBindings()
+    {
+        ClientRegistry.registerKeyBinding(KEY_OPEN_MOD_LIST);
+    }
+
     // This is where the magic happens
     public static void generateConfigFactories()
     {
@@ -115,6 +131,19 @@ public class ClientHandler
         if(list instanceof IBackgroundTexture)
         {
             Minecraft.getInstance().getTextureManager().bindTexture(((IBackgroundTexture) list).getBackgroundTexture());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onKeyPress(InputEvent.KeyInputEvent event)
+    {
+        if(KEY_OPEN_MOD_LIST.getKey().getKeyCode() == event.getKey() && event.getAction() == GLFW.GLFW_PRESS)
+        {
+            Minecraft minecraft = Minecraft.getInstance();
+            if(minecraft.player == null)
+                return;
+            Screen oldScreen = minecraft.currentScreen;
+            minecraft.displayGuiScreen(new ModListScreen(oldScreen));
         }
     }
 }
