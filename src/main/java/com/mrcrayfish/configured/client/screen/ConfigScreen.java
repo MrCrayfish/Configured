@@ -735,12 +735,6 @@ public class ConfigScreen extends Screen
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
-
-        @Override
-        public void onResetValue()
-        {
-            this.button.setMessage(new StringTextComponent(this.configValue.get().name()));
-        }
     }
 
     /**
