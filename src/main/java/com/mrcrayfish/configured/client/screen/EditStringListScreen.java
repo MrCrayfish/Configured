@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.client.gui.widget.list.ExtendedList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -29,15 +30,17 @@ public class EditStringListScreen extends Screen
     private final List<StringHolder> values = new ArrayList<>();
     private final ForgeConfigSpec.ConfigValue<List<?>> listValue;
     private final ForgeConfigSpec.ValueSpec valueSpec;
+    private final ResourceLocation background;
     private StringList list;
 
-    public EditStringListScreen(Screen parent, ITextComponent titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec)
+    public EditStringListScreen(Screen parent, ITextComponent titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
         this.listValue = listValue;
         this.valueSpec = valueSpec;
         this.values.addAll(listValue.get().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
+        this.background = background;
     }
 
     @Override
@@ -73,7 +76,7 @@ public class EditStringListScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class StringList extends ExtendedList<StringEntry>
+    public class StringList extends ExtendedList<StringEntry> implements IBackgroundTexture
     {
         public StringList()
         {
@@ -121,6 +124,12 @@ public class EditStringListScreen extends Screen
                     }
                 });
             });
+        }
+
+        @Override
+        public ResourceLocation getBackgroundTexture()
+        {
+            return background;
         }
     }
 

@@ -1,9 +1,12 @@
 package com.mrcrayfish.configured.client;
 
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.widget.list.AbstractList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -101,5 +104,17 @@ public class ClientHandler
         }
 
         return AbstractGui.BACKGROUND_LOCATION;
+    }
+
+    /**
+     * Linked via ASM. Do not delete!
+     */
+    @SuppressWarnings("unused")
+    public static void updateAbstractListTexture(AbstractList<?> list)
+    {
+        if(list instanceof IBackgroundTexture)
+        {
+            Minecraft.getInstance().getTextureManager().bindTexture(((IBackgroundTexture) list).getBackgroundTexture());
+        }
     }
 }

@@ -37,7 +37,9 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -485,7 +487,7 @@ public class ConfigScreen extends Screen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class EntryList extends AbstractOptionList<ConfigScreen.Entry>
+    public class EntryList extends AbstractOptionList<ConfigScreen.Entry> implements IBackgroundTexture
     {
         public EntryList(List<ConfigScreen.Entry> entries)
         {
@@ -539,106 +541,17 @@ public class ConfigScreen extends Screen
             });
         }
 
-        /**
-         * Literally just a copy of the original since the background can't be changed
-         *
-         * @param matrixStack  the current matrix stack
-         * @param mouseX       the current mouse x position
-         * @param mouseY       the current mouse y position
-         * @param partialTicks the partial ticks
-         */
         @Override
         public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
         {
-            this.renderBackground(matrixStack);
-            int scrollBarStart = this.getScrollbarPosition();
-            int scrollBarEnd = scrollBarStart + 6;
-            this.minecraft.getTextureManager().bindTexture(background);
-
-            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.getBuffer();
-
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-            buffer.pos(this.x0, this.y1, 0.0).tex(this.x0 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            buffer.pos(this.x1, this.y1, 0.0).tex(this.x1 / 32.0F, (this.y1 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            buffer.pos(this.x1, this.y0, 0.0).tex(this.x1 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            buffer.pos(this.x0, this.y0, 0.0).tex(this.x0 / 32.0F, (this.y0 + (int) this.getScrollAmount()) / 32.0F).color(32, 32, 32, 255).endVertex();
-            tessellator.draw();
-
-            int rowLeft = this.getRowLeft();
-            int scrollOffset = this.y0 + 4 - (int) this.getScrollAmount();
-            this.renderList(matrixStack, rowLeft, scrollOffset, mouseX, mouseY, partialTicks);
-            this.minecraft.getTextureManager().bindTexture(background);
-
-            RenderSystem.enableDepthTest();
-            RenderSystem.depthFunc(519);
-
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-            buffer.pos(this.x0, this.y0, -100).color(64, 64, 64, 255).tex(0.0F, this.y0 / 32.0F).endVertex();
-            buffer.pos((this.x0 + this.width), this.y0, -100.0D).color(64, 64, 64, 255).tex(this.width / 32.0F, this.y0 / 32.0F).endVertex();
-            buffer.pos((this.x0 + this.width), 0.0, -100.0D).color(64, 64, 64, 255).tex(this.width / 32.0F, 0.0F).endVertex();
-            buffer.pos(this.x0, 0.0, -100.0).color(64, 64, 64, 255).tex(0.0F, 0.0F).endVertex();
-            buffer.pos(this.x0, this.height, -100.0).color(64, 64, 64, 255).tex(0.0F, this.height / 32.0F).endVertex();
-            buffer.pos((this.x0 + this.width), this.height, -100.0).color(64, 64, 64, 255).tex(this.width / 32.0F, this.height / 32.0F).endVertex();
-            buffer.pos((this.x0 + this.width), this.y1, -100.0).color(64, 64, 64, 255).tex(this.width / 32.0F, this.y1 / 32.0F).endVertex();
-            buffer.pos(this.x0, this.y1, -100.0).color(64, 64, 64, 255).tex(0.0F, this.y1 / 32.0F).endVertex();
-            tessellator.draw();
-
-            RenderSystem.depthFunc(515);
-            RenderSystem.disableDepthTest();
-            RenderSystem.enableBlend();
-            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
-            RenderSystem.disableAlphaTest();
-            RenderSystem.shadeModel(7425);
-            RenderSystem.disableTexture();
-
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-            buffer.pos(this.x0, (this.y0 + 4), 0.0).color(0, 0, 0, 0).tex(0.0F, 1.0F).endVertex();
-            buffer.pos(this.x1, (this.y0 + 4), 0.0).color(0, 0, 0, 0).tex(1.0F, 1.0F).endVertex();
-            buffer.pos(this.x1, this.y0, 0.0).color(0, 0, 0, 255).tex(1.0F, 0.0F).endVertex();
-            buffer.pos(this.x0, this.y0, 0.0).color(0, 0, 0, 255).tex(0.0F, 0.0F).endVertex();
-            buffer.pos(this.x0, this.y1, 0.0).color(0, 0, 0, 255).tex(0.0F, 1.0F).endVertex();
-            buffer.pos(this.x1, this.y1, 0.0).color(0, 0, 0, 255).tex(1.0F, 1.0F).endVertex();
-            buffer.pos(this.x1, (this.y1 - 4), 0.0).color(0, 0, 0, 0).tex(1.0F, 0.0F).endVertex();
-            buffer.pos(this.x0, (this.y1 - 4), 0.0).color(0, 0, 0, 0).tex(0.0F, 0.0F).endVertex();
-            tessellator.draw();
-
-            int maxScroll = Math.max(0, this.getMaxPosition() - (this.y1 - this.y0 - 4));
-            if(maxScroll > 0)
-            {
-                int scrollBarStartY = (int) ((float) ((this.y1 - this.y0) * (this.y1 - this.y0)) / (float) this.getMaxPosition());
-                scrollBarStartY = MathHelper.clamp(scrollBarStartY, 32, this.y1 - this.y0 - 8);
-                int scrollBarEndY = (int) this.getScrollAmount() * (this.y1 - this.y0 - scrollBarStartY) / maxScroll + this.y0;
-                if(scrollBarEndY < this.y0)
-                {
-                    scrollBarEndY = this.y0;
-                }
-
-                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-                buffer.pos(scrollBarStart, this.y1, 0.0).color(0, 0, 0, 255).tex(0.0F, 1.0F).endVertex();
-                buffer.pos(scrollBarEnd, this.y1, 0.0).color(0, 0, 0, 255).tex(1.0F, 1.0F).endVertex();
-                buffer.pos(scrollBarEnd, this.y0, 0.0).color(0, 0, 0, 255).tex(1.0F, 0.0F).endVertex();
-                buffer.pos(scrollBarStart, this.y0, 0.0).color(0, 0, 0, 255).tex(0.0F, 0.0F).endVertex();
-                buffer.pos(scrollBarStart, (scrollBarEndY + scrollBarStartY), 0.0).color(128, 128, 128, 255).tex(0.0F, 1.0F).endVertex();
-                buffer.pos(scrollBarEnd, (scrollBarEndY + scrollBarStartY), 0.0).color(128, 128, 128, 255).tex(1.0F, 1.0F).endVertex();
-                buffer.pos(scrollBarEnd, scrollBarEndY, 0.0).color(128, 128, 128, 255).tex(1.0F, 0.0F).endVertex();
-                buffer.pos(scrollBarStart, scrollBarEndY, 0.0).color(128, 128, 128, 255).tex(0.0F, 0.0F).endVertex();
-                buffer.pos(scrollBarStart, (scrollBarEndY + scrollBarStartY - 1), 0.0).color(192, 192, 192, 255).tex(0.0F, 1.0F).endVertex();
-                buffer.pos((scrollBarEnd - 1), (scrollBarEndY + scrollBarStartY - 1), 0.0).color(192, 192, 192, 255).tex(1.0F, 1.0F).endVertex();
-                buffer.pos((scrollBarEnd - 1), scrollBarEndY, 0.0).color(192, 192, 192, 255).tex(1.0F, 0.0F).endVertex();
-                buffer.pos(scrollBarStart, scrollBarEndY, 0.0).color(192, 192, 192, 255).tex(0.0F, 0.0F).endVertex();
-                tessellator.draw();
-            }
-
-            this.renderDecorations(matrixStack, mouseX, mouseY);
-
-            RenderSystem.enableTexture();
-            RenderSystem.shadeModel(7424);
-            RenderSystem.enableAlphaTest();
-            RenderSystem.disableBlend();
-
+            super.render(matrixStack, mouseX, mouseY, partialTicks);
             this.renderToolTips(matrixStack, mouseX, mouseY);
+        }
+
+        @Override
+        public ResourceLocation getBackgroundTexture()
+        {
+            return background;
         }
     }
 
@@ -785,7 +698,7 @@ public class ConfigScreen extends Screen
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
             this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
-                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec));
+                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec, background));
             });
             this.eventListeners.add(this.button);
         }
@@ -920,17 +833,17 @@ public class ConfigScreen extends Screen
     public void renderDirtBackground(int vOffset)
     {
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        BufferBuilder buffer = tessellator.getBuffer();
         this.minecraft.getTextureManager().bindTexture(this.background);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         float size = 32.0F;
-        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-        bufferbuilder.pos(0.0D, this.height, 0.0D).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        bufferbuilder.pos(this.width, this.height, 0.0D).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        bufferbuilder.pos(this.width, 0.0D, 0.0D).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
-        bufferbuilder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        buffer.pos(0.0, this.height, 0.0).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.pos(this.width, this.height, 0.0).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.pos(this.width, 0.0, 0.0).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.pos(0.0, 0.0, 0.0).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
         tessellator.draw();
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
+        MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
     }
 
     private void updateSearchField(String value)

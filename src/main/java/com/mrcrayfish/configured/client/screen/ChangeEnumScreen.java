@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.client.util.ConfigUtil;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.gui.AbstractGui;
@@ -10,14 +11,20 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.ExtendedList;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.config.ModConfig;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +41,7 @@ public class ChangeEnumScreen extends Screen
 {
     private final Screen parent;
     private final ForgeConfigSpec.ConfigValue<Enum> configValue;
+    private final ResourceLocation background;
     private EnumList list;
     private List<Entry> entries;
     private TextFieldWidget searchTextField;
@@ -44,6 +52,7 @@ public class ChangeEnumScreen extends Screen
         super(title);
         this.parent = parent;
         this.configValue = configValue;
+        this.background = background;
     }
 
     @Override
@@ -138,7 +147,7 @@ public class ChangeEnumScreen extends Screen
         }
     }
 
-    public class EnumList extends ExtendedList<Entry>
+    public class EnumList extends ExtendedList<Entry> implements IBackgroundTexture
     {
         public EnumList(List<ChangeEnumScreen.Entry> entries)
         {
@@ -150,6 +159,12 @@ public class ChangeEnumScreen extends Screen
         public void replaceEntries(Collection<Entry> entries)
         {
             super.replaceEntries(entries);
+        }
+
+        @Override
+        public ResourceLocation getBackgroundTexture()
+        {
+            return background;
         }
     }
 
@@ -187,5 +202,22 @@ public class ChangeEnumScreen extends Screen
             ChangeEnumScreen.this.list.setSelected(this);
             return true;
         }
+    }
+
+    @Override
+    public void renderDirtBackground(int vOffset)
+    {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        this.minecraft.getTextureManager().bindTexture(this.background);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        float size = 32.0F;
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        buffer.pos(0.0, this.height, 0.0).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.pos(this.width, this.height, 0.0).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.pos(this.width, 0.0, 0.0).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
+        buffer.pos(0.0, 0.0, 0.0).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
+        tessellator.draw();
+        MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
     }
 }
