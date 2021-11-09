@@ -55,7 +55,7 @@ public class EditStringListScreen extends Screen
             this.minecraft.displayGuiScreen(this.parent);
         }));
         this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), "", o -> true, s -> {
+            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), "", o -> true, s -> {
                 StringHolder holder = new StringHolder(s);
                 this.values.add(holder);
                 this.list.addEntry(new StringEntry(this.list, holder));
@@ -145,7 +145,7 @@ public class EditStringListScreen extends Screen
             this.list = list;
             this.holder = holder;
             this.editButton = new Button(0, 0, 42, 20, new StringTextComponent("Edit"), onPress -> {
-                EditStringListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
+                EditStringListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
                     this.holder.setValue(s);
                 }));
             });

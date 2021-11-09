@@ -673,7 +673,7 @@ public class ConfigScreen extends Screen
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
             this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
-                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringScreen(ConfigScreen.this, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set));
+                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set));
             });
             this.eventListeners.add(this.button);
         }
