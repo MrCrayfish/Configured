@@ -198,6 +198,7 @@ public class ConfigScreen extends Screen
         this.constructEntries();
 
         this.list = new EntryList(this.entries);
+        this.list.func_244605_b(this.minecraft.world == null);
         this.children.add(this.list);
 
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));

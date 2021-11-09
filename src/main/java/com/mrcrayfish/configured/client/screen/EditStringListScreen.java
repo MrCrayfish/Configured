@@ -47,6 +47,7 @@ public class EditStringListScreen extends Screen
     protected void init()
     {
         this.list = new StringList();
+        this.list.func_244605_b(this.minecraft.world == null);
         this.children.add(this.list);
         this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, DialogTexts.GUI_DONE, (button) -> {
             List<String> newValues = this.values.stream().map(StringHolder::getValue).collect(Collectors.toList());

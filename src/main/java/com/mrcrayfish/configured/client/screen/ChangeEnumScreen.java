@@ -60,6 +60,7 @@ public class ChangeEnumScreen extends Screen
     {
         this.constructEntries();
         this.list = new EnumList(this.entries);
+        this.list.func_244605_b(this.minecraft.world == null);
         this.list.setSelected(this.list.getEventListeners().stream().filter(entry -> entry.getEnumValue() == this.configValue.get()).findFirst().orElse(null));
         this.children.add(this.list);
 
