@@ -197,7 +197,13 @@ public class ConfigScreen extends Screen
         this.children.add(this.list);
 
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
-        this.searchTextField.setResponder(s -> this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchPredicate(s)).collect(Collectors.toList())));
+        this.searchTextField.setResponder(s -> {
+            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchPredicate(s)).collect(Collectors.toList()));
+            if(!s.isEmpty())
+            {
+                this.list.setScrollAmount(0);
+            }
+        });
         this.children.add(this.searchTextField);
 
         if(this.rootMenu)
