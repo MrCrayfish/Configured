@@ -1,6 +1,8 @@
 package com.mrcrayfish.configured;
 
+import net.minecraft.potion.EffectType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -19,7 +21,7 @@ public class Config
         public final ForgeConfigSpec.IntValue intValue;
         public final ForgeConfigSpec.DoubleValue doubleValue;
         public final ForgeConfigSpec.LongValue longValue;
-        public final ForgeConfigSpec.EnumValue<Direction> enumValue;
+        public final ForgeConfigSpec.EnumValue<TextFormatting> enumValue;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> listValue;
 
         public Client(ForgeConfigSpec.Builder builder)
@@ -31,7 +33,7 @@ public class Config
             this.intValue = builder.comment("This is an Integer value").defineInRange("int_Value", 0, 0, 10);
             this.doubleValue = builder.comment("This is a Double value").defineInRange("doubleValue", 0.0, 0.0, 10.0);
             this.longValue = builder.comment("This is a Long value").defineInRange("longValue", 0L, 0L, 10L);
-            this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", Direction.NORTH);
+            this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", TextFormatting.BLACK);
             builder.pop();
         }
     }

@@ -650,7 +650,7 @@ public class ConfigScreen extends Screen
         public NumberEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec, Function<String, Number> parser)
         {
             super(configValue, valueSpec);
-            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 42, 18, new StringTextComponent("YEP"));
+            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 44, 18, new StringTextComponent("YEP"));
             this.textField.setText(configValue.get().toString());
             this.textField.setResponder((s) -> {
                 try
@@ -679,7 +679,7 @@ public class ConfigScreen extends Screen
         public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.textField.x = left + width - 66;
+            this.textField.x = left + width - 68;
             this.textField.y = top + 1;
             this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -726,7 +726,7 @@ public class ConfigScreen extends Screen
         public BooleanEntry(ForgeConfigSpec.ConfigValue<Boolean> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, DialogTexts.optionsEnabled(configValue.get()), (button) -> {
+            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(configValue.get()), (button) -> {
                 boolean flag = !configValue.get();
                 configValue.set(flag);
                 button.setMessage(DialogTexts.optionsEnabled(configValue.get()));
@@ -738,7 +738,7 @@ public class ConfigScreen extends Screen
         public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 67;
+            this.button.x = left + width - 69;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -759,7 +759,7 @@ public class ConfigScreen extends Screen
         {
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
                 ConfigScreen.this.minecraft.displayGuiScreen(new EditStringScreen(ConfigScreen.this, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set));
             });
             this.eventListeners.add(this.button);
@@ -769,7 +769,7 @@ public class ConfigScreen extends Screen
         public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 67;
+            this.button.x = left + width - 69;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -784,7 +784,7 @@ public class ConfigScreen extends Screen
         {
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
                 ConfigScreen.this.minecraft.displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec));
             });
             this.eventListeners.add(this.button);
@@ -794,7 +794,7 @@ public class ConfigScreen extends Screen
         public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 67;
+            this.button.x = left + width - 69;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -808,17 +808,8 @@ public class ConfigScreen extends Screen
         public EnumEntry(ForgeConfigSpec.ConfigValue<Enum> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 44, 20, new StringTextComponent(((Enum) configValue.get()).name()), (button) -> {
-                Object o = configValue.get();
-                if(o instanceof Enum)
-                {
-                    Enum e = (Enum) o;
-                    Object[] values = e.getDeclaringClass().getEnumConstants();
-                    e = (Enum) values[(e.ordinal() + 1) % values.length];
-                    //noinspection unchecked
-                    configValue.set(e);
-                    button.setMessage(new StringTextComponent(e.name()));
-                }
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), (button) -> {
+                ConfigScreen.this.minecraft.displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, new StringTextComponent(this.label), background, configValue));
             });
             this.eventListeners.add(this.button);
         }
@@ -827,7 +818,7 @@ public class ConfigScreen extends Screen
         public void render(MatrixStack matrixStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(matrixStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 67;
+            this.button.x = left + width - 69;
             this.button.y = top;
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
@@ -861,12 +852,8 @@ public class ConfigScreen extends Screen
                 if(ConfigScreen.this.activeTextField != null && ConfigScreen.this.activeTextField != this)
                 {
                     ConfigScreen.this.activeTextField.setFocused2(false);
-                    ConfigScreen.this.activeTextField = this;
                 }
-                else
-                {
-                    ConfigScreen.this.activeTextField = this;
-                }
+                ConfigScreen.this.activeTextField = this;
             }
         }
     }
