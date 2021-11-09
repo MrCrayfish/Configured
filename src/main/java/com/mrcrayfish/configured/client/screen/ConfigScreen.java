@@ -257,7 +257,7 @@ public class ConfigScreen extends Screen
 
     protected Predicate<Entry> getSearchPredicate(String s)
     {
-        return entry -> (entry instanceof SubMenu || entry instanceof ConfigEntry<?>) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+        return entry -> !(entry instanceof TitleEntry) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
     }
 
     @Override

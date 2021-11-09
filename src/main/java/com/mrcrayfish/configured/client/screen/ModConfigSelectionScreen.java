@@ -222,12 +222,6 @@ public class ModConfigSelectionScreen extends ConfigScreen
         }
     }
 
-    @Override
-    protected Predicate<Entry> getSearchPredicate(String s)
-    {
-        return entry -> (entry instanceof FileEntry) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
-    }
-
     /**
      * Tries to create a readable label from the file name of the given mod config.
      *
