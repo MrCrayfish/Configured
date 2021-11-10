@@ -43,7 +43,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -195,7 +194,7 @@ public class ConfigScreen extends Screen implements IBackgroundTexture
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
         this.searchTextField.setResponder(s ->
         {
-            this.updateSearchFieldSuggestion(s);
+            ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
             this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchFilter(s)).collect(Collectors.toList()));
             if(!s.isEmpty())
             {
@@ -203,7 +202,7 @@ public class ConfigScreen extends Screen implements IBackgroundTexture
             }
         });
         this.children.add(this.searchTextField);
-        this.updateSearchFieldSuggestion(this.searchTextField.getText());
+        ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
 
         if(this.rootMenu)
         {
@@ -343,7 +342,7 @@ public class ConfigScreen extends Screen implements IBackgroundTexture
         return this.background;
     }
 
-    abstract class Entry extends AbstractOptionList.Entry<Entry>
+    abstract class Entry extends AbstractOptionList.Entry<Entry> implements ILabelProvider
     {
         protected String label;
         protected List<IReorderingProcessor> tooltip;
@@ -353,6 +352,7 @@ public class ConfigScreen extends Screen implements IBackgroundTexture
             this.label = label;
         }
 
+        @Override
         public String getLabel()
         {
             return this.label;
@@ -828,33 +828,6 @@ public class ConfigScreen extends Screen implements IBackgroundTexture
         // Finally join words. Some mods have inputs like "Foo_Bar" and this causes a double space.
         // To fix this any whitespace is replaced with a single space
         return Strings.join(words, " ").replaceAll("\\s++", " ");
-    }
-
-    /**
-     * Updates the search field suggestion text. Suggestions are based on the labels of each entry.
-     *
-     * @param value the text currently in the search field
-     */
-    private void updateSearchFieldSuggestion(String value)
-    {
-        if(value.isEmpty())
-        {
-            this.searchTextField.setSuggestion(new TranslationTextComponent("configured.gui.search").getString());
-        }
-        else
-        {
-            Optional<Entry> optional = this.entries.stream().filter(info -> info.getLabel().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH))).min(Comparator.comparing(Entry::getLabel));
-            if(optional.isPresent())
-            {
-                int length = value.length();
-                String displayName = optional.get().getLabel();
-                this.searchTextField.setSuggestion(displayName.substring(length));
-            }
-            else
-            {
-                this.searchTextField.setSuggestion("");
-            }
-        }
     }
 
     @Override

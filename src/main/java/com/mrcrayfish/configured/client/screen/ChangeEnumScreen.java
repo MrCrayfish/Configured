@@ -2,7 +2,6 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -10,27 +9,19 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.MinecraftForge;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -66,15 +57,15 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         this.searchTextField = new TextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
         this.searchTextField.setResponder(s ->
         {
-            this.updateSearchFieldSuggestion(s);
-            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(entry -> entry.getLabel().getString().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH))).collect(Collectors.toList()));
+            ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
+            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(entry -> entry.getFormattedLabel().getString().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH))).collect(Collectors.toList()));
             if(!s.isEmpty())
             {
                 this.list.setScrollAmount(0);
             }
         });
         this.children.add(this.searchTextField);
-        this.updateSearchFieldSuggestion(this.searchTextField.getText());
+        ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
 
         this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, DialogTexts.GUI_DONE, button ->
         {
@@ -85,8 +76,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
             this.minecraft.displayGuiScreen(this.parent);
         }));
 
-        this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_CANCEL, button ->
-                this.minecraft.displayGuiScreen(this.parent)));
+        this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_CANCEL, button -> this.minecraft.displayGuiScreen(this.parent)));
     }
 
     private void constructEntries()
@@ -101,7 +91,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
                 entries.add(new Entry((Enum) e));
             }
         }
-        entries.sort(Comparator.comparing(entry -> entry.getLabel().getString()));
+        entries.sort(Comparator.comparing(entry -> entry.getFormattedLabel().getString()));
         this.entries = ImmutableList.copyOf(entries);
     }
 
@@ -123,28 +113,6 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         if(this.activeTooltip != null)
         {
             this.renderTooltip(matrixStack, this.activeTooltip, mouseX, mouseY);
-        }
-    }
-
-    private void updateSearchFieldSuggestion(String value)
-    {
-        if(value.isEmpty())
-        {
-            this.searchTextField.setSuggestion(new TranslationTextComponent("configured.gui.search").getString());
-        }
-        else
-        {
-            Optional<Entry> optional = this.entries.stream().filter(info -> info.getLabel().getString().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH))).min(Comparator.comparing(entry -> entry.getLabel().getString()));
-            if(optional.isPresent())
-            {
-                int length = value.length();
-                String displayName = optional.get().getLabel().getString();
-                this.searchTextField.setSuggestion(displayName.substring(length));
-            }
-            else
-            {
-                this.searchTextField.setSuggestion("");
-            }
         }
     }
 
@@ -175,7 +143,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         }
     }
 
-    public class Entry extends ExtendedList.AbstractListEntry<Entry>
+    public class Entry extends ExtendedList.AbstractListEntry<Entry> implements ILabelProvider
     {
         private final Enum enumValue;
         private StringTextComponent label;
@@ -191,7 +159,13 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
             return this.enumValue;
         }
 
-        public StringTextComponent getLabel()
+        @Override
+        public String getLabel()
+        {
+            return this.label.getUnformattedComponentText();
+        }
+
+        public StringTextComponent getFormattedLabel()
         {
             return this.label;
         }
