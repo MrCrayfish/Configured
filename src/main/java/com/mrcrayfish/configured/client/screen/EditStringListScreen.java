@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class EditStringListScreen extends Screen
+public class EditStringListScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final List<StringHolder> values = new ArrayList<>();
@@ -74,6 +74,12 @@ public class EditStringListScreen extends Screen
         this.list.render(matrixStack, mouseX, mouseY, partialTicks);
         drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 14, 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public ResourceLocation getBackgroundTexture()
+    {
+        return this.background;
     }
 
     @OnlyIn(Dist.CLIENT)

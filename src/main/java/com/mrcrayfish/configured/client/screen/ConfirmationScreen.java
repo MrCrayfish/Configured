@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * <p>
  * Author: MrCrayfish
  */
-public class ConfirmationScreen extends Screen
+public class ConfirmationScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final ITextComponent message;
@@ -67,20 +67,9 @@ public class ConfirmationScreen extends Screen
     }
 
     @Override
-    public void renderDirtBackground(int vOffset)
+    public ResourceLocation getBackgroundTexture()
     {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder builder = tessellator.getBuffer();
-        this.minecraft.getTextureManager().bindTexture(this.background);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        float size = 32.0F;
-        builder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-        builder.pos(0.0D, this.height, 0.0D).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        builder.pos(this.width, this.height, 0.0D).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        builder.pos(this.width, 0.0D, 0.0D).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
-        builder.pos(0.0D, 0.0D, 0.0D).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
-        tessellator.draw();
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
+        return this.background;
     }
 
     /**

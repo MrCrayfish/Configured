@@ -16,14 +16,7 @@ public class IconButton extends Button
 {
     public static final ResourceLocation ICONS = new ResourceLocation("configured:textures/gui/icons.png");
 
-    private int u, v;
-
-    public IconButton(int x, int y, int width, int height, int u, int v, IPressable pressedAction)
-    {
-        super(x, y, width, height, StringTextComponent.EMPTY, pressedAction);
-        this.u = u;
-        this.v = v;
-    }
+    private final int u, v;
 
     public IconButton(int x, int y, int width, int height, int u, int v, IPressable pressedAction, Button.ITooltip onTooltip)
     {

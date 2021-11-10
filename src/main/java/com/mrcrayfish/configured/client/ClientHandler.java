@@ -134,6 +134,18 @@ public class ClientHandler
         }
     }
 
+    /**
+     * Linked via ASM. Do not delete!
+     */
+    @SuppressWarnings("unused")
+    public static void updateScreenTexture(Screen screen)
+    {
+        if(screen instanceof IBackgroundTexture)
+        {
+            Minecraft.getInstance().getTextureManager().bindTexture(((IBackgroundTexture) screen).getBackgroundTexture());
+        }
+    }
+
     @SubscribeEvent
     public static void onKeyPress(InputEvent.KeyInputEvent event)
     {

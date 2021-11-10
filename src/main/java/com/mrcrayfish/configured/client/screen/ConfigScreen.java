@@ -2,15 +2,13 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
-import com.electronwill.nightconfig.core.file.FileConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
-import com.mrcrayfish.configured.util.ConfigHelper;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -21,9 +19,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
@@ -37,12 +32,9 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -60,7 +52,7 @@ import java.util.stream.Collectors;
  * Author: MrCrayfish
  */
 @OnlyIn(Dist.CLIENT)
-public class ConfigScreen extends Screen
+public class ConfigScreen extends Screen implements IBackgroundTexture
 {
     public static final ResourceLocation LOGO_TEXTURE = new ResourceLocation("configured", "textures/gui/logo.png");
 
@@ -82,19 +74,19 @@ public class ConfigScreen extends Screen
     };
 
     protected final Screen parent;
-    private final String displayName;
+    protected final String displayName;
     @Nullable
-    private final ConfigFileEntry configFileEntry;
+    protected final ConfigFileEntry configFileEntry;
     protected final ResourceLocation background;
-    private final boolean rootMenu;
-    private final boolean configFileMenu;
-    private ModConfig config;
-    private EntryList list;
+    protected final boolean rootMenu;
+    protected final boolean configFileMenu;
+    protected ModConfig config;
+    protected EntryList list;
     protected List<Entry> entries;
-    private ConfigTextFieldWidget activeTextField;
-    private ConfigTextFieldWidget searchTextField;
-    private Button restoreButton;
-    private List<IReorderingProcessor> activeTooltip;
+    protected ConfigTextFieldWidget activeTextField;
+    protected ConfigTextFieldWidget searchTextField;
+    protected Button restoreButton;
+    protected List<IReorderingProcessor> activeTooltip;
 
     protected ConfigScreen(Screen parent, String displayName, ResourceLocation background, @Nullable ConfigFileEntry configFileEntry, boolean rootMenu, boolean configFileMenu)
     {
@@ -197,71 +189,50 @@ public class ConfigScreen extends Screen
         this.constructEntries();
 
         this.list = new EntryList(this.entries);
-        this.list.func_244605_b(this.minecraft.world == null);
+        this.list.func_244605_b(!isPlayingGame());
         this.children.add(this.list);
 
         this.searchTextField = new ConfigTextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
-        this.searchTextField.setResponder(s -> {
-            this.updateSearchField(s);
-            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchPredicate(s)).collect(Collectors.toList()));
+        this.searchTextField.setResponder(s ->
+        {
+            this.updateSearchFieldSuggestion(s);
+            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(this.getSearchFilter(s)).collect(Collectors.toList()));
             if(!s.isEmpty())
             {
                 this.list.setScrollAmount(0);
             }
         });
         this.children.add(this.searchTextField);
-        this.updateSearchField(this.searchTextField.getText());
+        this.updateSearchFieldSuggestion(this.searchTextField.getText());
 
         if(this.rootMenu)
         {
             this.restoreButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) ->
             {
-                if(this.config == null)
-                    return;
-                ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
+                if(this.config != null)
                 {
-                    if(!result || this.config == null)
-                        return;
-                    // Resets all config values
-                    ConfigHelper.gatherAllConfigValues(this.config).forEach(pair ->
-                    {
-                        ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
-                        ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                        configValue.set(valueSpec.getDefault());
-                    });
-                    this.updateRestoreDefaultButton();
-                });
-                confirmScreen.setBackground(background);
-                confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
-                confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
-                ConfigScreen.this.minecraft.displayGuiScreen(confirmScreen);
+                    this.showRestoreScreen();
+                }
             }));
-            this.updateRestoreDefaultButton();
+            this.updateRestoreButton();
+
             this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) ->
             {
                 this.minecraft.displayGuiScreen(this.parent);
 
-                if(this.config == null)
+                if(this.config == null || this.config.getType() != ModConfig.Type.SERVER)
                     return;
 
-                if(this.config.getConfigData() instanceof FileConfig)
+                if(!ConfigScreen.isPlayingGame())
                 {
-                    this.config.save();
-                }
-
-                if(this.config.getType() != ModConfig.Type.SERVER)
-                    return;
-
-                if(Minecraft.getInstance().world == null)
-                {
-                    // Unload server configs since they are per world
+                    // Unload server configs since still in main menu
                     this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
                     ConfigHelper.setConfigData(this.config, null);
                 }
                 else
                 {
                     ConfigHelper.sendConfigDataToServer(this.config);
-                    ConfigHelper.resetCache(this.config);
+                    ConfigHelper.resetCache(this.config); //TODO probably don't need
                 }
             }));
         }
@@ -274,7 +245,30 @@ public class ConfigScreen extends Screen
         }
     }
 
-    private void updateRestoreDefaultButton()
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void showRestoreScreen()
+    {
+        ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
+        {
+            if(!result || this.config == null)
+                return;
+            // Resets all config values
+            ConfigHelper.gatherAllConfigValues(this.config).forEach(pair ->
+            {
+                ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
+                ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
+                configValue.set(valueSpec.getDefault());
+            });
+            ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent());
+            this.updateRestoreButton();
+        });
+        confirmScreen.setBackground(background);
+        confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
+        confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
+        Minecraft.getInstance().displayGuiScreen(confirmScreen);
+    }
+
+    private void updateRestoreButton()
     {
         if(this.config != null && this.restoreButton != null)
         {
@@ -282,7 +276,7 @@ public class ConfigScreen extends Screen
         }
     }
 
-    protected Predicate<Entry> getSearchPredicate(String s)
+    protected Predicate<Entry> getSearchFilter(String s)
     {
         return entry -> !(entry instanceof TitleEntry) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
     }
@@ -341,6 +335,12 @@ public class ConfigScreen extends Screen
     public void setActiveTooltip(List<IReorderingProcessor> activeTooltip)
     {
         this.activeTooltip = activeTooltip;
+    }
+
+    @Override
+    public ResourceLocation getBackgroundTexture()
+    {
+        return this.background;
     }
 
     abstract class Entry extends AbstractOptionList.Entry<Entry>
@@ -417,6 +417,7 @@ public class ConfigScreen extends Screen
         protected final List<IGuiEventListener> eventListeners = Lists.newArrayList();
         protected Button resetButton;
 
+        @SuppressWarnings("unchecked")
         public ConfigEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(createLabelFromConfig(configValue, valueSpec));
@@ -426,13 +427,8 @@ public class ConfigScreen extends Screen
             {
                 this.tooltip = this.createToolTip(configValue, valueSpec);
             }
-            Button.ITooltip tooltip = (button, matrixStack, mouseX, mouseY) ->
-            {
-                if(button.active && button.isHovered())
-                {
-                    ConfigScreen.this.renderTooltip(matrixStack, ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.reset"), Math.max(ConfigScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                }
-            };
+            int maxTooltipWidth = Math.max(ConfigScreen.this.width / 2 - 43, 170);
+            Button.ITooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, new TranslationTextComponent("configured.gui.reset"), maxTooltipWidth);
             this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, onPress -> {
                 configValue.set(valueSpec.getDefault());
                 this.onResetValue();
@@ -575,19 +571,20 @@ public class ConfigScreen extends Screen
     {
         private ConfigTextFieldWidget textField;
 
+        @SuppressWarnings("unchecked")
         public NumberEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec, Function<String, Number> parser)
         {
             super(configValue, valueSpec);
-            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 44, 18, new StringTextComponent("YEP"));
+            this.textField = new ConfigTextFieldWidget(ConfigScreen.this.font, 0, 0, 44, 18, new StringTextComponent(this.label));
             this.textField.setText(configValue.get().toString());
-            this.textField.setResponder((s) -> {
+            this.textField.setResponder((s) ->
+            {
                 try
                 {
                     Number n = parser.apply(s);
                     if(valueSpec.test(n))
                     {
                         this.textField.setTextColor(14737632);
-                        //noinspection unchecked
                         configValue.set(n);
                     }
                     else
@@ -654,7 +651,8 @@ public class ConfigScreen extends Screen
         public BooleanEntry(ForgeConfigSpec.ConfigValue<Boolean> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(configValue.get()), (button) -> {
+            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(configValue.get()), button ->
+            {
                 boolean flag = !configValue.get();
                 configValue.set(flag);
                 button.setMessage(DialogTexts.optionsEnabled(configValue.get()));
@@ -687,9 +685,7 @@ public class ConfigScreen extends Screen
         {
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
-                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set));
-            });
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set)));
             this.eventListeners.add(this.button);
         }
 
@@ -712,9 +708,7 @@ public class ConfigScreen extends Screen
         {
             super(configValue, valueSpec);
             String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), (button) -> {
-                ConfigScreen.this.minecraft.displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec, background));
-            });
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec, background)));
             this.eventListeners.add(this.button);
         }
 
@@ -736,9 +730,7 @@ public class ConfigScreen extends Screen
         public EnumEntry(ForgeConfigSpec.ConfigValue<Enum> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), (button) -> {
-                ConfigScreen.this.minecraft.displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, new StringTextComponent(this.label), background, configValue));
-            });
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), button -> Minecraft.getInstance().displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, new StringTextComponent(this.label), background, configValue)));
             this.eventListeners.add(this.button);
         }
 
@@ -838,24 +830,12 @@ public class ConfigScreen extends Screen
         return Strings.join(words, " ").replaceAll("\\s++", " ");
     }
 
-    @Override
-    public void renderDirtBackground(int vOffset)
-    {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        this.minecraft.getTextureManager().bindTexture(this.background);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        float size = 32.0F;
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        buffer.pos(0.0, this.height, 0.0).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        buffer.pos(this.width, this.height, 0.0).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        buffer.pos(this.width, 0.0, 0.0).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
-        buffer.pos(0.0, 0.0, 0.0).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
-        tessellator.draw();
-        MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
-    }
-
-    private void updateSearchField(String value)
+    /**
+     * Updates the search field suggestion text. Suggestions are based on the labels of each entry.
+     *
+     * @param value the text currently in the search field
+     */
+    private void updateSearchFieldSuggestion(String value)
     {
         if(value.isEmpty())
         {
@@ -863,9 +843,7 @@ public class ConfigScreen extends Screen
         }
         else
         {
-            Optional<Entry> optional = this.entries.stream().filter(info -> {
-                return info.getLabel().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH));
-            }).min(Comparator.comparing(Entry::getLabel));
+            Optional<Entry> optional = this.entries.stream().filter(info -> info.getLabel().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH))).min(Comparator.comparing(Entry::getLabel));
             if(optional.isPresent())
             {
                 int length = value.length();
@@ -883,6 +861,11 @@ public class ConfigScreen extends Screen
     public boolean shouldCloseOnEsc()
     {
         return this.config == null || this.config.getType() != ModConfig.Type.SERVER;
+    }
+
+    public static boolean isPlayingGame()
+    {
+        return Minecraft.getInstance().player != null;
     }
 
     public static class ConfigFileEntry

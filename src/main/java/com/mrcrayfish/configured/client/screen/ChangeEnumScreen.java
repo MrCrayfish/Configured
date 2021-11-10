@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class ChangeEnumScreen extends Screen
+public class ChangeEnumScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final ForgeConfigSpec.ConfigValue<Enum> configValue;
@@ -63,8 +63,9 @@ public class ChangeEnumScreen extends Screen
         this.children.add(this.list);
 
         this.searchTextField = new TextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
-        this.searchTextField.setResponder(s -> {
-            this.updateSearchField(s);
+        this.searchTextField.setResponder(s ->
+        {
+            this.updateSearchFieldSuggestion(s);
             this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(entry -> entry.getLabel().getString().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH))).collect(Collectors.toList()));
             if(!s.isEmpty())
             {
@@ -72,18 +73,19 @@ public class ChangeEnumScreen extends Screen
             }
         });
         this.children.add(this.searchTextField);
-        this.updateSearchField(this.searchTextField.getText());
+        this.updateSearchFieldSuggestion(this.searchTextField.getText());
 
-        this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) -> {
-            if(this.list.getSelected() != null) {
+        this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, DialogTexts.GUI_DONE, button ->
+        {
+            if(this.list.getSelected() != null)
+            {
                 this.configValue.set(this.list.getSelected().enumValue);
             }
             this.minecraft.displayGuiScreen(this.parent);
         }));
 
-        this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_CANCEL, (button) -> {
-            this.minecraft.displayGuiScreen(this.parent);
-        }));
+        this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_CANCEL, button ->
+                this.minecraft.displayGuiScreen(this.parent)));
     }
 
     private void constructEntries()
@@ -122,7 +124,7 @@ public class ChangeEnumScreen extends Screen
         }
     }
 
-    private void updateSearchField(String value)
+    private void updateSearchFieldSuggestion(String value)
     {
         if(value.isEmpty())
         {
@@ -130,9 +132,7 @@ public class ChangeEnumScreen extends Screen
         }
         else
         {
-            Optional<Entry> optional = this.entries.stream().filter(info -> {
-                return info.getLabel().getString().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH));
-            }).min(Comparator.comparing(entry -> entry.getLabel().getString()));
+            Optional<Entry> optional = this.entries.stream().filter(info -> info.getLabel().getString().toLowerCase(Locale.ENGLISH).startsWith(value.toLowerCase(Locale.ENGLISH))).min(Comparator.comparing(entry -> entry.getLabel().getString()));
             if(optional.isPresent())
             {
                 int length = value.length();
@@ -144,6 +144,12 @@ public class ChangeEnumScreen extends Screen
                 this.searchTextField.setSuggestion("");
             }
         }
+    }
+
+    @Override
+    public ResourceLocation getBackgroundTexture()
+    {
+        return this.background;
     }
 
     public class EnumList extends ExtendedList<Entry> implements IBackgroundTexture
@@ -180,7 +186,7 @@ public class ChangeEnumScreen extends Screen
 
         public Enum getEnumValue()
         {
-            return enumValue;
+            return this.enumValue;
         }
 
         public StringTextComponent getLabel()
@@ -201,22 +207,5 @@ public class ChangeEnumScreen extends Screen
             ChangeEnumScreen.this.list.setSelected(this);
             return true;
         }
-    }
-
-    @Override
-    public void renderDirtBackground(int vOffset)
-    {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        this.minecraft.getTextureManager().bindTexture(this.background);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        float size = 32.0F;
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        buffer.pos(0.0, this.height, 0.0).tex(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        buffer.pos(this.width, this.height, 0.0).tex(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        buffer.pos(this.width, 0.0, 0.0).tex(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
-        buffer.pos(0.0, 0.0, 0.0).tex(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
-        tessellator.draw();
-        MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.BackgroundDrawnEvent(this, new MatrixStack()));
     }
 }

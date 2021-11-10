@@ -7,6 +7,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.AnvilConverterException;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
@@ -55,10 +56,8 @@ public class WorldSelectionScreen extends ConfigScreen
         List<Entry> entries = new ArrayList<>();
         try
         {
-            SaveFormat saveFormat = this.minecraft.getSaveLoader();
-            saveFormat.getSaveList().forEach(worldSummary -> {
-                entries.add(new WorldEntry(worldSummary));
-            });
+            SaveFormat saveFormat = Minecraft.getInstance().getSaveLoader();
+            saveFormat.getSaveList().forEach(worldSummary -> entries.add(new WorldEntry(worldSummary)));
         }
         catch(AnvilConverterException e)
         {
@@ -84,7 +83,7 @@ public class WorldSelectionScreen extends ConfigScreen
         super.updateTooltip(mouseX, mouseY);
         if(ScreenUtil.isMouseWithin(this.width - 30, 15, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.server_config_info"), 200));
+            this.setActiveTooltip(Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.server_config_info"), 200));
         }
     }
 
@@ -136,7 +135,6 @@ public class WorldSelectionScreen extends ConfigScreen
             blit(matrixStack, left + 4, top, 22, 22, 0, 0, 64, 64, 64, 64);
             AbstractGui.drawString(matrixStack, WorldSelectionScreen.this.minecraft.fontRenderer, this.worldName, left + 32, top + 2, 0xFFFFFF);
             AbstractGui.drawString(matrixStack, WorldSelectionScreen.this.minecraft.fontRenderer, this.folderName, left + 32, top + 12, 0xFFFFFF);
-
             this.modifyButton.x = left + width - 51;
             this.modifyButton.y = top;
             this.modifyButton.render(matrixStack, mouseX, mouseY, partialTicks);

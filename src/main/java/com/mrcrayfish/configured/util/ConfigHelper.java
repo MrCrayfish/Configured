@@ -3,11 +3,9 @@ package com.mrcrayfish.configured.util;
 import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
-import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import net.minecraft.client.Minecraft;
@@ -23,7 +21,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,6 +84,12 @@ public class ConfigHelper
         });
     }
 
+    /**
+     * Since ModConfig#setConfigData is not visible, this is a helper method to reflectively call the method
+     *
+     * @param config     the config to update
+     * @param configData the new data for the config
+     */
     public static void setConfigData(ModConfig config, @Nullable CommentedConfig configData)
     {
         try
@@ -103,6 +106,12 @@ public class ConfigHelper
         }
     }
 
+    /**
+     * Gets the mod config for the given file name. Uses reflection to obtain the config map.
+     *
+     * @param fileName the file name of the config
+     * @return the mod config instance for the file name or null if it doesn't exist
+     */
     @Nullable
     public static ModConfig getModConfig(String fileName)
     {
@@ -110,6 +119,13 @@ public class ConfigHelper
         return configMap != null ? configMap.get(fileName) : null;
     }
 
+    /**
+     * A helper method to fire config event. Since Forge has hidden these calls (which is fine), the
+     * only way to call them is to call them is by using reflection.
+     *
+     * @param config the config to fire the event for
+     * @param event  the event
+     */
     public static void fireEvent(ModConfig config, ModConfig.ModConfigEvent event)
     {
         try
@@ -155,6 +171,10 @@ public class ConfigHelper
         }
     }
 
+    /**
+     * Resets the spec cache for the given mod config
+     * @param config
+     */
     public static void resetCache(ModConfig config)
     {
         gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
