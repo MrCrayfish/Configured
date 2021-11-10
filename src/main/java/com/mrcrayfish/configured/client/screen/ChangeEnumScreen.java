@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -100,6 +101,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
                 entries.add(new Entry((Enum) e));
             }
         }
+        entries.sort(Comparator.comparing(entry -> entry.getLabel().getString()));
         this.entries = ImmutableList.copyOf(entries);
     }
 
