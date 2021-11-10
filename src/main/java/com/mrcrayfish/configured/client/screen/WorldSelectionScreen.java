@@ -4,7 +4,7 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mrcrayfish.configured.client.util.ConfigUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.AnvilConverterException;
 import net.minecraft.client.gui.AbstractGui;
@@ -171,7 +171,7 @@ public class WorldSelectionScreen extends ConfigScreen
                 Path serverConfigPath = levelSave.resolveFilePath(SERVER_CONFIG_FOLDER);
                 FileUtils.getOrCreateDirectory(serverConfigPath, "serverconfig");
                 final CommentedFileConfig data = config.getHandler().reader(serverConfigPath).apply(config);
-                ConfigUtil.setConfigData(config, data);
+                ConfigHelper.setConfigData(config, data);
                 ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
                     WorldSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(parent, worldName, config, background));
                 });

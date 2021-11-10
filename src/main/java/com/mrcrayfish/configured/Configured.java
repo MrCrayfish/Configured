@@ -1,11 +1,13 @@
 package com.mrcrayfish.configured;
 
 import com.mrcrayfish.configured.client.ClientHandler;
+import com.mrcrayfish.configured.network.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLLoader;
@@ -29,11 +31,17 @@ public class Configured
             ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
             ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.customSpec, "custom_client.toml");
         }
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onConstructEvent);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
         ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
     }
 
-    private void onConstructEvent(FMLLoadCompleteEvent event)
+    private void onCommonSetup(FMLCommonSetupEvent event)
+    {
+        PacketHandler.registerPlayMessages();
+    }
+
+    private void onLoadComplete(FMLLoadCompleteEvent event)
     {
         if(FMLLoader.getDist() == Dist.CLIENT)
         {

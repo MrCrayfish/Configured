@@ -25,7 +25,7 @@ public class IconButton extends Button
         this.v = v;
     }
 
-    public IconButton(int x, int y, int width, int height, int u, int v, Button.ITooltip onTooltip, IPressable pressedAction)
+    public IconButton(int x, int y, int width, int height, int u, int v, IPressable pressedAction, Button.ITooltip onTooltip)
     {
         super(x, y, width, height, StringTextComponent.EMPTY, pressedAction, onTooltip);
         this.u = u;

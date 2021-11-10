@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
-import com.mrcrayfish.configured.client.util.ConfigUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -26,10 +27,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * Author: MrCrayfish
@@ -94,35 +93,27 @@ public class ModConfigSelectionScreen extends ConfigScreen
             super(createLabelFromModConfig(config).getString());
             this.config = config;
             this.title = createLabelFromModConfig(config);
-            this.allConfigValues = ConfigUtil.gatherAllConfigValues(config);
+            this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
             this.fileName = this.createTrimmedFileName(config.getFileName());
             this.modifyButton = this.createModifyButton(config);
-            if(config.getType() != ModConfig.Type.SERVER)
+            this.modifyButton.active = this.hasRequiredPermission();
+            if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
-                Button.ITooltip tooltip = (button, matrixStack, mouseX, mouseY) ->
+                this.restoreButton = new IconButton(0, 0, 20, 20, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) ->
                 {
-                    if(button.active && button.isHovered())
+                    if(button.isHovered())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, ModConfigSelectionScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.restore_defaults"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        if(this.hasRequiredPermission() && button.active)
+                        {
+                            ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.restore_defaults"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        }
+                        else if(!this.hasRequiredPermission())
+                        {
+                            ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        }
                     }
-                };
-                this.restoreButton = new IconButton(0, 0, 20, 20, 0, 0, tooltip, onPress -> {
-                    ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result -> {
-                        if(!result || this.allConfigValues == null) return;
-                        // Resets all config values
-                        this.allConfigValues.forEach(pair -> {
-                            ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
-                            ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                            configValue.set(valueSpec.getDefault());
-                        });
-                    });
-                    confirmScreen.setBackground(background);
-                    confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
-                    confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
-                    ModConfigSelectionScreen.this.minecraft.displayGuiScreen(confirmScreen);
-                    this.updateRestoreDefaultButton();
-                    config.save();
                 });
+                this.restoreButton.active = this.hasRequiredPermission();
                 this.updateRestoreDefaultButton();
             }
             else
@@ -131,44 +122,89 @@ public class ModConfigSelectionScreen extends ConfigScreen
             }
         }
 
+        private void showRestoreScreen()
+        {
+            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
+            {
+                if(!result || this.allConfigValues == null)
+                    return;
+                // Resets all config values
+                this.allConfigValues.forEach(pair ->
+                {
+                    ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
+                    ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
+                    configValue.set(valueSpec.getDefault());
+                });
+                this.updateRestoreDefaultButton();
+                ConfigHelper.sendConfigDataToServer(this.config);
+            });
+            confirmScreen.setBackground(background);
+            confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
+            confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
+            Minecraft.getInstance().displayGuiScreen(confirmScreen);
+        }
+
+        private boolean hasRequiredPermission()
+        {
+            if(this.config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().player != null)
+            {
+                return Minecraft.getInstance().player.hasPermissionLevel(2);
+            }
+            return true;
+        }
+
         private ITextComponent createTrimmedFileName(String fileName)
         {
             ITextComponent trimmedFileName = new StringTextComponent(fileName).mergeStyle(TextFormatting.GRAY);
-            if(ModConfigSelectionScreen.this.minecraft.fontRenderer.getStringWidth(fileName) > 160)
+            if(Minecraft.getInstance().fontRenderer.getStringWidth(fileName) > 160)
             {
-                trimmedFileName = new StringTextComponent(ModConfigSelectionScreen.this.minecraft.fontRenderer.func_238412_a_(fileName, 150) + "...").mergeStyle(TextFormatting.GRAY);
+                trimmedFileName = new StringTextComponent(Minecraft.getInstance().fontRenderer.func_238412_a_(fileName, 150) + "...").mergeStyle(TextFormatting.GRAY);
             }
             return trimmedFileName;
         }
 
         /**
-         * Creates and returns a new modify button instance. Since server configurations are handled different, the label and click handler
-         * of this button is different if the given ModConfig instance is of the server type. It's just better to reuse
+         * Creates and returns a new modify button instance. Since server configurations are handled
+         * different, the label and click handler of this button is different if the given ModConfig
+         * instance is of the server type.
          * @param config
          * @return
          */
         private Button createModifyButton(ModConfig config)
         {
-            boolean serverConfig = config.getType() == ModConfig.Type.SERVER;
+            boolean serverConfig = config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().world == null;
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            Button button = new Button(0, 0, serverConfig ? 72 : 50, 20, new TranslationTextComponent(langKey), onPress -> {
-                if(serverConfig) {
-                    ModConfigSelectionScreen.this.minecraft.displayGuiScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
-                } else {
-                    ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
-                        ModConfigSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, container.getModInfo().getDisplayName(), config, ModConfigSelectionScreen.this.background));
+            return new Button(0, 0, serverConfig ? 70 : 50, 20, new TranslationTextComponent(langKey), onPress ->
+            {
+                if(!this.hasRequiredPermission())
+                    return;
+
+                if(serverConfig)
+                {
+                    Minecraft.getInstance().displayGuiScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
+                }
+                else
+                {
+                    ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
+                    {
+                        Minecraft.getInstance().displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, container.getModInfo().getDisplayName(), config, ModConfigSelectionScreen.this.background));
                     });
                 }
+            }, (button, matrixStack, mouseX, mouseY) ->
+            {
+                if(button.isHovered() && !this.hasRequiredPermission())
+                {
+                    ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                }
             });
-            return button;
         }
 
         @Override
         public void render(MatrixStack matrixStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
-            AbstractGui.drawString(matrixStack, ModConfigSelectionScreen.this.minecraft.fontRenderer, this.title, left + 28, top + 2, 0xFFFFFF);
-            AbstractGui.drawString(matrixStack, ModConfigSelectionScreen.this.minecraft.fontRenderer, this.fileName, left + 28, top + 12, 0xFFFFFF);
-            ModConfigSelectionScreen.this.minecraft.getTextureManager().bindTexture(IconButton.ICONS);
+            AbstractGui.drawString(matrixStack, Minecraft.getInstance().fontRenderer, this.title, left + 28, top + 2, 0xFFFFFF);
+            AbstractGui.drawString(matrixStack, Minecraft.getInstance().fontRenderer, this.fileName, left + 28, top + 12, 0xFFFFFF);
+            Minecraft.getInstance().getTextureManager().bindTexture(IconButton.ICONS);
             float brightness = true ? 1.0F : 0.5F;
             RenderSystem.color4f(brightness, brightness, brightness, 1.0F);
             blit(matrixStack, left + 4, top, 18, 22, this.getIconU(), 11, 9, 11, 32, 32);
@@ -215,9 +251,9 @@ public class ModConfigSelectionScreen extends ConfigScreen
          */
         private void updateRestoreDefaultButton()
         {
-            if(this.config != null && this.restoreButton != null)
+            if(this.config != null && this.restoreButton != null && this.hasRequiredPermission())
             {
-                this.restoreButton.active = ConfigUtil.isModified(this.config);
+                this.restoreButton.active = ConfigHelper.isModified(this.config);
             }
         }
     }

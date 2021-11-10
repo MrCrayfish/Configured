@@ -155,10 +155,10 @@ public class EditStringListScreen extends Screen
                     EditStringListScreen.this.renderTooltip(matrixStack, EditStringListScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
-            this.deleteButton = new IconButton(0, 0, 20, 20, 11, 0, tooltip, onPress -> {
+            this.deleteButton = new IconButton(0, 0, 20, 20, 11, 0, onPress -> {
                 EditStringListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
-            });
+            }, tooltip);
         }
 
         @Override

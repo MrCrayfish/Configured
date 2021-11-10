@@ -3,7 +3,6 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mrcrayfish.configured.client.util.ConfigUtil;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -23,7 +22,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.config.ModConfig;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;

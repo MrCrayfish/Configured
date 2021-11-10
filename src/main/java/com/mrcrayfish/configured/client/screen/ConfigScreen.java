@@ -2,16 +2,17 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.electronwill.nightconfig.core.file.FileConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
-import com.mrcrayfish.configured.client.util.ConfigUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import joptsimple.internal.Strings;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.FontRenderer;
@@ -26,7 +27,6 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
@@ -41,7 +41,6 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -215,39 +214,54 @@ public class ConfigScreen extends Screen
 
         if(this.rootMenu)
         {
-            this.restoreButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) -> {
-                if(this.config == null) return;
-                ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result -> {
+            this.restoreButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) ->
+            {
+                if(this.config == null)
+                    return;
+                ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
+                {
                     if(!result || this.config == null)
                         return;
                     // Resets all config values
-                    ConfigUtil.gatherAllConfigValues(this.config).forEach(pair -> {
+                    ConfigHelper.gatherAllConfigValues(this.config).forEach(pair ->
+                    {
                         ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
                         ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
                         configValue.set(valueSpec.getDefault());
                     });
+                    this.updateRestoreDefaultButton();
                 });
                 confirmScreen.setBackground(background);
                 confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
                 confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
                 ConfigScreen.this.minecraft.displayGuiScreen(confirmScreen);
-                this.updateRestoreDefaultButton();
-                this.config.save();
             }));
             this.updateRestoreDefaultButton();
             this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) ->
             {
                 this.minecraft.displayGuiScreen(this.parent);
-                if(this.config != null)
+
+                if(this.config == null)
+                    return;
+
+                if(this.config.getConfigData() instanceof FileConfig)
                 {
                     this.config.save();
+                }
 
+                if(this.config.getType() != ModConfig.Type.SERVER)
+                    return;
+
+                if(Minecraft.getInstance().world == null)
+                {
                     // Unload server configs since they are per world
-                    if(this.config.getType() == ModConfig.Type.SERVER)
-                    {
-                        this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
-                        ConfigUtil.setConfigData(this.config, null);
-                    }
+                    this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
+                    ConfigHelper.setConfigData(this.config, null);
+                }
+                else
+                {
+                    ConfigHelper.sendConfigDataToServer(this.config);
+                    ConfigHelper.resetCache(this.config);
                 }
             }));
         }
@@ -264,7 +278,7 @@ public class ConfigScreen extends Screen
     {
         if(this.config != null && this.restoreButton != null)
         {
-            this.restoreButton.active = ConfigUtil.isModified(this.config);
+            this.restoreButton.active = ConfigHelper.isModified(this.config);
         }
     }
 
@@ -419,10 +433,10 @@ public class ConfigScreen extends Screen
                     ConfigScreen.this.renderTooltip(matrixStack, ConfigScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.reset"), Math.max(ConfigScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
-            this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, tooltip, onPress -> {
+            this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, onPress -> {
                 configValue.set(valueSpec.getDefault());
                 this.onResetValue();
-            });
+            }, tooltip);
             this.eventListeners.add(this.resetButton);
         }
 
