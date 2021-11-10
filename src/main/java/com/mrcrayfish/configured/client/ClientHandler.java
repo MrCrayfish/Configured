@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.client;
 
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
  * Author: MrCrayfish
  */
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(modid = "configured", value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
 public class ClientHandler
 {
     public static final KeyBinding KEY_OPEN_MOD_LIST = new KeyBinding("key.configured.open_mod_list", -1, "key.categories.configured");

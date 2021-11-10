@@ -19,10 +19,10 @@ import org.apache.logging.log4j.Logger;
 /**
  * Author: MrCrayfish
  */
-@Mod(value = "configured")
+@Mod(value = Reference.MOD_ID)
 public class Configured
 {
-    public static final Logger LOGGER = LogManager.getLogger("configured");
+    public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
 
     public Configured()
     {

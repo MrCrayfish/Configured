@@ -1,5 +1,6 @@
 package com.mrcrayfish.configured.network;
 
+import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.network.message.IMessage;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import net.minecraft.util.ResourceLocation;
@@ -12,7 +13,7 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 public class PacketHandler
 {
     private static final String PROTOCOL_VERSION = "1";
-    private static final SimpleChannel PLAY_CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation("configured", "play"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
+    private static final SimpleChannel PLAY_CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(Reference.MOD_ID, "play"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     private static int nextId = 0;
 
     public static void registerPlayMessages()

@@ -1,7 +1,5 @@
 package com.mrcrayfish.configured;
 
-import net.minecraft.potion.EffectType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;

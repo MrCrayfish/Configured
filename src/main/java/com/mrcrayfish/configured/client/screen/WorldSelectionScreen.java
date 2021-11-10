@@ -4,8 +4,8 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mrcrayfish.configured.util.ConfigHelper;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.AnvilConverterException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -32,13 +32,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Author: MrCrayfish
  */
-public class WorldSelectionScreen extends ConfigScreen
+public class WorldSelectionScreen extends ListMenuScreen
 {
     private static final FolderName SERVER_CONFIG_FOLDER = new FolderName("serverconfig");
 
@@ -46,14 +45,13 @@ public class WorldSelectionScreen extends ConfigScreen
 
     public WorldSelectionScreen(Screen parent, ResourceLocation background, ModConfig config, ITextComponent title)
     {
-        super(parent, new TranslationTextComponent("configured.gui.edit_world_config", title).getString(), background, null, false, true);
+        super(parent, new TranslationTextComponent("configured.gui.edit_world_config", title), background, 30);
         this.config = config;
     }
 
     @Override
-    protected void constructEntries()
+    protected void constructEntries(List<Entry> entries)
     {
-        List<Entry> entries = new ArrayList<>();
         try
         {
             SaveFormat saveFormat = Minecraft.getInstance().getSaveLoader();
@@ -63,7 +61,6 @@ public class WorldSelectionScreen extends ConfigScreen
         {
             e.printStackTrace();
         }
-        this.entries = ImmutableList.copyOf(entries);
     }
 
     @Override
@@ -171,7 +168,7 @@ public class WorldSelectionScreen extends ConfigScreen
                 final CommentedFileConfig data = config.getHandler().reader(serverConfigPath).apply(config);
                 ConfigHelper.setConfigData(config, data);
                 ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
-                    WorldSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(parent, worldName, config, background));
+                    WorldSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(parent, new StringTextComponent(worldName), config, background));
                 });
             }
             catch(IOException e)

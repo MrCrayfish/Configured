@@ -104,7 +104,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         this.searchTextField.render(matrixStack, mouseX, mouseY, partialTicks);
         drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.minecraft.getTextureManager().bindTexture(ConfigScreen.LOGO_TEXTURE);
+        this.minecraft.getTextureManager().bindTexture(ListMenuScreen.CONFIGURED_LOGO);
         blit(matrixStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {

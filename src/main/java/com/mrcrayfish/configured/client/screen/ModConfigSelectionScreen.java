@@ -25,7 +25,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,20 +32,19 @@ import java.util.Set;
 /**
  * Author: MrCrayfish
  */
-public class ModConfigSelectionScreen extends ConfigScreen
+public class ModConfigSelectionScreen extends ListMenuScreen
 {
     private final Map<ModConfig.Type, Set<ModConfig>> configMap;
 
     public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<ModConfig>> configMap)
     {
-        super(parent, displayName, background, null, false, true);
+        super(parent, new StringTextComponent(displayName), background, 30);
         this.configMap = configMap;
     }
 
     @Override
-    protected void constructEntries()
+    protected void constructEntries(List<Entry> entries)
     {
-        List<Entry> entries = new ArrayList<>();
         Set<ModConfig> clientConfigs = this.configMap.get(ModConfig.Type.CLIENT);
         if(clientConfigs != null)
         {
@@ -74,7 +72,13 @@ public class ModConfigSelectionScreen extends ConfigScreen
                 entries.add(new FileEntry(config));
             });
         }
-        this.entries = ImmutableList.copyOf(entries);
+    }
+
+    @Override
+    protected void init()
+    {
+        super.init();
+        this.addButton(new Button(this.width / 2 - 75, this.height - 29, 150, 20, DialogTexts.GUI_BACK, button -> this.minecraft.displayGuiScreen(this.parent)));
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -187,7 +191,7 @@ public class ModConfigSelectionScreen extends ConfigScreen
                 {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
                     {
-                        Minecraft.getInstance().displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, container.getModInfo().getDisplayName(), config, ModConfigSelectionScreen.this.background));
+                        Minecraft.getInstance().displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, new StringTextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
                     });
                 }
             }, (button, matrixStack, mouseX, mouseY) ->

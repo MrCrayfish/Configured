@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured.client.util;
 
-import com.mrcrayfish.configured.client.screen.ConfigScreen;
 import com.mrcrayfish.configured.client.screen.ILabelProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
