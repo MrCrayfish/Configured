@@ -96,31 +96,31 @@ public class ConfigScreen extends ListMenuScreen
                 Object value = ((ValueEntry) c).getHolder().getValue();
                 if(value instanceof Boolean)
                 {
-                    entries.add(new BooleanItem((ValueHolder<Boolean>) configValueEntry.getHolder()));
+                    configEntries.add(new BooleanItem((ValueHolder<Boolean>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Integer)
                 {
-                    entries.add(new IntegerItem((ValueHolder<Integer>) configValueEntry.getHolder()));
+                    configEntries.add(new IntegerItem((ValueHolder<Integer>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Double)
                 {
-                    entries.add(new DoubleItem((ValueHolder<Double>) configValueEntry.getHolder()));
+                    configEntries.add(new DoubleItem((ValueHolder<Double>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Long)
                 {
-                    entries.add(new LongItem((ValueHolder<Long>) configValueEntry.getHolder()));
+                    configEntries.add(new LongItem((ValueHolder<Long>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Enum)
                 {
-                    entries.add(new EnumItem((ValueHolder<Enum<?>>) configValueEntry.getHolder()));
+                    configEntries.add(new EnumItem((ValueHolder<Enum<?>>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof String)
                 {
-                    entries.add(new StringItem((ValueHolder<String>) configValueEntry.getHolder()));
+                    configEntries.add(new StringItem((ValueHolder<String>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof List<?>)
                 {
-                    entries.add(new ListStringItem((ListValueHolder) configValueEntry.getHolder()));
+                    configEntries.add(new ListStringItem((ListValueHolder) configValueEntry.getHolder()));
                 }
                 else
                 {
