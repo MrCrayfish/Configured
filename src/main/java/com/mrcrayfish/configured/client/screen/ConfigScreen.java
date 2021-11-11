@@ -237,7 +237,7 @@ public class ConfigScreen extends ListMenuScreen
             return true;
         });
         confirmScreen.setBackground(background);
-        confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
+        confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.reset_all").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
         confirmScreen.setNegativeText(DialogTexts.GUI_CANCEL);
         Minecraft.getInstance().displayGuiScreen(confirmScreen);
     }
