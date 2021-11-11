@@ -9,6 +9,7 @@ import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.AnvilConverterException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
@@ -61,6 +62,13 @@ public class WorldSelectionScreen extends ListMenuScreen
         {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void init()
+    {
+        super.init();
+        this.addButton(new Button(this.width / 2 - 75, this.height - 29, 150, 20, DialogTexts.GUI_BACK, button -> this.minecraft.displayGuiScreen(this.parent)));
     }
 
     @Override
