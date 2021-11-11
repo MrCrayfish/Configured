@@ -187,7 +187,10 @@ public class ConfigHelper
         {
             if(entry instanceof ConfigScreen.FolderEntry)
             {
-                return isModified((ConfigScreen.FolderEntry) entry);
+                if(isModified((ConfigScreen.FolderEntry) entry))
+                {
+                    return true;
+                }
             }
             else if(entry instanceof ConfigScreen.ValueEntry)
             {
@@ -206,7 +209,10 @@ public class ConfigHelper
         {
             if(entry instanceof ConfigScreen.FolderEntry)
             {
-                return isChanged((ConfigScreen.FolderEntry) entry);
+                if(isChanged((ConfigScreen.FolderEntry) entry))
+                {
+                    return true;
+                }
             }
             else if(entry instanceof ConfigScreen.ValueEntry)
             {
