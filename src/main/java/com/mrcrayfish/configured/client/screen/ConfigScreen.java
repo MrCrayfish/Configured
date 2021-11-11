@@ -74,7 +74,7 @@ public class ConfigScreen extends ListMenuScreen
 
     public ConfigScreen(Screen parent, ITextComponent title, ModConfig config, ResourceLocation background)
     {
-        this(parent, title, background, new FolderEntry(config.getSpec().getValues(), config.getSpec(), true));
+        this(parent, title, background, new FolderEntry("Root", config.getSpec().getValues(), config.getSpec(), true));
         this.config = config;
     }
 
@@ -86,7 +86,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             if(c instanceof FolderEntry)
             {
-                configEntries.add(new FolderItem("Test", (FolderEntry) c));
+                configEntries.add(new FolderItem((FolderEntry) c));
             }
             else if(c instanceof ValueEntry)
             {
@@ -263,9 +263,9 @@ public class ConfigScreen extends ListMenuScreen
     {
         private final Button button;
 
-        public FolderItem(String label, FolderEntry folderEntry)
+        public FolderItem(FolderEntry folderEntry)
         {
-            super(new StringTextComponent(createLabel(label)));
+            super(new StringTextComponent(createLabel(folderEntry.label)));
             this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
                 ITextComponent newTitle = ConfigScreen.this.title.copyRaw().appendString(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
@@ -667,13 +667,15 @@ public class ConfigScreen extends ListMenuScreen
 
     public static class FolderEntry implements IEntry
     {
+        private final String label;
         private final UnmodifiableConfig config;
         private final ForgeConfigSpec spec;
         private final boolean root;
         private List<IEntry> entries;
 
-        public FolderEntry(UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
+        public FolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
         {
+            this.label = label;
             this.config = config;
             this.spec = spec;
             this.root = root;
@@ -689,7 +691,7 @@ public class ConfigScreen extends ListMenuScreen
                 {
                     if(o instanceof UnmodifiableConfig)
                     {
-                        builder.add(new FolderEntry((UnmodifiableConfig) o, this.spec, false));
+                        builder.add(new FolderEntry(s, (UnmodifiableConfig) o, this.spec, false));
                     }
                     else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
                     {
