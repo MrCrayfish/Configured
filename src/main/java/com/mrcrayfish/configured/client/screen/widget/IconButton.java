@@ -21,6 +21,11 @@ public class IconButton extends Button
     private final ITextComponent label;
     private final int u, v;
 
+    public IconButton(int x, int y, int u, int v, int width, ITextComponent label, IPressable onPress)
+    {
+        this(x, y, u, v, width, label, onPress, (b, ms, mx, my) -> {});
+    }
+
     public IconButton(int x, int y, int u, int v, IPressable onPress, Button.ITooltip onTooltip)
     {
         this(x, y, u, v, 20, StringTextComponent.EMPTY, onPress, onTooltip);

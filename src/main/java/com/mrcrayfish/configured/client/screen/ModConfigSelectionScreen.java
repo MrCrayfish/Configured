@@ -190,7 +190,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             boolean serverConfig = config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().world == null;
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            return new Button(0, 0, serverConfig ? 70 : 50, 20, new TranslationTextComponent(langKey), onPress ->
+            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslationTextComponent(langKey), onPress ->
             {
                 if(ConfigScreen.isPlayingGame() && this.config.getType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
                     return;
@@ -233,7 +233,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             blit(matrixStack, left + 4, top, 18, 22, this.getIconU(), 11, 9, 11, 64, 64);
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-            this.modifyButton.x = left + width - 73;
+            this.modifyButton.x = left + width - 83;
             this.modifyButton.y = top;
             this.modifyButton.render(matrixStack, mouseX, mouseY, partialTicks);
 

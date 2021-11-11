@@ -139,7 +139,7 @@ public class ConfigScreen extends ListMenuScreen
 
         if(this.folderEntry.isRoot())
         {
-            this.saveButton = this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.save"), (button) ->
+            this.saveButton = this.addButton(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslationTextComponent("configured.gui.save"), (button) ->
             {
                 if(this.config != null)
                 {
@@ -147,7 +147,7 @@ public class ConfigScreen extends ListMenuScreen
                 }
                 this.minecraft.displayGuiScreen(this.parent);
             }));
-            this.restoreButton = this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.reset_all"), (button) ->
+            this.restoreButton = this.addButton(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslationTextComponent("configured.gui.reset_all"), (button) ->
             {
                 if(this.folderEntry.isRoot())
                 {
