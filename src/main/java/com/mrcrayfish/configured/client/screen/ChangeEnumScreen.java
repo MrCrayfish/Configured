@@ -15,7 +15,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.ArrayList;
 import java.util.Collection;
