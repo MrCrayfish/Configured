@@ -329,7 +329,7 @@ public class ConfigScreen extends ListMenuScreen
             }
             int maxTooltipWidth = Math.max(ConfigScreen.this.width / 2 - 43, 170);
             Button.ITooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, new TranslationTextComponent("configured.gui.reset"), maxTooltipWidth);
-            this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, onPress -> {
+            this.resetButton = new IconButton(0, 0, 0, 0, onPress -> {
                 this.holder.restoreDefaultValue();
                 this.onResetValue();
             }, tooltip);

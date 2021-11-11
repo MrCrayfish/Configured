@@ -104,7 +104,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
             if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
-                this.restoreButton = new IconButton(0, 0, 20, 20, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) ->
+                this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) ->
                 {
                     if(button.isHovered())
                     {
@@ -230,7 +230,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             Minecraft.getInstance().getTextureManager().bindTexture(IconButton.ICONS);
             float brightness = true ? 1.0F : 0.5F;
             RenderSystem.color4f(brightness, brightness, brightness, 1.0F);
-            blit(matrixStack, left + 4, top, 18, 22, this.getIconU(), 11, 9, 11, 32, 32);
+            blit(matrixStack, left + 4, top, 18, 22, this.getIconU(), 11, 9, 11, 64, 64);
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
             this.modifyButton.x = left + width - 73;
