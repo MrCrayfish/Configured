@@ -41,7 +41,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected final ResourceLocation background;
     protected final int itemHeight;
     protected EntryList list;
-    protected List<Entry> entries;
+    protected List<Item> entries;
     protected List<IReorderingProcessor> activeTooltip;
     protected FocusedTextFieldWidget activeTextField;
     protected FocusedTextFieldWidget searchTextField;
@@ -58,7 +58,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected void init()
     {
         // Constructs a list of entries and adds them to an option list
-        List<Entry> entries = new ArrayList<>();
+        List<Item> entries = new ArrayList<>();
         this.constructEntries(entries);
         this.entries = ImmutableList.copyOf(entries); //Should this still be immutable?
         this.list = new EntryList(this.entries);
@@ -70,8 +70,8 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.searchTextField.setResponder(s ->
         {
             ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
-            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(entry -> {
-                return !(entry instanceof IIgnoreSearch) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(item -> {
+                return !(item instanceof IIgnoreSearch) && item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
             }).collect(Collectors.toList()));
             if(!s.isEmpty())
             {
@@ -82,7 +82,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
     }
 
-    protected abstract void constructEntries(List<Entry> entries);
+    protected abstract void constructEntries(List<Item> entries);
 
     @Override
     public ResourceLocation getBackgroundTexture()
@@ -169,9 +169,9 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         return Minecraft.getInstance().player != null;
     }
 
-    protected class EntryList extends AbstractOptionList<Entry> implements IBackgroundTexture
+    protected class EntryList extends AbstractOptionList<Item> implements IBackgroundTexture
     {
-        public EntryList(List<ListMenuScreen.Entry> entries)
+        public EntryList(List<Item> entries)
         {
             super(ListMenuScreen.this.minecraft, ListMenuScreen.this.width, ListMenuScreen.this.height, 50, ListMenuScreen.this.height - 36, ListMenuScreen.this.itemHeight);
             entries.forEach(this::addEntry);
@@ -197,7 +197,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         // Overridden simply to make it public
         @Override
-        public void replaceEntries(Collection<ListMenuScreen.Entry> entries)
+        public void replaceEntries(Collection<Item> entries)
         {
             super.replaceEntries(entries);
         }
@@ -213,15 +213,15 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         {
             if(this.isMouseOver(mouseX, mouseY) && mouseX < ListMenuScreen.this.list.getRowLeft() + ListMenuScreen.this.list.getRowWidth() - 67)
             {
-                ListMenuScreen.Entry entry = this.getEntryAtPosition(mouseX, mouseY);
-                if(entry != null)
+                Item item = this.getEntryAtPosition(mouseX, mouseY);
+                if(item != null)
                 {
-                    ListMenuScreen.this.setActiveTooltip(entry.tooltip);
+                    ListMenuScreen.this.setActiveTooltip(item.tooltip);
                 }
             }
-            this.getEventListeners().forEach(entry ->
+            this.getEventListeners().forEach(item ->
             {
-                entry.getEventListeners().forEach(o ->
+                item.getEventListeners().forEach(o ->
                 {
                     if(o instanceof Button)
                     {
@@ -232,17 +232,17 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
-    protected abstract class Entry extends AbstractOptionList.Entry<Entry> implements ILabelProvider
+    protected abstract class Item extends AbstractOptionList.Entry<Item> implements ILabelProvider
     {
         protected final ITextComponent label;
         protected List<IReorderingProcessor> tooltip;
 
-        public Entry(ITextComponent label)
+        public Item(ITextComponent label)
         {
             this.label = label;
         }
 
-        public Entry(String label)
+        public Item(String label)
         {
             this.label = new StringTextComponent(label);
         }
@@ -265,14 +265,14 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
-    public class TitleEntry extends Entry
+    public class TitleItem extends Item implements IIgnoreSearch
     {
-        public TitleEntry(ITextComponent title)
+        public TitleItem(ITextComponent title)
         {
             super(title);
         }
 
-        public TitleEntry(String title)
+        public TitleItem(String title)
         {
             super(new StringTextComponent(title).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.YELLOW));
         }

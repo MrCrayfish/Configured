@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.network.play;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.network.PacketHandler;

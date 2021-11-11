@@ -1,5 +1,6 @@
 package com.mrcrayfish.configured.client.screen;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -43,33 +44,33 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     }
 
     @Override
-    protected void constructEntries(List<Entry> entries)
+    protected void constructEntries(List<Item> entries)
     {
         Set<ModConfig> clientConfigs = this.configMap.get(ModConfig.Type.CLIENT);
         if(clientConfigs != null)
         {
-            entries.add(new TitleEntry(new TranslationTextComponent("configured.gui.title.client_configuration").getString()));
+            entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.client_configuration").getString()));
             clientConfigs.forEach(config ->
             {
-                entries.add(new FileEntry(config));
+                entries.add(new FileItem(config));
             });
         }
         Set<ModConfig> commonConfigs = this.configMap.get(ModConfig.Type.COMMON);
         if(commonConfigs != null)
         {
-            entries.add(new TitleEntry(new TranslationTextComponent("configured.gui.title.common_configuration").getString()));
+            entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.common_configuration").getString()));
             commonConfigs.forEach(config ->
             {
-                entries.add(new FileEntry(config));
+                entries.add(new FileItem(config));
             });
         }
         Set<ModConfig> serverConfigs = this.configMap.get(ModConfig.Type.SERVER);
         if(serverConfigs != null)
         {
-            entries.add(new TitleEntry(new TranslationTextComponent("configured.gui.title.server_configuration").getString()));
+            entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.server_configuration").getString()));
             serverConfigs.forEach(config ->
             {
-                entries.add(new FileEntry(config));
+                entries.add(new FileItem(config));
             });
         }
     }
@@ -82,7 +83,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     }
 
     @OnlyIn(Dist.CLIENT)
-    public class FileEntry extends Entry
+    public class FileItem extends Item
     {
         protected final ModConfig config;
         protected final ITextComponent title;
@@ -92,7 +93,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         protected final Button restoreButton;
         private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
-        public FileEntry(ModConfig config)
+        public FileItem(ModConfig config)
         {
             super(createLabelFromModConfig(config).getString());
             this.config = config;
@@ -126,21 +127,31 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             }
         }
 
+        @SuppressWarnings({"rawtypes", "unchecked"})
         private void showRestoreScreen()
         {
             ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
             {
                 if(!result || this.allConfigValues == null)
                     return;
+
                 // Resets all config values
+                CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
                 this.allConfigValues.forEach(pair ->
                 {
                     ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
                     ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                    configValue.set(valueSpec.getDefault());
+                    newConfig.set(configValue.getPath(), valueSpec.getDefault());
                 });
                 this.updateRestoreDefaultButton();
-                ConfigHelper.sendConfigDataToServer(this.config);
+                this.config.getConfigData().putAll(newConfig);
+                ConfigHelper.resetCache(this.config);
+
+                // Post logic for server configs
+                if(this.config.getType() == ModConfig.Type.SERVER)
+                {
+                    ConfigHelper.sendConfigDataToServer(this.config);
+                }
             });
             confirmScreen.setBackground(background);
             confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));

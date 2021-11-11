@@ -6,6 +6,7 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
+import com.mrcrayfish.configured.client.screen.ConfigScreen;
 import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import net.minecraft.client.Minecraft;
@@ -178,5 +179,43 @@ public class ConfigHelper
     public static void resetCache(ModConfig config)
     {
         gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
+    }
+
+    public static boolean isModified(ConfigScreen.FolderEntry folder)
+    {
+        for(ConfigScreen.IEntry entry : folder.getEntries())
+        {
+            if(entry instanceof ConfigScreen.FolderEntry)
+            {
+                return isModified((ConfigScreen.FolderEntry) entry);
+            }
+            else if(entry instanceof ConfigScreen.ValueEntry)
+            {
+                if(!((ConfigScreen.ValueEntry) entry).getHolder().isDefaultValue())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isChanged(ConfigScreen.FolderEntry folder)
+    {
+        for(ConfigScreen.IEntry entry : folder.getEntries())
+        {
+            if(entry instanceof ConfigScreen.FolderEntry)
+            {
+                return isChanged((ConfigScreen.FolderEntry) entry);
+            }
+            else if(entry instanceof ConfigScreen.ValueEntry)
+            {
+                if(((ConfigScreen.ValueEntry) entry).getHolder().isChanged())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

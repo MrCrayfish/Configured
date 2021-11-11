@@ -28,18 +28,18 @@ public class EditStringListScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final List<StringHolder> values = new ArrayList<>();
-    private final ForgeConfigSpec.ConfigValue<List<?>> listValue;
     private final ForgeConfigSpec.ValueSpec valueSpec;
     private final ResourceLocation background;
+    private final ConfigScreen.ListValueHolder holder;
     private StringList list;
 
-    public EditStringListScreen(Screen parent, ITextComponent titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec, ResourceLocation background)
+    public EditStringListScreen(Screen parent, ITextComponent titleIn, ConfigScreen.ListValueHolder holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
-        this.listValue = listValue;
-        this.valueSpec = valueSpec;
-        this.values.addAll(listValue.get().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
+        this.holder = holder;
+        this.valueSpec = holder.getSpec();
+        this.values.addAll(holder.getValue().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
         this.background = background;
     }
 
@@ -47,12 +47,12 @@ public class EditStringListScreen extends Screen implements IBackgroundTexture
     protected void init()
     {
         this.list = new StringList();
-        this.list.func_244605_b(this.minecraft.world == null);
+        this.list.func_244605_b(!ListMenuScreen.isPlayingGame());
         this.children.add(this.list);
         this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, DialogTexts.GUI_DONE, (button) -> {
             List<String> newValues = this.values.stream().map(StringHolder::getValue).collect(Collectors.toList());
             this.valueSpec.correct(newValues);
-            this.listValue.set(newValues);
+            this.holder.setValue(newValues);
             this.minecraft.displayGuiScreen(this.parent);
         }));
         this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.add_value"), (button) -> {

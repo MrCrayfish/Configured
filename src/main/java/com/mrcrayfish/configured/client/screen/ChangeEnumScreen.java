@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -30,19 +31,21 @@ import java.util.stream.Collectors;
 public class ChangeEnumScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
-    private final ForgeConfigSpec.ConfigValue<Enum> configValue;
+    private final Consumer<Enum<?>> onSave;
     private final ResourceLocation background;
+    private Enum<?> selectedValue;
     private EnumList list;
     private List<Entry> entries;
     private TextFieldWidget searchTextField;
     private List<IReorderingProcessor> activeTooltip;
 
-    protected ChangeEnumScreen(Screen parent, ITextComponent title, ResourceLocation background, ForgeConfigSpec.ConfigValue<Enum> configValue)
+    protected ChangeEnumScreen(Screen parent, ITextComponent title, ResourceLocation background, Enum<?> value, Consumer<Enum<?>> onSave)
     {
         super(title);
         this.parent = parent;
-        this.configValue = configValue;
+        this.onSave = onSave;
         this.background = background;
+        this.selectedValue = value;
     }
 
     @Override
@@ -50,8 +53,8 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     {
         this.constructEntries();
         this.list = new EnumList(this.entries);
-        this.list.func_244605_b(this.minecraft.world == null);
-        this.list.setSelected(this.list.getEventListeners().stream().filter(entry -> entry.getEnumValue() == this.configValue.get()).findFirst().orElse(null));
+        this.list.func_244605_b(!ListMenuScreen.isPlayingGame());
+        this.list.setSelected(this.list.getEventListeners().stream().filter(entry -> entry.getEnumValue() == this.selectedValue).findFirst().orElse(null));
         this.children.add(this.list);
 
         this.searchTextField = new TextFieldWidget(this.font, this.width / 2 - 110, 22, 220, 20, new StringTextComponent("Search"));
@@ -71,7 +74,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         {
             if(this.list.getSelected() != null)
             {
-                this.configValue.set(this.list.getSelected().enumValue);
+                this.onSave.accept(this.list.getSelected().enumValue);
             }
             this.minecraft.displayGuiScreen(this.parent);
         }));
@@ -82,13 +85,13 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        Object value = this.configValue.get();
-        if(value instanceof Enum)
+        Object value = this.selectedValue;
+        if(value != null)
         {
-            Object[] enums = ((Enum) value).getDeclaringClass().getEnumConstants();
+            Object[] enums = ((Enum<?>) value).getDeclaringClass().getEnumConstants();
             for(Object e : enums)
             {
-                entries.add(new Entry((Enum) e));
+                entries.add(new Entry((Enum<?>) e));
             }
         }
         entries.sort(Comparator.comparing(entry -> entry.getFormattedLabel().getString()));
@@ -145,16 +148,16 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
 
     public class Entry extends ExtendedList.AbstractListEntry<Entry> implements ILabelProvider
     {
-        private final Enum enumValue;
-        private StringTextComponent label;
+        private final Enum<?> enumValue;
+        private final StringTextComponent label;
 
-        public Entry(Enum enumValue)
+        public Entry(Enum<?> enumValue)
         {
             this.enumValue = enumValue;
             this.label = new StringTextComponent(ConfigScreen.createLabel(enumValue.name().toLowerCase(Locale.ENGLISH)));
         }
 
-        public Enum getEnumValue()
+        public Enum<?> getEnumValue()
         {
             return this.enumValue;
         }
@@ -181,6 +184,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         public boolean mouseClicked(double mouseX, double mouseY, int button)
         {
             ChangeEnumScreen.this.list.setSelected(this);
+            ChangeEnumScreen.this.selectedValue = this.enumValue;
             return true;
         }
     }

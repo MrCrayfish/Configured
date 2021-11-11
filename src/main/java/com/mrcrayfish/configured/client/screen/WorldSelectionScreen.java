@@ -50,12 +50,12 @@ public class WorldSelectionScreen extends ListMenuScreen
     }
 
     @Override
-    protected void constructEntries(List<Entry> entries)
+    protected void constructEntries(List<Item> entries)
     {
         try
         {
             SaveFormat saveFormat = Minecraft.getInstance().getSaveLoader();
-            saveFormat.getSaveList().forEach(worldSummary -> entries.add(new WorldEntry(worldSummary)));
+            saveFormat.getSaveList().forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
         }
         catch(AnvilConverterException e)
         {
@@ -88,16 +88,16 @@ public class WorldSelectionScreen extends ListMenuScreen
     public void onClose()
     {
         super.onClose();
-        this.entries.forEach(entry ->
+        this.entries.forEach(item ->
         {
-            if(entry instanceof WorldEntry)
+            if(item instanceof WorldItem)
             {
-                ((WorldEntry) entry).disposeIcon();
+                ((WorldItem) item).disposeIcon();
             }
         });
     }
 
-    public class WorldEntry extends Entry
+    public class WorldItem extends Item
     {
         private final ITextComponent worldName;
         private final ITextComponent folderName;
@@ -106,7 +106,7 @@ public class WorldSelectionScreen extends ListMenuScreen
         private final DynamicTexture texture;
         private final Button modifyButton;
 
-        public WorldEntry(WorldSummary summary)
+        public WorldItem(WorldSummary summary)
         {
             super(summary.getDisplayName());
             this.worldName = new StringTextComponent(summary.getDisplayName());

@@ -1,6 +1,6 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.electronwill.nightconfig.core.AbstractConfig;
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -32,13 +32,12 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
+import java.util.Queue;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Author: MrCrayfish
@@ -46,112 +45,89 @@ import java.util.function.Predicate;
 @OnlyIn(Dist.CLIENT)
 public class ConfigScreen extends ListMenuScreen
 {
-    public static final Comparator<Entry> SORT_ALPHABETICALLY = (o1, o2) ->
+    public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->
     {
-        if(o1 instanceof SubMenu && o2 instanceof SubMenu)
+        if(o1 instanceof FolderItem && o2 instanceof FolderItem)
         {
             return o1.getLabel().compareTo(o2.getLabel());
         }
-        if(!(o1 instanceof SubMenu) && o2 instanceof SubMenu)
+        if(!(o1 instanceof FolderItem) && o2 instanceof FolderItem)
         {
             return 1;
         }
-        if(o1 instanceof SubMenu)
+        if(o1 instanceof FolderItem)
         {
             return -1;
         }
         return o1.getLabel().compareTo(o2.getLabel());
     };
 
-    @Nullable
-    protected final ConfigFileEntry configFileEntry;
+    protected final FolderEntry folderEntry;
     protected ModConfig config;
     protected Button restoreButton;
 
-    protected ConfigScreen(Screen parent, ITextComponent title, ResourceLocation background, @Nullable ConfigFileEntry configFileEntry)
+    protected ConfigScreen(Screen parent, ITextComponent title, ResourceLocation background, FolderEntry folderEntry)
     {
         super(parent, title, background, 24);
-        this.configFileEntry = configFileEntry;
-    }
-
-    public ConfigScreen(Screen parent, ITextComponent title, @Nullable ConfigFileEntry entry, ResourceLocation background)
-    {
-        this(parent, title, background, entry);
+        this.folderEntry = folderEntry;
     }
 
     public ConfigScreen(Screen parent, ITextComponent title, ModConfig config, ResourceLocation background)
     {
-        this(parent, title, background, new ConfigFileEntry(config.getSpec(), config.getSpec().getValues()));
+        this(parent, title, background, new FolderEntry(config.getSpec().getValues(), config.getSpec(), true));
         this.config = config;
     }
 
     @Override
-    protected void constructEntries(List<Entry> entries)
+    protected void constructEntries(List<Item> entries)
     {
-        if(this.configFileEntry != null)
+        List<Item> configEntries = new ArrayList<>();
+        this.folderEntry.getEntries().forEach(c ->
         {
-            List<Entry> configEntries = new ArrayList<>();
-            this.createEntriesFromConfig(this.configFileEntry.config, this.configFileEntry.spec, configEntries);
-            configEntries.sort(SORT_ALPHABETICALLY);
-            entries.addAll(configEntries);
-        }
-    }
-
-    /**
-     * Scans the given unmodifiable config and creates an entry for each scanned
-     * config value based on it's type.
-     *
-     * @param values  the values to scan
-     * @param spec    the spec of config
-     * @param entries the list to add the entries to
-     */
-    private void createEntriesFromConfig(UnmodifiableConfig values, ForgeConfigSpec spec, List<Entry> entries)
-    {
-        values.valueMap().forEach((s, o) ->
-        {
-            if(o instanceof AbstractConfig)
+            if(c instanceof FolderEntry)
             {
-                entries.add(new SubMenu(s, spec, (AbstractConfig) o));
+                configEntries.add(new FolderItem("Test", (FolderEntry) c));
             }
-            else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
+            else if(c instanceof ValueEntry)
             {
-                ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
-                ForgeConfigSpec.ValueSpec valueSpec = spec.getRaw(configValue.getPath());
-                Object value = configValue.get();
+                ValueEntry configValueEntry = (ValueEntry) c;
+                Object value = ((ValueEntry) c).getHolder().getValue();
                 if(value instanceof Boolean)
                 {
-                    entries.add(new BooleanEntry((ForgeConfigSpec.ConfigValue<Boolean>) configValue, valueSpec));
+                    entries.add(new BooleanItem((ValueHolder<Boolean>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Integer)
                 {
-                    entries.add(new IntegerEntry((ForgeConfigSpec.ConfigValue<Integer>) configValue, valueSpec));
+                    entries.add(new IntegerItem((ValueHolder<Integer>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Double)
                 {
-                    entries.add(new DoubleEntry((ForgeConfigSpec.ConfigValue<Double>) configValue, valueSpec));
+                    entries.add(new DoubleItem((ValueHolder<Double>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Long)
                 {
-                    entries.add(new LongEntry((ForgeConfigSpec.ConfigValue<Long>) configValue, valueSpec));
+                    entries.add(new LongItem((ValueHolder<Long>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof Enum)
                 {
-                    entries.add(new EnumEntry((ForgeConfigSpec.ConfigValue<Enum>) configValue, valueSpec));
+                    entries.add(new EnumItem((ValueHolder<Enum<?>>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof String)
                 {
-                    entries.add(new StringEntry((ForgeConfigSpec.ConfigValue<String>) configValue, valueSpec));
+                    entries.add(new StringItem((ValueHolder<String>) configValueEntry.getHolder()));
                 }
                 else if(value instanceof List<?>)
                 {
-                    entries.add(new ListStringEntry((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec));
+                    entries.add(new ListStringItem((ListValueHolder) configValueEntry.getHolder()));
                 }
                 else
                 {
-                    Configured.LOGGER.info("Unsupported config value: " + configValue.getPath());
+                    Configured.LOGGER.info("Unsupported config value: " + configValueEntry.getHolder().configValue.getPath());
                 }
             }
         });
+        configEntries.sort(SORT_ALPHABETICALLY);
+        entries.addAll(configEntries);
     }
 
     @Override
@@ -159,11 +135,11 @@ public class ConfigScreen extends ListMenuScreen
     {
         super.init();
 
-        if(!(this.parent instanceof ConfigScreen))
+        if(this.folderEntry.isRoot())
         {
             this.restoreButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) ->
             {
-                if(this.config != null)
+                if(this.folderEntry.isRoot())
                 {
                     this.showRestoreScreen();
                 }
@@ -172,22 +148,11 @@ public class ConfigScreen extends ListMenuScreen
 
             this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) ->
             {
+                if(this.config != null)
+                {
+                    this.saveConfig();
+                }
                 this.minecraft.displayGuiScreen(this.parent);
-
-                if(this.config == null || this.config.getType() != ModConfig.Type.SERVER)
-                    return;
-
-                if(!ListMenuScreen.isPlayingGame())
-                {
-                    // Unload server configs since still in main menu
-                    this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
-                    ConfigHelper.setConfigData(this.config, null);
-                }
-                else
-                {
-                    ConfigHelper.sendConfigDataToServer(this.config);
-                    ConfigHelper.resetCache(this.config); //TODO probably don't need
-                }
             }));
         }
         else
@@ -196,21 +161,62 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void saveConfig()
+    {
+        // Don't need to save if nothing changed
+        if(!ConfigHelper.isChanged(this.folderEntry))
+            return;
+
+        // Creates a temporary config to merge into the real config. This avoids multiple save calls
+        CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
+        Queue<FolderEntry> found = new ArrayDeque<>();
+        found.add(this.folderEntry);
+        while(!found.isEmpty())
+        {
+            FolderEntry folder = found.poll();
+            for(IEntry entry : folder.getEntries())
+            {
+                if(entry instanceof FolderEntry)
+                {
+                    found.offer((FolderEntry) entry);
+                }
+                else if(entry instanceof ValueEntry)
+                {
+                    ValueEntry valueEntry = (ValueEntry) entry;
+                    ValueHolder<?> holder = valueEntry.getHolder();
+                    if(holder.isChanged())
+                    {
+                        List<String> path = holder.configValue.getPath();
+                        newConfig.set(path, holder.getValue());
+                    }
+                }
+            }
+        }
+        this.config.getConfigData().putAll(newConfig);
+        ConfigHelper.resetCache(this.config);
+
+        // Post logic for server configs
+        if(this.config.getType() == ModConfig.Type.SERVER)
+        {
+            if(!ListMenuScreen.isPlayingGame())
+            {
+                // Unload server configs since still in main menu
+                this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
+                ConfigHelper.setConfigData(this.config, null);
+            }
+            else
+            {
+                ConfigHelper.sendConfigDataToServer(this.config);
+            }
+        }
+    }
+
     private void showRestoreScreen()
     {
         ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
         {
-            if(!result || this.config == null)
-                return;
-            // Resets all config values
-            ConfigHelper.gatherAllConfigValues(this.config).forEach(pair ->
-            {
-                ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
-                ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                configValue.set(valueSpec.getDefault());
-            });
-            ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent());
+            if(!result) return;
+            this.restoreDefaults(this.folderEntry);
             this.updateRestoreButton();
         });
         confirmScreen.setBackground(background);
@@ -219,17 +225,27 @@ public class ConfigScreen extends ListMenuScreen
         Minecraft.getInstance().displayGuiScreen(confirmScreen);
     }
 
-    private void updateRestoreButton()
+    private void restoreDefaults(FolderEntry entry)
     {
-        if(this.config != null && this.restoreButton != null)
+        entry.getEntries().forEach(e ->
         {
-            this.restoreButton.active = ConfigHelper.isModified(this.config);
-        }
+            if(e instanceof FolderEntry)
+            {
+                this.restoreDefaults((FolderEntry) e);
+            }
+            else if(e instanceof ValueEntry)
+            {
+                ((ValueEntry) e).getHolder().restoreDefaultValue();
+            }
+        });
     }
 
-    protected Predicate<Entry> getSearchFilter(String s)
+    private void updateRestoreButton()
     {
-        return entry -> !(entry instanceof TitleEntry) && entry.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+        if(this.restoreButton != null && this.folderEntry.isRoot())
+        {
+            this.restoreButton.active = ConfigHelper.isModified(this.folderEntry);
+        }
     }
 
     @Override
@@ -243,16 +259,16 @@ public class ConfigScreen extends ListMenuScreen
         super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
-    public class SubMenu extends Entry
+    public class FolderItem extends Item
     {
         private final Button button;
 
-        public SubMenu(String label, ForgeConfigSpec spec, AbstractConfig values)
+        public FolderItem(String label, FolderEntry folderEntry)
         {
             super(new StringTextComponent(createLabel(label)));
             this.button = new Button(10, 5, 44, 20, new StringTextComponent(this.getLabel()).mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.WHITE), onPress -> {
                 ITextComponent newTitle = ConfigScreen.this.title.copyRaw().appendString(" > " + this.getLabel());
-                ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, new ConfigFileEntry(spec, values), background));
+                ConfigScreen.this.minecraft.displayGuiScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
             });
         }
 
@@ -272,33 +288,31 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public abstract class ConfigEntry<T extends ForgeConfigSpec.ConfigValue> extends Entry
+    public abstract class ConfigItem<T> extends Item
     {
-        protected final T configValue;
-        protected final ForgeConfigSpec.ValueSpec valueSpec;
+        protected final ValueHolder<T> holder;
         protected final List<IGuiEventListener> eventListeners = Lists.newArrayList();
         protected final Button resetButton;
 
         @SuppressWarnings("unchecked")
-        public ConfigEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public ConfigItem(ValueHolder<T> holder)
         {
-            super(createLabelFromConfig(configValue, valueSpec));
-            this.configValue = configValue;
-            this.valueSpec = valueSpec;
-            if(valueSpec.getComment() != null)
+            super(createLabelFromHolder(holder));
+            this.holder = holder;
+            if(this.holder.valueSpec.getComment() != null)
             {
-                this.tooltip = this.createToolTip(configValue, valueSpec);
+                this.tooltip = this.createToolTip(holder);
             }
             int maxTooltipWidth = Math.max(ConfigScreen.this.width / 2 - 43, 170);
             Button.ITooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, new TranslationTextComponent("configured.gui.reset"), maxTooltipWidth);
             this.resetButton = new IconButton(0, 0, 20, 20, 0, 0, onPress -> {
-                configValue.set(valueSpec.getDefault());
+                this.holder.restoreDefaultValue();
                 this.onResetValue();
             }, tooltip);
             this.eventListeners.add(this.resetButton);
         }
 
-        public void onResetValue() {}
+        protected void onResetValue() {}
 
         @Override
         public List<? extends IGuiEventListener> getEventListeners()
@@ -316,7 +330,7 @@ public class ConfigScreen extends ListMenuScreen
                 ConfigScreen.this.setActiveTooltip(this.tooltip);
             }
 
-            this.resetButton.active = !this.configValue.get().equals(this.valueSpec.getDefault());
+            this.resetButton.active = !this.holder.isDefaultValue();
             this.resetButton.x = left + width - 21;
             this.resetButton.y = top;
             this.resetButton.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -331,11 +345,11 @@ public class ConfigScreen extends ListMenuScreen
             return this.label;
         }
 
-        private List<IReorderingProcessor> createToolTip(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec)
+        private List<IReorderingProcessor> createToolTip(ValueHolder<T> holder)
         {
             FontRenderer font = Minecraft.getInstance().fontRenderer;
-            List<ITextProperties> lines = font.getCharacterManager().func_238362_b_(new StringTextComponent(spec.getComment()), 200, Style.EMPTY);
-            String name = lastValue(value.getPath(), "");
+            List<ITextProperties> lines = font.getCharacterManager().func_238362_b_(new StringTextComponent(holder.valueSpec.getComment()), 200, Style.EMPTY);
+            String name = lastValue(holder.configValue.getPath(), "");
             lines.add(0, new StringTextComponent(name).mergeStyle(TextFormatting.YELLOW));
             int rangeIndex = -1;
             for(int i = 0; i < lines.size(); i++)
@@ -358,25 +372,25 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public abstract class NumberEntry<T extends ForgeConfigSpec.ConfigValue> extends ConfigEntry<T>
+    public abstract class NumberItem<T extends Number> extends ConfigItem<T>
     {
         private final FocusedTextFieldWidget textField;
 
         @SuppressWarnings("unchecked")
-        public NumberEntry(T configValue, ForgeConfigSpec.ValueSpec valueSpec, Function<String, Number> parser)
+        public NumberItem(ValueHolder<T> holder, Function<String, Number> parser)
         {
-            super(configValue, valueSpec);
+            super(holder);
             this.textField = new FocusedTextFieldWidget(ConfigScreen.this.font, 0, 0, 44, 18, this.label);
-            this.textField.setText(configValue.get().toString());
+            this.textField.setText(holder.getValue().toString());
             this.textField.setResponder((s) ->
             {
                 try
                 {
                     Number n = parser.apply(s);
-                    if(valueSpec.test(n))
+                    if(holder.valueSpec.test(n))
                     {
                         this.textField.setTextColor(14737632);
-                        configValue.set(n);
+                        holder.setValue((T) n);
                     }
                     else
                     {
@@ -403,46 +417,45 @@ public class ConfigScreen extends ListMenuScreen
         @Override
         public void onResetValue()
         {
-            this.textField.setText(this.configValue.get().toString());
+            this.textField.setText(this.holder.getValue().toString());
         }
     }
 
-    public class IntegerEntry extends NumberEntry<ForgeConfigSpec.ConfigValue<Integer>>
+    public class IntegerItem extends NumberItem<Integer>
     {
-        public IntegerEntry(ForgeConfigSpec.ConfigValue<Integer> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public IntegerItem(ValueHolder<Integer> holder)
         {
-            super(configValue, valueSpec, Integer::parseInt);
+            super(holder, Integer::parseInt);
         }
     }
 
-    public class DoubleEntry extends NumberEntry<ForgeConfigSpec.ConfigValue<Double>>
+    public class DoubleItem extends NumberItem<Double>
     {
-        public DoubleEntry(ForgeConfigSpec.ConfigValue<Double> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public DoubleItem(ValueHolder<Double> holder)
         {
-            super(configValue, valueSpec, Double::parseDouble);
+            super(holder, Double::parseDouble);
         }
     }
 
-    public class LongEntry extends NumberEntry<ForgeConfigSpec.ConfigValue<Long>>
+    public class LongItem extends NumberItem<Long>
     {
-        public LongEntry(ForgeConfigSpec.ConfigValue<Long> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public LongItem(ValueHolder<Long> holder)
         {
-            super(configValue, valueSpec, Long::parseLong);
+            super(holder, Long::parseLong);
         }
     }
 
-    public class BooleanEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<Boolean>>
+    public class BooleanItem extends ConfigItem<Boolean>
     {
         private final Button button;
 
-        public BooleanEntry(ForgeConfigSpec.ConfigValue<Boolean> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public BooleanItem(ValueHolder<Boolean> holder)
         {
-            super(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(configValue.get()), button ->
+            super(holder);
+            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(holder.getValue()), button ->
             {
-                boolean flag = !configValue.get();
-                configValue.set(flag);
-                button.setMessage(DialogTexts.optionsEnabled(configValue.get()));
+                holder.setValue(!holder.getValue());
+                button.setMessage(DialogTexts.optionsEnabled(holder.getValue()));
             });
             this.eventListeners.add(this.button);
         }
@@ -459,19 +472,18 @@ public class ConfigScreen extends ListMenuScreen
         @Override
         public void onResetValue()
         {
-            this.button.setMessage(DialogTexts.optionsEnabled(this.configValue.get()));
+            this.button.setMessage(DialogTexts.optionsEnabled(this.holder.getValue()));
         }
     }
 
-    public class StringEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<String>>
+    public class StringItem extends ConfigItem<String>
     {
         private final Button button;
 
-        public StringEntry(ForgeConfigSpec.ConfigValue<String> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public StringItem(ValueHolder<String> holder)
         {
-            super(configValue, valueSpec);
-            String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, new StringTextComponent(title), configValue.get(), valueSpec::test, configValue::set)));
+            super(holder);
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, this.label, holder.getValue(), holder.valueSpec::test, holder::setValue)));
             this.eventListeners.add(this.button);
         }
 
@@ -485,15 +497,14 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public class ListStringEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<List<?>>>
+    public class ListStringItem extends ConfigItem<List<?>>
     {
         private final Button button;
 
-        public ListStringEntry(ForgeConfigSpec.ConfigValue<List<?>> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public ListStringItem(ListValueHolder holder)
         {
-            super(configValue, valueSpec);
-            String title = createLabelFromConfig(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringListScreen(ConfigScreen.this, new StringTextComponent(title), configValue, valueSpec, background)));
+            super(holder);
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringListScreen(ConfigScreen.this, this.label, holder, background)));
             this.eventListeners.add(this.button);
         }
 
@@ -507,14 +518,14 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public class EnumEntry extends ConfigEntry<ForgeConfigSpec.ConfigValue<Enum>>
+    public class EnumItem extends ConfigItem<Enum<?>>
     {
         private final Button button;
 
-        public EnumEntry(ForgeConfigSpec.ConfigValue<Enum> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        public EnumItem(ValueHolder<Enum<?>> holder)
         {
-            super(configValue, valueSpec);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), button -> Minecraft.getInstance().displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, configValue)));
+            super(holder);
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), button -> Minecraft.getInstance().displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, holder.getValue(), holder::setValue)));
             this.eventListeners.add(this.button);
         }
 
@@ -550,17 +561,16 @@ public class ConfigScreen extends ListMenuScreen
      * first attempt to create a label from the translation key in the spec, otherwise it
      * will create a readable label from the raw config value name.
      *
-     * @param configValue the config value
-     * @param valueSpec   the associated value spec
+     * @param holder the config value holder
      * @return a readable label string
      */
-    private static String createLabelFromConfig(ForgeConfigSpec.ConfigValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+    private static String createLabelFromHolder(ValueHolder<?> holder)
     {
-        if(valueSpec.getTranslationKey() != null && I18n.hasKey(valueSpec.getTranslationKey()))
+        if(holder.valueSpec.getTranslationKey() != null && I18n.hasKey(holder.valueSpec.getTranslationKey()))
         {
-            return new TranslationTextComponent(valueSpec.getTranslationKey()).getString();
+            return new TranslationTextComponent(holder.valueSpec.getTranslationKey()).getString();
         }
-        return createLabel(lastValue(configValue.getPath(), ""));
+        return createLabel(lastValue(holder.configValue.getPath(), ""));
     }
 
     /**
@@ -592,15 +602,134 @@ public class ConfigScreen extends ListMenuScreen
         return this.config == null || this.config.getType() != ModConfig.Type.SERVER;
     }
 
-    public static class ConfigFileEntry
+    public static class ValueHolder<T>
     {
-        private final ForgeConfigSpec spec;
-        private final UnmodifiableConfig config;
+        private final ForgeConfigSpec.ConfigValue<T> configValue;
+        private final ForgeConfigSpec.ValueSpec valueSpec;
+        private final T initialValue;
+        protected T value;
 
-        public ConfigFileEntry(ForgeConfigSpec spec, UnmodifiableConfig config)
+        public ValueHolder(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
-            this.spec = spec;
+            this.configValue = configValue;
+            this.valueSpec = valueSpec;
+            this.initialValue = configValue.get();
+            this.setValue(configValue.get());
+        }
+
+        protected void setValue(T value)
+        {
+            this.value = value;
+        }
+
+        public T getValue()
+        {
+            return this.value;
+        }
+
+        @SuppressWarnings("unchecked")
+        public void restoreDefaultValue()
+        {
+            this.setValue((T) this.valueSpec.getDefault());
+        }
+
+        public boolean isDefaultValue()
+        {
+            return this.value.equals(this.valueSpec.getDefault());
+        }
+
+        public boolean isChanged()
+        {
+            return !this.value.equals(this.initialValue);
+        }
+
+        public ForgeConfigSpec.ValueSpec getSpec()
+        {
+            return this.valueSpec;
+        }
+    }
+
+    public static class ListValueHolder extends ValueHolder<List<?>>
+    {
+        public ListValueHolder(ForgeConfigSpec.ConfigValue<List<?>> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        {
+            super(configValue, valueSpec);
+        }
+
+        @Override
+        protected void setValue(List<?> value)
+        {
+            this.value = new ArrayList<>(value);
+        }
+    }
+
+    public interface IEntry {}
+
+    public static class FolderEntry implements IEntry
+    {
+        private final UnmodifiableConfig config;
+        private final ForgeConfigSpec spec;
+        private final boolean root;
+        private List<IEntry> entries;
+
+        public FolderEntry(UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
+        {
             this.config = config;
+            this.spec = spec;
+            this.root = root;
+            this.init();
+        }
+
+        private void init()
+        {
+            if(this.entries == null)
+            {
+                ImmutableList.Builder<IEntry> builder = ImmutableList.builder();
+                this.config.valueMap().forEach((s, o) ->
+                {
+                    if(o instanceof UnmodifiableConfig)
+                    {
+                        builder.add(new FolderEntry((UnmodifiableConfig) o, this.spec, false));
+                    }
+                    else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
+                    {
+                        ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
+                        ForgeConfigSpec.ValueSpec valueSpec = this.spec.getRaw(configValue.getPath());
+                        builder.add(new ValueEntry(configValue, valueSpec));
+                    }
+                });
+                this.entries = builder.build();
+            }
+        }
+
+        public boolean isRoot()
+        {
+            return this.root;
+        }
+
+        public boolean isInitialized()
+        {
+            return this.entries != null;
+        }
+
+        public List<IEntry> getEntries()
+        {
+            return this.entries;
+        }
+    }
+
+    public static class ValueEntry implements IEntry
+    {
+        private final ValueHolder<?> holder;
+
+        public ValueEntry(ForgeConfigSpec.ConfigValue<?> configValue, ForgeConfigSpec.ValueSpec valueSpec)
+        {
+            this.holder = configValue.get() instanceof List ? new ListValueHolder((ForgeConfigSpec.ConfigValue<List<?>>) configValue, valueSpec) : new ValueHolder<>(configValue, valueSpec);
+        }
+
+        public ValueHolder<?> getHolder()
+        {
+            return this.holder;
         }
     }
 }
