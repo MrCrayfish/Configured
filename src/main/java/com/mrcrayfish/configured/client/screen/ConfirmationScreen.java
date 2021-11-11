@@ -11,6 +11,7 @@ import net.minecraft.util.text.ITextComponent;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * A simple versatile confirmation screen
@@ -21,12 +22,12 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final ITextComponent message;
-    private final Consumer<Boolean> handler;
+    private final Function<Boolean, Boolean> handler;
     private ITextComponent positiveText = DialogTexts.GUI_YES;
     private ITextComponent negativeText = DialogTexts.GUI_NO;
     private ResourceLocation background = AbstractGui.BACKGROUND_LOCATION;
 
-    public ConfirmationScreen(Screen parent, ITextComponent message, Consumer<Boolean> handler)
+    public ConfirmationScreen(Screen parent, ITextComponent message, Function<Boolean, Boolean> handler)
     {
         super(message);
         this.parent = parent;
@@ -39,13 +40,19 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     {
         List<IReorderingProcessor> lines = this.font.trimStringToWidth(this.message, 300);
         int messageOffset = (lines.size() * (this.font.FONT_HEIGHT + 2)) / 2;
-        this.addButton(new Button(this.width / 2 - 105, this.height / 2 + messageOffset, 100, 20, this.positiveText, button -> {
-            this.handler.accept(true);
-            this.minecraft.displayGuiScreen(this.parent);
+        this.addButton(new Button(this.width / 2 - 105, this.height / 2 + messageOffset, 100, 20, this.positiveText, button ->
+        {
+            if(this.handler.apply(true))
+            {
+                this.minecraft.displayGuiScreen(this.parent);
+            }
         }));
-        this.addButton(new Button(this.width / 2 + 5, this.height / 2 + messageOffset, 100, 20, this.negativeText, button -> {
-            this.handler.accept(false);
-            this.minecraft.displayGuiScreen(this.parent);
+        this.addButton(new Button(this.width / 2 + 5, this.height / 2 + messageOffset, 100, 20, this.negativeText, button ->
+        {
+            if(this.handler.apply(false))
+            {
+                this.minecraft.displayGuiScreen(this.parent);
+            }
         }));
     }
 

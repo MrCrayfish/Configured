@@ -133,7 +133,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
             {
                 if(!result || this.allConfigValues == null)
-                    return;
+                    return true;
 
                 // Resets all config values
                 CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
@@ -152,6 +152,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     ConfigHelper.sendConfigDataToServer(this.config);
                 }
+                return true;
             });
             confirmScreen.setBackground(background);
             confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));

@@ -156,7 +156,18 @@ public class ConfigScreen extends ListMenuScreen
             }));
             this.addButton(new Button(this.width / 2 + 50, this.height - 29, 90, 20, DialogTexts.GUI_CANCEL, (button) ->
             {
-                this.minecraft.displayGuiScreen(this.parent);
+                if(this.isChanged(this.folderEntry))
+                {
+                    this.minecraft.displayGuiScreen(new ConfirmationScreen(this, new TranslationTextComponent("configured.gui.unsaved_changes"), result -> {
+                        if(!result) return true;
+                        this.minecraft.displayGuiScreen(this.parent);
+                        return false;
+                    }));
+                }
+                else
+                {
+                    this.minecraft.displayGuiScreen(this.parent);
+                }
             }));
             this.updateButtons();
         }
@@ -220,9 +231,10 @@ public class ConfigScreen extends ListMenuScreen
     {
         ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
         {
-            if(!result) return;
+            if(!result) return true;
             this.restoreDefaults(this.folderEntry);
             this.updateButtons();
+            return true;
         });
         confirmScreen.setBackground(background);
         confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
