@@ -64,9 +64,10 @@ public class ConfigScreen extends ListMenuScreen
 
     protected final FolderEntry folderEntry;
     protected ModConfig config;
+    protected Button saveButton;
     protected Button restoreButton;
 
-    protected ConfigScreen(Screen parent, ITextComponent title, ResourceLocation background, FolderEntry folderEntry)
+    private ConfigScreen(Screen parent, ITextComponent title, ResourceLocation background, FolderEntry folderEntry)
     {
         super(parent, title, background, 24);
         this.folderEntry = folderEntry;
@@ -74,7 +75,8 @@ public class ConfigScreen extends ListMenuScreen
 
     public ConfigScreen(Screen parent, ITextComponent title, ModConfig config, ResourceLocation background)
     {
-        this(parent, title, background, new FolderEntry("Root", config.getSpec().getValues(), config.getSpec(), true));
+        super(parent, title, background, 24);
+        this.folderEntry = new FolderEntry("Root", config.getSpec().getValues(), config.getSpec(), true);
         this.config = config;
     }
 
@@ -137,16 +139,7 @@ public class ConfigScreen extends ListMenuScreen
 
         if(this.folderEntry.isRoot())
         {
-            this.restoreButton = this.addButton(new Button(this.width / 2 - 155, this.height - 29, 150, 20, new TranslationTextComponent("configured.gui.restore_defaults"), (button) ->
-            {
-                if(this.folderEntry.isRoot())
-                {
-                    this.showRestoreScreen();
-                }
-            }));
-            this.updateRestoreButton();
-
-            this.addButton(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, DialogTexts.GUI_DONE, (button) ->
+            this.saveButton = this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.save"), (button) ->
             {
                 if(this.config != null)
                 {
@@ -154,6 +147,18 @@ public class ConfigScreen extends ListMenuScreen
                 }
                 this.minecraft.displayGuiScreen(this.parent);
             }));
+            this.restoreButton = this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.reset_all"), (button) ->
+            {
+                if(this.folderEntry.isRoot())
+                {
+                    this.showRestoreScreen();
+                }
+            }));
+            this.addButton(new Button(this.width / 2 + 50, this.height - 29, 90, 20, DialogTexts.GUI_CANCEL, (button) ->
+            {
+                this.minecraft.displayGuiScreen(this.parent);
+            }));
+            this.updateButtons();
         }
         else
         {
@@ -164,7 +169,7 @@ public class ConfigScreen extends ListMenuScreen
     private void saveConfig()
     {
         // Don't need to save if nothing changed
-        if(!ConfigHelper.isChanged(this.folderEntry))
+        if(!this.isChanged(this.folderEntry))
             return;
 
         // Creates a temporary config to merge into the real config. This avoids multiple save calls
@@ -217,7 +222,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             if(!result) return;
             this.restoreDefaults(this.folderEntry);
-            this.updateRestoreButton();
+            this.updateButtons();
         });
         confirmScreen.setBackground(background);
         confirmScreen.setPositiveText(new TranslationTextComponent("configured.gui.restore").mergeStyle(TextFormatting.GOLD, TextFormatting.BOLD));
@@ -240,11 +245,18 @@ public class ConfigScreen extends ListMenuScreen
         });
     }
 
-    private void updateRestoreButton()
+    private void updateButtons()
     {
-        if(this.restoreButton != null && this.folderEntry.isRoot())
+        if(this.folderEntry.isRoot())
         {
-            this.restoreButton.active = ConfigHelper.isModified(this.folderEntry);
+            if(this.saveButton != null)
+            {
+                this.saveButton.active = this.isChanged(this.folderEntry);
+            }
+            if(this.restoreButton != null)
+            {
+                this.restoreButton.active = this.isModified(this.folderEntry);
+            }
         }
     }
 
@@ -391,6 +403,7 @@ public class ConfigScreen extends ListMenuScreen
                     {
                         this.textField.setTextColor(14737632);
                         holder.setValue((T) n);
+                        ConfigScreen.this.updateButtons();
                     }
                     else
                     {
@@ -456,6 +469,7 @@ public class ConfigScreen extends ListMenuScreen
             {
                 holder.setValue(!holder.getValue());
                 button.setMessage(DialogTexts.optionsEnabled(holder.getValue()));
+                ConfigScreen.this.updateButtons();
             });
             this.eventListeners.add(this.button);
         }
@@ -483,7 +497,10 @@ public class ConfigScreen extends ListMenuScreen
         public StringItem(ValueHolder<String> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, this.label, holder.getValue(), holder.valueSpec::test, holder::setValue)));
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringScreen(ConfigScreen.this, background, this.label, holder.getValue(), holder.valueSpec::test, s -> {
+                holder.setValue(s);
+                ConfigScreen.this.updateButtons();
+            })));
             this.eventListeners.add(this.button);
         }
 
@@ -525,7 +542,10 @@ public class ConfigScreen extends ListMenuScreen
         public EnumItem(ValueHolder<Enum<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), button -> Minecraft.getInstance().displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, holder.getValue(), holder::setValue)));
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.change"), button -> Minecraft.getInstance().displayGuiScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, holder.getValue(), e -> {
+                holder.setValue(e);
+                ConfigScreen.this.updateButtons();
+            })));
             this.eventListeners.add(this.button);
         }
 
@@ -602,7 +622,7 @@ public class ConfigScreen extends ListMenuScreen
         return this.config == null || this.config.getType() != ModConfig.Type.SERVER;
     }
 
-    public static class ValueHolder<T>
+    public class ValueHolder<T>
     {
         private final ForgeConfigSpec.ConfigValue<T> configValue;
         private final ForgeConfigSpec.ValueSpec valueSpec;
@@ -631,6 +651,7 @@ public class ConfigScreen extends ListMenuScreen
         public void restoreDefaultValue()
         {
             this.setValue((T) this.valueSpec.getDefault());
+            ConfigScreen.this.updateButtons();
         }
 
         public boolean isDefaultValue()
@@ -649,7 +670,7 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public static class ListValueHolder extends ValueHolder<List<?>>
+    public class ListValueHolder extends ValueHolder<List<?>>
     {
         public ListValueHolder(ForgeConfigSpec.ConfigValue<List<?>> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
@@ -665,7 +686,7 @@ public class ConfigScreen extends ListMenuScreen
 
     public interface IEntry {}
 
-    public static class FolderEntry implements IEntry
+    public class FolderEntry implements IEntry
     {
         private final String label;
         private final UnmodifiableConfig config;
@@ -720,7 +741,7 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public static class ValueEntry implements IEntry
+    public class ValueEntry implements IEntry
     {
         private final ValueHolder<?> holder;
 
@@ -733,5 +754,49 @@ public class ConfigScreen extends ListMenuScreen
         {
             return this.holder;
         }
+    }
+
+    public boolean isModified(FolderEntry folder)
+    {
+        for(IEntry entry : folder.getEntries())
+        {
+            if(entry instanceof FolderEntry)
+            {
+                if(this.isModified((FolderEntry) entry))
+                {
+                    return true;
+                }
+            }
+            else if(entry instanceof ValueEntry)
+            {
+                if(!((ValueEntry) entry).getHolder().isDefaultValue())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isChanged(FolderEntry folder)
+    {
+        for(IEntry entry : folder.getEntries())
+        {
+            if(entry instanceof FolderEntry)
+            {
+                if(this.isChanged((FolderEntry) entry))
+                {
+                    return true;
+                }
+            }
+            else if(entry instanceof ValueEntry)
+            {
+                if(((ValueEntry) entry).getHolder().isChanged())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

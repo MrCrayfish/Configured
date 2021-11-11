@@ -196,47 +196,4 @@ public class ConfigHelper
         gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
     }
 
-    public static boolean isModified(ConfigScreen.FolderEntry folder)
-    {
-        for(ConfigScreen.IEntry entry : folder.getEntries())
-        {
-            if(entry instanceof ConfigScreen.FolderEntry)
-            {
-                if(isModified((ConfigScreen.FolderEntry) entry))
-                {
-                    return true;
-                }
-            }
-            else if(entry instanceof ConfigScreen.ValueEntry)
-            {
-                if(!((ConfigScreen.ValueEntry) entry).getHolder().isDefaultValue())
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean isChanged(ConfigScreen.FolderEntry folder)
-    {
-        for(ConfigScreen.IEntry entry : folder.getEntries())
-        {
-            if(entry instanceof ConfigScreen.FolderEntry)
-            {
-                if(isChanged((ConfigScreen.FolderEntry) entry))
-                {
-                    return true;
-                }
-            }
-            else if(entry instanceof ConfigScreen.ValueEntry)
-            {
-                if(((ConfigScreen.ValueEntry) entry).getHolder().isChanged())
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }
