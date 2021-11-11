@@ -10,6 +10,8 @@ import com.mrcrayfish.configured.client.screen.ConfigScreen;
 import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
+import net.minecraft.network.NetworkManager;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ConfigTracker;
@@ -153,8 +155,21 @@ public class ConfigHelper
         return null;
     }
 
+    public static boolean isConfiguredInstalledOnServer()
+    {
+        ClientPlayNetHandler connection = Minecraft.getInstance().getConnection();
+        if(connection == null)
+            return false;
+        NetworkManager manager = connection.getNetworkManager();
+        return PacketHandler.getPlayChannel().isRemotePresent(manager);
+    }
+
     public static void sendConfigDataToServer(ModConfig config)
     {
+        // Prevents trying to send packet to server if the server doesn't have configured installed
+        if(!isConfiguredInstalledOnServer())
+            return;
+
         try
         {
             Minecraft minecraft = Minecraft.getInstance();
