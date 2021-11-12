@@ -11,7 +11,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.2.0-1.17.1'
+version = '1.3.0-1.17.1'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
@@ -46,7 +46,7 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'configured', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
             mods {
                 configured {
                     source sourceSets.main

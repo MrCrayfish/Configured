@@ -1,36 +1,31 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * A simple versatile confirmation screen
  * <p>
  * Author: MrCrayfish
  */
-public class ConfirmationScreen extends Screen
+public class ConfirmationScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final Component message;
-    private final Consumer<Boolean> handler;
+    private final Function<Boolean, Boolean> handler;
     private Component positiveText = CommonComponents.GUI_YES;
     private Component negativeText = CommonComponents.GUI_NO;
     private ResourceLocation background = Screen.BACKGROUND_LOCATION;
 
-    public ConfirmationScreen(Screen parent, TranslatableComponent message, Consumer<Boolean> handler)
+    public ConfirmationScreen(Screen parent, Component message, Function<Boolean, Boolean> handler)
     {
         super(message);
         this.parent = parent;
@@ -41,13 +36,21 @@ public class ConfirmationScreen extends Screen
     @Override
     protected void init()
     {
-        this.addRenderableWidget(new Button(this.width / 2 - 105, this.height / 2, 100, 20, this.positiveText, button -> {
-            this.handler.accept(true);
-            this.minecraft.setScreen(this.parent);
+        List<FormattedCharSequence> lines = this.font.split(this.message, 300);
+        int messageOffset = (lines.size() * (this.font.lineHeight + 2)) / 2;
+        this.addRenderableWidget(new Button(this.width / 2 - 105, this.height / 2 + messageOffset, 100, 20, this.positiveText, button ->
+        {
+            if(this.handler.apply(true))
+            {
+                this.minecraft.setScreen(this.parent);
+            }
         }));
-        this.addRenderableWidget(new Button(this.width / 2 + 5, this.height / 2, 100, 20, this.negativeText, button -> {
-            this.handler.accept(false);
-            this.minecraft.setScreen(this.parent);
+        this.addRenderableWidget(new Button(this.width / 2 + 5, this.height / 2 + messageOffset, 100, 20, this.negativeText, button ->
+        {
+            if(this.handler.apply(false))
+            {
+                this.minecraft.setScreen(this.parent);
+            }
         }));
     }
 
@@ -56,25 +59,18 @@ public class ConfirmationScreen extends Screen
     {
         this.renderBackground(poseStack);
         super.render(poseStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(poseStack, this.font, this.message, this.width / 2, this.height / 2 - 20, 0xFFFFFF);
+        List<FormattedCharSequence> lines = this.font.split(this.message, 300);
+        for(int i = 0; i < lines.size(); i++)
+        {
+            int lineWidth = this.font.width(lines.get(i));
+            this.font.draw(poseStack, lines.get(i), this.width / 2 - lineWidth / 2, this.height / 2 - 20 - (lines.size() * (this.font.lineHeight + 2)) / 2 + i * (this.font.lineHeight + 2), 0xFFFFFF);
+        }
     }
 
     @Override
-    public void renderDirtBackground(int vOffset)
+    public ResourceLocation getBackgroundTexture()
     {
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder builder = tesselator.getBuilder();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, this.background);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        float size = 32.0F;
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        builder.vertex(0.0D, this.height, 0.0D).uv(0.0F, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        builder.vertex(this.width, this.height, 0.0D).uv(this.width / size, this.height / size + vOffset).color(64, 64, 64, 255).endVertex();
-        builder.vertex(this.width, 0.0D, 0.0D).uv(this.width / size, vOffset).color(64, 64, 64, 255).endVertex();
-        builder.vertex(0.0D, 0.0D, 0.0D).uv(0.0F, vOffset).color(64, 64, 64, 255).endVertex();
-        tesselator.end();
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent(this, new PoseStack()));
+        return this.background;
     }
 
     /**
@@ -102,8 +98,9 @@ public class ConfirmationScreen extends Screen
      *
      * @param background a resource location pointing to a texture
      */
-    public void setBackground(ResourceLocation background)
+    public ConfirmationScreen setBackground(ResourceLocation background)
     {
         this.background = background;
+        return this;
     }
 }
