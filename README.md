@@ -22,7 +22,6 @@ Configured is a simple and lightweight mod that dynamically creates a configurat
 This mod has support to change the background texture of the config screen. Just add `[modproperties.<yourmodid>]` to the bottom of your `mods.toml` then under it add an entry called `configuredBackground` set the value to `"minecraft:textures/block/stone.png"` or another location to a texture file. You do not need to make your mod depend on this mod, however on CurseForge I appreciate if you mark this mod as an optional dependency. See `mods.toml` in this repo for an example.
 
 ## Screenshots
-
-![Screenshot 1](https://media.forgecdn.net/attachments/407/576/screenshot6.png)
-![Screenshot 2](https://media.forgecdn.net/attachments/407/572/screenshot2.png)
-![Screenshot 3](https://media.forgecdn.net/attachments/407/573/screenshot3.png)
+![Screenshot6](https://user-images.githubusercontent.com/4958241/141668789-094a0da7-92a0-404b-ac93-c4d1a8d3e7bf.png)
+![Screenshot2](https://user-images.githubusercontent.com/4958241/141668794-655e84fd-5399-4d6d-a754-4e124f904115.png)
+![Screenshot3](https://user-images.githubusercontent.com/4958241/141668796-fd10121d-7b5e-4330-a2bc-5779a0d96e53.png)
