@@ -153,7 +153,7 @@ public class ClientHandler
     @SubscribeEvent
     public static void onKeyPress(InputEvent.KeyInputEvent event)
     {
-        if(event.getAction() == GLFW.GLFW_PRESS && KEY_OPEN_MOD_LIST.isPressed())
+        if(event.getAction() == GLFW.GLFW_PRESS && KEY_OPEN_MOD_LIST.isDown())
         {
             Minecraft minecraft = Minecraft.getInstance();
             if(minecraft.player == null)
