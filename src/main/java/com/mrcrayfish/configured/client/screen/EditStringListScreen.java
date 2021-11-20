@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -15,6 +16,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -26,36 +28,39 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class EditStringListScreen extends Screen
+public class EditStringListScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final List<StringHolder> values = new ArrayList<>();
-    private final ForgeConfigSpec.ConfigValue<List<?>> listValue;
     private final ForgeConfigSpec.ValueSpec valueSpec;
+    private final ResourceLocation background;
+    private final ConfigScreen.ListValueHolder holder;
     private StringList list;
 
-    public EditStringListScreen(Screen parent, Component titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec)
+    public EditStringListScreen(Screen parent, Component titleIn, ConfigScreen.ListValueHolder holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
-        this.listValue = listValue;
-        this.valueSpec = valueSpec;
-        this.values.addAll(listValue.get().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
+        this.holder = holder;
+        this.valueSpec = holder.getSpec();
+        this.values.addAll(holder.getValue().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
+        this.background = background;
     }
 
     @Override
     protected void init()
     {
         this.list = new StringList();
+        this.list.setRenderBackground(!ListMenuScreen.isPlayingGame());
         this.addWidget(this.list);
         this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
             List<String> newValues = this.values.stream().map(StringHolder::getValue).collect(Collectors.toList());
             this.valueSpec.correct(newValues);
-            this.listValue.set(newValues);
+            this.holder.setValue(newValues);
             this.minecraft.setScreen(this.parent);
         }));
         this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.setScreen(new EditStringScreen(EditStringListScreen.this, new TranslatableComponent("configured.gui.edit_value"), "", o -> true, s -> {
+            this.minecraft.setScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslatableComponent("configured.gui.edit_value"), "", o -> true, s -> {
                 StringHolder holder = new StringHolder(s);
                 this.values.add(holder);
                 this.list.addEntry(new StringEntry(this.list, holder));
@@ -75,8 +80,14 @@ public class EditStringListScreen extends Screen
         super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 
+    @Override
+    public ResourceLocation getBackgroundTexture()
+    {
+        return this.background;
+    }
+
     @OnlyIn(Dist.CLIENT)
-    public class StringList extends ContainerObjectSelectionList<StringEntry>
+    public class StringList extends ContainerObjectSelectionList<StringEntry> implements IBackgroundTexture
     {
         public StringList()
         {
@@ -118,12 +129,18 @@ public class EditStringListScreen extends Screen
             {
                 entry.children().forEach(o ->
                 {
-                    if(o instanceof AbstractSliderButton)
+                    if(o instanceof Button)
                     {
-                        ((AbstractSliderButton)o).renderToolTip(poseStack, mouseX, mouseY);
+                        ((Button)o).renderToolTip(poseStack, mouseX, mouseY);
                     }
                 });
             });
+        }
+
+        @Override
+        public ResourceLocation getBackgroundTexture()
+        {
+            return background;
         }
     }
 
@@ -139,19 +156,19 @@ public class EditStringListScreen extends Screen
             this.list = list;
             this.holder = holder;
             this.editButton = new Button(0, 0, 42, 20, new TextComponent("Edit"), onPress -> {
-                EditStringListScreen.this.minecraft.setScreen(new EditStringScreen(EditStringListScreen.this, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
+                EditStringListScreen.this.minecraft.setScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
                     this.holder.setValue(s);
                 }));
             });
-            Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
+            Button.OnTooltip tooltip = (button, poseStack, mouseX, mouseY) -> {
                 if(button.active && button.isHovered()) {
-                    EditStringListScreen.this.renderTooltip(matrixStack, EditStringListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                    EditStringListScreen.this.renderTooltip(poseStack, EditStringListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
-            this.deleteButton = new IconButton(0, 0, 20, 20, 11, 0, tooltip, onPress -> {
+            this.deleteButton = new IconButton(0, 0, 11, 0, onPress -> {
                 EditStringListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
-            });
+            }, tooltip);
         }
 
         @Override
