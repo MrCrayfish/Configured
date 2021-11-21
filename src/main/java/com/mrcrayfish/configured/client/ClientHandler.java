@@ -88,6 +88,7 @@ public class ClientHandler
         return modConfigMap;
     }
 
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private static void addConfigSetToMap(ModContainer container, ModConfig.Type type, Map<ModConfig.Type, Set<ModConfig>> configMap)
     {
         /* Optifine basically breaks Forge's client config, so it's simply not added */
@@ -97,10 +98,14 @@ public class ClientHandler
             return;
         }
 
-        Set<ModConfig> configSet = getConfigSets().getOrDefault(type, Collections.emptySet()).stream().filter(config -> config.getModId().equals(container.getModId())).collect(Collectors.toSet());
-        if(!configSet.isEmpty())
+        Set<ModConfig> configSet = getConfigSets().get(type);
+        synchronized(configSet)
         {
-            configMap.put(type, configSet);
+            Set<ModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).collect(Collectors.toSet());
+            if(!filteredConfigSets.isEmpty())
+            {
+                configMap.put(type, filteredConfigSets);
+            }
         }
     }
 
