@@ -94,7 +94,7 @@ public class ClientHandler
             Configured.LOGGER.info("Ignoring Forge's client config since OptiFine was detected");
             return;
         }
-        
+
         Set<ModConfig> configSet = getConfigSets().get(type);
         synchronized(configSet)
         {
