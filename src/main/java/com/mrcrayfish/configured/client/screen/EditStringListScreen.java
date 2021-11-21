@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.client.gui.widget.list.ExtendedList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -23,36 +24,39 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class EditStringListScreen extends Screen
+public class EditStringListScreen extends Screen implements IBackgroundTexture
 {
     private final Screen parent;
     private final List<StringHolder> values = new ArrayList<>();
-    private final ForgeConfigSpec.ConfigValue<List<?>> listValue;
     private final ForgeConfigSpec.ValueSpec valueSpec;
+    private final ResourceLocation background;
+    private final ConfigScreen.ListValueHolder holder;
     private StringList list;
 
-    public EditStringListScreen(Screen parent, ITextComponent titleIn, ForgeConfigSpec.ConfigValue<List<?>> listValue, ForgeConfigSpec.ValueSpec valueSpec)
+    public EditStringListScreen(Screen parent, ITextComponent titleIn, ConfigScreen.ListValueHolder holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
-        this.listValue = listValue;
-        this.valueSpec = valueSpec;
-        this.values.addAll(listValue.get().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
+        this.holder = holder;
+        this.valueSpec = holder.getSpec();
+        this.values.addAll(holder.getValue().stream().map(o -> new StringHolder(o.toString())).collect(Collectors.toList()));
+        this.background = background;
     }
 
     @Override
     protected void init()
     {
         this.list = new StringList();
+        this.list.func_244605_b(!ListMenuScreen.isPlayingGame());
         this.children.add(this.list);
         this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, DialogTexts.GUI_DONE, (button) -> {
             List<String> newValues = this.values.stream().map(StringHolder::getValue).collect(Collectors.toList());
             this.valueSpec.correct(newValues);
-            this.listValue.set(newValues);
+            this.holder.setValue(newValues);
             this.minecraft.displayGuiScreen(this.parent);
         }));
         this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), "", o -> true, s -> {
+            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), "", o -> true, s -> {
                 StringHolder holder = new StringHolder(s);
                 this.values.add(holder);
                 this.list.addEntry(new StringEntry(this.list, holder));
@@ -72,8 +76,14 @@ public class EditStringListScreen extends Screen
         super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
+    @Override
+    public ResourceLocation getBackgroundTexture()
+    {
+        return this.background;
+    }
+
     @OnlyIn(Dist.CLIENT)
-    public class StringList extends ExtendedList<StringEntry>
+    public class StringList extends ExtendedList<StringEntry> implements IBackgroundTexture
     {
         public StringList()
         {
@@ -122,6 +132,12 @@ public class EditStringListScreen extends Screen
                 });
             });
         }
+
+        @Override
+        public ResourceLocation getBackgroundTexture()
+        {
+            return background;
+        }
     }
 
     public class StringEntry extends AbstractOptionList.Entry<StringEntry>
@@ -136,7 +152,7 @@ public class EditStringListScreen extends Screen
             this.list = list;
             this.holder = holder;
             this.editButton = new Button(0, 0, 42, 20, new StringTextComponent("Edit"), onPress -> {
-                EditStringListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
+                EditStringListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), o -> true, s -> {
                     this.holder.setValue(s);
                 }));
             });
@@ -145,10 +161,10 @@ public class EditStringListScreen extends Screen
                     EditStringListScreen.this.renderTooltip(matrixStack, EditStringListScreen.this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.remove"), Math.max(EditStringListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
-            this.deleteButton = new IconButton(0, 0, 20, 20, 11, 0, tooltip, onPress -> {
+            this.deleteButton = new IconButton(0, 0, 11, 0, onPress -> {
                 EditStringListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
-            });
+            }, tooltip);
         }
 
         @Override

@@ -1,12 +1,14 @@
 package com.mrcrayfish.configured.client.screen.widget;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 
 /**
@@ -16,18 +18,23 @@ public class IconButton extends Button
 {
     public static final ResourceLocation ICONS = new ResourceLocation("configured:textures/gui/icons.png");
 
-    private int u, v;
+    private final ITextComponent label;
+    private final int u, v;
 
-    public IconButton(int x, int y, int width, int height, int u, int v, IPressable pressedAction)
+    public IconButton(int x, int y, int u, int v, int width, ITextComponent label, IPressable onPress)
     {
-        super(x, y, width, height, StringTextComponent.EMPTY, pressedAction);
-        this.u = u;
-        this.v = v;
+        this(x, y, u, v, width, label, onPress, (b, ms, mx, my) -> {});
     }
 
-    public IconButton(int x, int y, int width, int height, int u, int v, Button.ITooltip onTooltip, IPressable pressedAction)
+    public IconButton(int x, int y, int u, int v, IPressable onPress, Button.ITooltip onTooltip)
     {
-        super(x, y, width, height, StringTextComponent.EMPTY, pressedAction, onTooltip);
+        this(x, y, u, v, 20, StringTextComponent.EMPTY, onPress, onTooltip);
+    }
+
+    public IconButton(int x, int y, int u, int v, int width, ITextComponent label, IPressable onPress, Button.ITooltip onTooltip)
+    {
+        super(x, y, width, 20, StringTextComponent.EMPTY, onPress, onTooltip);
+        this.label = label;
         this.u = u;
         this.v = v;
     }
@@ -35,23 +42,22 @@ public class IconButton extends Button
     @Override
     public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
-        Minecraft mc = Minecraft.getInstance();
-        FontRenderer font = mc.fontRenderer;
-        mc.getTextureManager().bindTexture(WIDGETS_LOCATION);
+        super.renderButton(matrixStack, mouseX, mouseY, partialTicks);
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.getTextureManager().bindTexture(ICONS);
+        RenderSystem.enableDepthTest();
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.alpha);
-        int vOffset = this.getYImage(this.isHovered());
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-        this.blit(matrixStack, this.x, this.y, 0, 46 + vOffset * 20, this.width / 2, this.height);
-        this.blit(matrixStack, this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + vOffset * 20, this.width / 2, this.height);
-        this.renderBg(matrixStack, mc, mouseX, mouseY);
-        int color = this.getFGColor();
-        drawCenteredString(matrixStack, font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, color | MathHelper.ceil(this.alpha * 255.0F) << 24);
-        mc.getTextureManager().bindTexture(ICONS);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        int contentWidth = 10 + minecraft.fontRenderer.getStringPropertyWidth(this.label) + (!this.label.getString().isEmpty() ? 4 : 0);
+        int iconX = this.x + (this.width - contentWidth) / 2;
+        int iconY = this.y + 5;
         float brightness = this.active ? 1.0F : 0.5F;
         RenderSystem.color4f(brightness, brightness, brightness, this.alpha);
-        blit(matrixStack, this.x + 5, this.y + 4, this.getBlitOffset(), this.u, this.v, 11, 11, 32, 32);
+        blit(matrixStack, iconX, iconY, this.u, this.v, 11, 11, 64, 64);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.alpha);
+        int textColor = this.getFGColor() | MathHelper.ceil(this.alpha * 255.0F) << 24;
+        drawString(matrixStack, minecraft.fontRenderer, this.label, iconX + 14, iconY + 1, textColor);
     }
 }
