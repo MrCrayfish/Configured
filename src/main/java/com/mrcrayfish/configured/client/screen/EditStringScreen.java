@@ -22,14 +22,13 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
     private final Screen parent;
     private final ResourceLocation background;
     private final String originalValue;
-    private final Function<Object, Boolean> validator;
+    private final Function<String, Boolean> validator;
     private final Consumer<String> onSave;
     private Button doneButton;
     private TextFieldWidget textField;
 
-    protected EditStringScreen(Screen parent, ResourceLocation background, ITextComponent component, String originalValue, Function<Object, Boolean> validator, Consumer<String> onSave)
+    protected EditStringScreen(Screen parent, ResourceLocation background, ITextComponent component, String originalValue, Function<String, Boolean> validator, Consumer<String> onSave)
     {
-
         super(component);
         this.parent = parent;
         this.background = background;

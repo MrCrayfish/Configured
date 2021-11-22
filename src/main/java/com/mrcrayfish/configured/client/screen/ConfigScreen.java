@@ -32,9 +32,12 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
@@ -120,7 +123,7 @@ public class ConfigScreen extends ListMenuScreen
                 }
                 else if(value instanceof List<?>)
                 {
-                    configEntries.add(new ListStringItem((ListValueHolder) configValueEntry.getHolder()));
+                    configEntries.add(new ListItem((ListValueHolder) configValueEntry.getHolder()));
                 }
                 else
                 {
@@ -203,6 +206,17 @@ public class ConfigScreen extends ListMenuScreen
                     if(holder.isChanged())
                     {
                         List<String> path = holder.configValue.getPath();
+                        if(holder instanceof ListValueHolder)
+                        {
+                            ListValueHolder listHolder = (ListValueHolder) holder;
+                            Function<List<?>, List<?>> converter = listHolder.getConverter();
+                            if(converter != null)
+                            {
+                                List<?> convertedList = converter.apply(listHolder.getValue());
+                                newConfig.set(path, convertedList);
+                                continue;
+                            }
+                        }
                         newConfig.set(path, holder.getValue());
                     }
                 }
@@ -526,14 +540,14 @@ public class ConfigScreen extends ListMenuScreen
         }
     }
 
-    public class ListStringItem extends ConfigItem<List<?>>
+    public class ListItem extends ConfigItem<List<?>>
     {
         private final Button button;
 
-        public ListStringItem(ListValueHolder holder)
+        public ListItem(ListValueHolder holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditStringListScreen(ConfigScreen.this, this.label, holder, background)));
+            this.button = new Button(10, 5, 46, 20, new TranslationTextComponent("configured.gui.edit"), button -> Minecraft.getInstance().displayGuiScreen(new EditListScreen(ConfigScreen.this, this.label, holder, background)));
             this.eventListeners.add(this.button);
         }
 
@@ -676,6 +690,11 @@ public class ConfigScreen extends ListMenuScreen
             return !this.value.equals(this.initialValue);
         }
 
+        public ForgeConfigSpec.ConfigValue<T> getConfigValue()
+        {
+            return configValue;
+        }
+
         public ForgeConfigSpec.ValueSpec getSpec()
         {
             return this.valueSpec;
@@ -684,15 +703,41 @@ public class ConfigScreen extends ListMenuScreen
 
     public class ListValueHolder extends ValueHolder<List<?>>
     {
+        @Nullable
+        private final Function<List<?>, List<?>> converter;
+
         public ListValueHolder(ForgeConfigSpec.ConfigValue<List<?>> configValue, ForgeConfigSpec.ValueSpec valueSpec)
         {
             super(configValue, valueSpec);
+            this.converter = this.createConverter(configValue);
+        }
+
+        @Nullable
+        private Function<List<?>, List<?>> createConverter(ForgeConfigSpec.ConfigValue<List<?>> configValue)
+        {
+            List<?> original = configValue.get();
+            if(original instanceof ArrayList)
+            {
+                return ArrayList::new;
+            }
+            else if(original instanceof LinkedList)
+            {
+                return LinkedList::new;
+            }
+            // TODO allow developers to hook custom list
+            return null;
         }
 
         @Override
         protected void setValue(List<?> value)
         {
             this.value = new ArrayList<>(value);
+        }
+
+        @Nullable
+        public Function<List<?>, List<?>> getConverter()
+        {
+            return this.converter;
         }
     }
 
