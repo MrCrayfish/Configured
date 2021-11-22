@@ -222,7 +222,6 @@ public class ConfigScreen extends ListMenuScreen
             }
         }
         this.config.getConfigData().putAll(newConfig);
-        ConfigHelper.resetCache(this.config);
 
         // Post logic for server configs
         if(this.config.getType() == ModConfig.Type.SERVER)
@@ -237,6 +236,12 @@ public class ConfigScreen extends ListMenuScreen
             {
                 ConfigHelper.sendConfigDataToServer(this.config);
             }
+        }
+        else
+        {
+            Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
+            this.config.getSpec().afterReload();
+            ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent());
         }
     }
 
