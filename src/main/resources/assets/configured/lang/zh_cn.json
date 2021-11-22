@@ -1,0 +1,27 @@
+{
+    "configured.gui.search": "搜索...",
+    "configured.gui.reset_all": "重置所有",
+    "configured.gui.edit": "编辑",
+    "configured.gui.edit_value": "编辑值",
+    "configured.gui.add_value": "添加...",
+    "configured.gui.reset": "重置",
+    "configured.gui.remove": "删除",
+    "configured.gui.modify": "更改",
+    "configured.gui.restore": "还原",
+    "configured.gui.select": "选择",
+    "configured.gui.change": "修改",
+    "configured.gui.save": "保存",
+    "configured.gui.select_world": "选择世界",
+    "configured.gui.no_permission": "§c您无权执行此操作",
+    "configured.gui.not_installed": "§c服务器上没有安装Configured",
+    "configured.gui.edit_world_config": "选择世界来编辑 §e%s§r 配置",
+    "configured.gui.info": "此菜单是由Configured动态生成的。单击此处打开此mod的CurseForge页面!"
+    "configured.gui.server_config_info": "基于服务器对于每个世界的配置都是独立的。这意味着对配置所做的任何更改将仅应用于选定的世界。",
+    "configured.gui.restore_message": "您确定要重置所有值吗？如果您正在玩模组包，此配置可能已被作者修改，恢复将破坏模组的预期体验。 §6这个操作是不可逆的！",
+    "configured.gui.unsaved_changes": "有未保存的更改。确定要停止编辑吗？",
+    "configured.gui.title.client_configuration": "客户端配置",
+    "configured.gui.title.common_configuration": "常用配置",
+    "configured.gui.title.server_configuration": "服务器配置",
+    "key.configured.open_mod_list": "打开模组列表",
+    "key.categories.configured": "Configured"
+}
