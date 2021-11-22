@@ -171,10 +171,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private MutableComponent createTrimmedFileName(String fileName)
         {
-            MutableComponent trimmedFileName = new TextComponent(fileName).withStyle(ChatFormatting.GRAY);
+            MutableComponent trimmedFileName = new TextComponent(fileName);
             if(Minecraft.getInstance().font.width(fileName) > 150)
             {
-                trimmedFileName = new TextComponent(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140) + "...").withStyle(ChatFormatting.GRAY);
+                trimmedFileName = new TextComponent(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140) + "...");
             }
             return trimmedFileName;
         }

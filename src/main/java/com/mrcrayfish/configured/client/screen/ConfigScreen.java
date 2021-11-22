@@ -29,6 +29,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -240,7 +241,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
             this.config.getSpec().afterReload();
-            ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent());
+            ConfigHelper.fireEvent(this.config, new ModConfigEvent.Reloading(this.config));
         }
     }
 
@@ -550,7 +551,7 @@ public class ConfigScreen extends ListMenuScreen
         public ListItem(ListValueHolder holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringListScreen(ConfigScreen.this, this.label, holder, background)));
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, background)));
             this.eventListeners.add(this.button);
         }
 
