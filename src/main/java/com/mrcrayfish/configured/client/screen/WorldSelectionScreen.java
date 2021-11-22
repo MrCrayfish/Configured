@@ -46,7 +46,7 @@ public class WorldSelectionScreen extends ListMenuScreen
 
     public WorldSelectionScreen(Screen parent, ResourceLocation background, ModConfig config, ITextComponent title)
     {
-        super(parent, new TranslationTextComponent("configured.gui.edit_world_config", title), background, 30);
+        super(parent, new TranslationTextComponent("configured.gui.edit_world_config", title.copyRaw().mergeStyle(TextFormatting.YELLOW)), background, 30);
         this.config = config;
     }
 

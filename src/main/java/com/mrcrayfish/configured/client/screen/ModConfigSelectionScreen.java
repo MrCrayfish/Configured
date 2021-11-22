@@ -115,7 +115,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                         }
                         else if(!this.hasRequiredPermission())
                         {
-                            ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                            ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission").mergeStyle(TextFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                         }
                     }
                 });
@@ -213,11 +213,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.not_installed"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.not_installed").mergeStyle(TextFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }
                     else if(!this.hasRequiredPermission())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission").mergeStyle(TextFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }
                 }
             });
