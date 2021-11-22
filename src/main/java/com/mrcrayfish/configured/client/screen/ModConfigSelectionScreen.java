@@ -13,6 +13,7 @@ import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -95,11 +96,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         public FileItem(ModConfig config)
         {
-            super(createLabelFromModConfig(config).getString());
+            super(createLabelFromModConfig(config));
             this.config = config;
-            this.title = createLabelFromModConfig(config);
+            this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
             this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
-            this.fileName = this.createTrimmedFileName(config.getFileName());
+            this.fileName = this.createTrimmedFileName(config.getFileName()).mergeStyle(TextFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
             this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
             if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
@@ -169,12 +170,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             return true;
         }
 
-        private ITextComponent createTrimmedFileName(String fileName)
+        private StringTextComponent createTrimmedFileName(String fileName)
         {
-            ITextComponent trimmedFileName = new StringTextComponent(fileName).mergeStyle(TextFormatting.GRAY);
-            if(Minecraft.getInstance().fontRenderer.getStringWidth(fileName) > 160)
+            StringTextComponent trimmedFileName = new StringTextComponent(fileName);
+            if(Minecraft.getInstance().fontRenderer.getStringWidth(fileName) > 150)
             {
-                trimmedFileName = new StringTextComponent(Minecraft.getInstance().fontRenderer.func_238412_a_(fileName, 150) + "...").mergeStyle(TextFormatting.GRAY);
+                trimmedFileName = new StringTextComponent(Minecraft.getInstance().fontRenderer.func_238412_a_(fileName, 140) + "...");
             }
             return trimmedFileName;
         }
@@ -287,13 +288,13 @@ public class ModConfigSelectionScreen extends ListMenuScreen
      * @param config
      * @return
      */
-    private static ITextComponent createLabelFromModConfig(ModConfig config)
+    private static String createLabelFromModConfig(ModConfig config)
     {
         String fileName = config.getFileName();
         fileName = fileName.replace(config.getModId() + "-", "");
         fileName = fileName.substring(0, fileName.length() - ".toml".length());
         fileName = FilenameUtils.getName(fileName);
         fileName = ConfigScreen.createLabel(fileName);
-        return new StringTextComponent(fileName);
+        return fileName;
     }
 }
