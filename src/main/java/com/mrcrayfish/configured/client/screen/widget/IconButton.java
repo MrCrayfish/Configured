@@ -50,14 +50,15 @@ public class IconButton extends Button
         RenderSystem.defaultBlendFunc();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         int contentWidth = 10 + minecraft.fontRenderer.getStringPropertyWidth(this.label) + (!this.label.getString().isEmpty() ? 4 : 0);
-        if(contentWidth > this.width)
+        boolean renderIcon = contentWidth <= this.width;
+        if(!renderIcon)
         {
             contentWidth = minecraft.fontRenderer.getStringPropertyWidth(this.label);
         }
         int iconX = this.x + (this.width - contentWidth) / 2;
         int iconY = this.y + 5;
         float brightness = this.active ? 1.0F : 0.5F;
-        if(contentWidth <= this.width)
+        if(renderIcon)
         {
             RenderSystem.color4f(brightness, brightness, brightness, this.alpha);
             blit(matrixStack, iconX, iconY, this.u, this.v, 11, 11, 64, 64);
