@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,11 +21,12 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
     private final Screen parent;
     private final ResourceLocation background;
     private final String originalValue;
-    private final Function<Object, Boolean> validator;
+    private final Function<String, Boolean> validator;
     private final Consumer<String> onSave;
+    private Button doneButton;
     private EditBox textField;
 
-    protected EditStringScreen(Screen parent, ResourceLocation background, Component component, String originalValue, Function<Object, Boolean> validator, Consumer<String> onSave)
+    protected EditStringScreen(Screen parent, ResourceLocation background, Component component, String originalValue, Function<String, Boolean> validator, Consumer<String> onSave)
     {
         super(component);
         this.parent = parent;
@@ -40,9 +42,10 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
         this.textField = new EditBox(this.font, this.width / 2 - 150, this.height / 2 - 25, 300, 20, TextComponent.EMPTY);
         this.textField.setMaxLength(32500);
         this.textField.setValue(this.originalValue);
+        this.textField.setResponder(s -> this.updateValidation());
         this.addRenderableWidget(this.textField);
 
-        this.addRenderableWidget(new Button(this.width / 2 - 1 - 150, this.height / 2 + 3, 148, 20, CommonComponents.GUI_DONE, (button) -> {
+        this.doneButton = this.addRenderableWidget(new Button(this.width / 2 - 1 - 150, this.height / 2 + 3, 148, 20, CommonComponents.GUI_DONE, (button) -> {
             String text = this.textField.getValue();
             if(this.validator.apply(text)) {
                 this.onSave.accept(text);
@@ -52,6 +55,16 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
         this.addRenderableWidget(new Button(this.width / 2 + 3, this.height / 2 + 3, 148, 20, CommonComponents.GUI_CANCEL, (button) -> {
             this.minecraft.setScreen(this.parent);
         }));
+
+        this.updateValidation();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    protected void updateValidation()
+    {
+        boolean valid = this.validator.apply(this.textField.getValue());
+        this.doneButton.active = valid;
+        this.textField.setTextColor(valid || this.textField.getValue().isEmpty() ? ChatFormatting.WHITE.getColor() : ChatFormatting.RED.getColor());
     }
 
     @Override

@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -94,11 +95,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         public FileItem(ModConfig config)
         {
-            super(createLabelFromModConfig(config).getString());
+            super(createLabelFromModConfig(config));
             this.config = config;
-            this.title = createLabelFromModConfig(config);
+            this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
             this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
-            this.fileName = this.createTrimmedFileName(config.getFileName());
+            this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
             this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
             if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
@@ -113,7 +114,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                         }
                         else if(!this.hasRequiredPermission())
                         {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                         }
                     }
                 });
@@ -168,12 +169,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             return true;
         }
 
-        private Component createTrimmedFileName(String fileName)
+        private MutableComponent createTrimmedFileName(String fileName)
         {
-            Component trimmedFileName = new TextComponent(fileName).withStyle(ChatFormatting.GRAY);
-            if(Minecraft.getInstance().font.width(fileName) > 160)
+            MutableComponent trimmedFileName = new TextComponent(fileName).withStyle(ChatFormatting.GRAY);
+            if(Minecraft.getInstance().font.width(fileName) > 150)
             {
-                trimmedFileName = new TextComponent(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 150) + "...").withStyle(ChatFormatting.GRAY);
+                trimmedFileName = new TextComponent(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140) + "...").withStyle(ChatFormatting.GRAY);
             }
             return trimmedFileName;
         }
@@ -211,11 +212,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }
                     else if(!this.hasRequiredPermission())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }
                 }
             });
@@ -286,13 +287,13 @@ public class ModConfigSelectionScreen extends ListMenuScreen
      * @param config
      * @return
      */
-    private static Component createLabelFromModConfig(ModConfig config)
+    private static String createLabelFromModConfig(ModConfig config)
     {
         String fileName = config.getFileName();
         fileName = fileName.replace(config.getModId() + "-", "");
         fileName = fileName.substring(0, fileName.length() - ".toml".length());
         fileName = FilenameUtils.getName(fileName);
         fileName = ConfigScreen.createLabel(fileName);
-        return new TextComponent(fileName);
+        return fileName;
     }
 }

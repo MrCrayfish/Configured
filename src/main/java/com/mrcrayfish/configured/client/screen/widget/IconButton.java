@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -53,11 +52,19 @@ public class IconButton extends Button
         RenderSystem.defaultBlendFunc();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         int contentWidth = 10 + mc.font.width(this.label) + (!this.label.getString().isEmpty() ? 4 : 0);
+        boolean renderIcon = contentWidth <= this.width;
+        if(!renderIcon)
+        {
+            contentWidth = mc.font.width(this.label);
+        }
         int iconX = this.x + (this.width - contentWidth) / 2;
         int iconY = this.y + 5;
         float brightness = this.active ? 1.0F : 0.5F;
-        RenderSystem.setShaderColor(brightness, brightness, brightness, this.alpha);
-        blit(poseStack, iconX, iconY, this.getBlitOffset(), this.u, this.v, 11, 11, 64, 64);
+        if(renderIcon)
+        {
+            RenderSystem.setShaderColor(brightness, brightness, brightness, this.alpha);
+            blit(poseStack, iconX, iconY, this.getBlitOffset(), this.u, this.v, 11, 11, 64, 64);
+        }
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         int textColor = this.getFGColor() | Mth.ceil(this.alpha * 255.0F) << 24;
         drawString(poseStack, mc.font, this.label, iconX + 14, iconY + 1, textColor);

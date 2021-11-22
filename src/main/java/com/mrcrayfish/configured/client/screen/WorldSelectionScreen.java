@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public class WorldSelectionScreen extends ListMenuScreen
 
     public WorldSelectionScreen(Screen parent, ResourceLocation background, ModConfig config, Component title)
     {
-        super(parent, new TranslatableComponent("configured.gui.edit_world_config", title), background, 30);
+        super(parent, new TranslatableComponent("configured.gui.edit_world_config", title.plainCopy().withStyle(ChatFormatting.YELLOW)), background, 30);
         this.config = config;
     }
 
@@ -56,7 +57,9 @@ public class WorldSelectionScreen extends ListMenuScreen
         try
         {
             LevelStorageSource source = Minecraft.getInstance().getLevelSource();
-            source.getLevelList().forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
+            List<LevelSummary> levelList = source.getLevelList();
+            Collections.sort(levelList);
+            levelList.forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
         }
         catch(LevelStorageException e)
         {
