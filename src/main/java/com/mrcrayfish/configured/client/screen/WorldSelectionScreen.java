@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,7 +57,9 @@ public class WorldSelectionScreen extends ListMenuScreen
         try
         {
             SaveFormat saveFormat = Minecraft.getInstance().getSaveLoader();
-            saveFormat.getSaveList().forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
+            List<WorldSummary> saveList = saveFormat.getSaveList();
+            Collections.sort(saveList);
+            saveList.forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
         }
         catch(AnvilConverterException e)
         {
