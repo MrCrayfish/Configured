@@ -18,6 +18,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class EditStringListScreen extends Screen implements IBackgroundTexture
             this.minecraft.displayGuiScreen(this.parent);
         }));
         this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), "", o -> true, s -> {
+            this.minecraft.displayGuiScreen(new EditStringScreen(EditStringListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), "", o -> this.valueSpec.test(Collections.singletonList(o)), s -> {
                 StringHolder holder = new StringHolder(s);
                 this.values.add(holder);
                 this.list.addEntry(new StringEntry(this.list, holder));

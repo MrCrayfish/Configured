@@ -9,6 +9,7 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -23,10 +24,12 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
     private final String originalValue;
     private final Function<Object, Boolean> validator;
     private final Consumer<String> onSave;
+    private Button doneButton;
     private TextFieldWidget textField;
 
     protected EditStringScreen(Screen parent, ResourceLocation background, ITextComponent component, String originalValue, Function<Object, Boolean> validator, Consumer<String> onSave)
     {
+
         super(component);
         this.parent = parent;
         this.background = background;
@@ -41,9 +44,10 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
         this.textField = new TextFieldWidget(this.font, this.width / 2 - 150, this.height / 2 - 25, 300, 20, StringTextComponent.EMPTY);
         this.textField.setMaxStringLength(32500);
         this.textField.setText(this.originalValue);
+        this.textField.setResponder(s -> this.updateValidation());
         this.children.add(this.textField);
 
-        this.addButton(new Button(this.width / 2 - 1 - 150, this.height / 2 + 3, 148, 20, DialogTexts.GUI_DONE, button ->
+        this.doneButton = this.addButton(new Button(this.width / 2 - 1 - 150, this.height / 2 + 3, 148, 20, DialogTexts.GUI_DONE, button ->
         {
             String text = this.textField.getText();
             if(this.validator.apply(text))
@@ -53,6 +57,16 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
             }
         }));
         this.addButton(new Button(this.width / 2 + 3, this.height / 2 + 3, 148, 20, DialogTexts.GUI_CANCEL, button -> Minecraft.getInstance().displayGuiScreen(this.parent)));
+
+        this.updateValidation();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    protected void updateValidation()
+    {
+        boolean valid = this.validator.apply(this.textField.getText());
+        this.doneButton.active = valid;
+        this.textField.setTextColor(valid || this.textField.getText().isEmpty() ? TextFormatting.WHITE.getColor() : TextFormatting.RED.getColor());
     }
 
     @Override
