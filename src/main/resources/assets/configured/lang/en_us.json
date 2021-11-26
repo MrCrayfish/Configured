@@ -22,6 +22,7 @@
     "configured.gui.title.client_configuration": "Client Configurations",
     "configured.gui.title.common_configuration": "Common Configurations",
     "configured.gui.title.server_configuration": "Server Configurations",
+    "configured.config.client.force_configured_menu": "Force Configured Menu",
     "key.configured.open_mod_list": "Open Mod List",
     "key.categories.configured": "Configured"
 }

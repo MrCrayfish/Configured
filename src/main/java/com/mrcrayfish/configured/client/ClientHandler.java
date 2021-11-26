@@ -1,6 +1,8 @@
 package com.mrcrayfish.configured.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mrcrayfish.configured.Config;
+import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.client.screen.ConfigScreen;
@@ -60,13 +62,13 @@ public class ClientHandler
         ModList.get().forEachModContainer((modId, container) ->
         {
             // Ignore mods that already implement their own custom factory
-            if(container.getCustomExtension(ConfigGuiHandler.ConfigGuiFactory.class).isPresent())
+            if(container.getCustomExtension(ConfigGuiHandler.ConfigGuiFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
                 return;
 
             Map<ModConfig.Type, Set<ModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
-                Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()));
+                Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
                 container.registerExtensionPoint(ConfigGuiHandler.ConfigGuiFactory.class, () -> new ConfigGuiHandler.ConfigGuiFactory((mc, screen) -> new ModConfigSelectionScreen(screen, displayName, backgroundTexture, modConfigMap)));
