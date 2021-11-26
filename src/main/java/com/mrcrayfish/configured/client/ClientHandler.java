@@ -1,5 +1,6 @@
 package com.mrcrayfish.configured.client;
 
+import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
@@ -57,13 +58,13 @@ public class ClientHandler
         ModList.get().forEachModContainer((modId, container) ->
         {
             // Ignore mods that already implement their own custom factory
-            if(container.getCustomExtension(ExtensionPoint.CONFIGGUIFACTORY).isPresent())
+            if(container.getCustomExtension(ExtensionPoint.CONFIGGUIFACTORY).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
                 return;
 
             Map<ModConfig.Type, Set<ModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
-                Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()));
+                Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
                 container.registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> new ModConfigSelectionScreen(screen, displayName, backgroundTexture, modConfigMap));

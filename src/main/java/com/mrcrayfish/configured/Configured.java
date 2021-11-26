@@ -28,9 +28,9 @@ public class Configured
     {
         if(!FMLLoader.isProduction()) //Only load config if development environment
         {
-            ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
-            ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.customSpec, "custom_client.toml");
+            ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.testSpec, "configured_test_config.toml");
         }
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
         ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
