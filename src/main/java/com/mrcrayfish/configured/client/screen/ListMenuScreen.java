@@ -147,7 +147,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         {
             for(GuiEventListener widget : this.children())
             {
-                if(widget instanceof Button && ((Button) widget).isHovered())
+                if(widget instanceof Button && ((Button) widget).isHoveredOrFocused())
                 {
                     ((Button) widget).renderToolTip(poseStack, mouseX, mouseY);
                     break;

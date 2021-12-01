@@ -7,7 +7,7 @@ import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;

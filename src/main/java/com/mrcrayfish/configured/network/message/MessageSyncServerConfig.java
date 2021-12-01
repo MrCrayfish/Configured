@@ -3,8 +3,8 @@ package com.mrcrayfish.configured.network.message;
 import com.mrcrayfish.configured.network.play.ClientPlayHandler;
 import com.mrcrayfish.configured.network.play.ServerPlayHandler;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkDirection;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 

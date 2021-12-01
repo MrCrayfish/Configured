@@ -106,7 +106,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
                 {
-                    if(button.isHovered())
+                    if(button.isHoveredOrFocused())
                     {
                         if(this.hasRequiredPermission() && button.active)
                         {
@@ -208,7 +208,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 }
             }, (button, poseStack, mouseX, mouseY) ->
             {
-                if(button.isHovered())
+                if(button.isHoveredOrFocused())
                 {
                     if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
                     {

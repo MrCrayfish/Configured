@@ -26,7 +26,7 @@ public class ScreenUtil
 
     public static Button.OnTooltip createButtonTooltip(Screen screen, Component message, int maxWidth)
     {
-        return createButtonTooltip(screen, message, maxWidth, button -> button.active && button.isHovered());
+        return createButtonTooltip(screen, message, maxWidth, button -> button.active && button.isHoveredOrFocused());
     }
 
     public static Button.OnTooltip createButtonTooltip(Screen screen, Component message, int maxWidth, Predicate<Button> predicate)

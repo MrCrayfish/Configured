@@ -176,7 +176,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
                 }));
             });
             Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
-                if(button.active && button.isHovered()) {
+                if(button.active && button.isHoveredOrFocused()) {
                     EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
