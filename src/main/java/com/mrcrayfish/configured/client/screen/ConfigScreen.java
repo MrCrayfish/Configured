@@ -241,7 +241,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
             this.config.getSpec().afterReload();
-            ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent());
+            ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent(this.config));
         }
     }
 

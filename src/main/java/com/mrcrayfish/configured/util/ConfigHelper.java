@@ -34,7 +34,7 @@ public class ConfigHelper
 {
     private static final Method MOD_CONFIG_SET_CONFIG_DATA = ObfuscationReflectionHelper.findMethod(ModConfig.class, "setConfigData", CommentedConfig.class);
     private static final Method MOD_CONFIG_FIRE_EVENT = ObfuscationReflectionHelper.findMethod(ModConfig.class, "fireEvent", ModConfig.ModConfigEvent.class);
-    private static final Constructor<ModConfig.Reloading> MOD_CONFIG_RELOADING = ObfuscationReflectionHelper.findConstructor(ModConfig.Reloading.class);
+    private static final Constructor<ModConfig.Reloading> MOD_CONFIG_RELOADING = ObfuscationReflectionHelper.findConstructor(ModConfig.Reloading.class, ModConfig.class);
 
     /**
      * Determines if the given ModConfig differs compared to it's default values.
@@ -141,11 +141,11 @@ public class ConfigHelper
     }
 
     @Nullable
-    public static ModConfig.Reloading reloadingEvent()
+    public static ModConfig.Reloading reloadingEvent(ModConfig config)
     {
         try
         {
-            return MOD_CONFIG_RELOADING.newInstance();
+            return MOD_CONFIG_RELOADING.newInstance(config);
         }
         catch(Exception e)
         {

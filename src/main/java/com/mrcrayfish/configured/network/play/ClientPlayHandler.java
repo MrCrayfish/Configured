@@ -24,7 +24,7 @@ public class ClientPlayHandler
             {
                 CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
                 ConfigHelper.setConfigData(config, data);
-                ConfigHelper.fireEvent(config, ConfigHelper.reloadingEvent());
+                ConfigHelper.fireEvent(config, ConfigHelper.reloadingEvent(config));
             });
         }
     }
