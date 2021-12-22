@@ -15,7 +15,7 @@
     "configured.gui.no_permission": "Tu n'a pas la permission de faire ça.",
     "configured.gui.not_installed": "Configured n'est pas installer sur le serveur",
     "configured.gui.edit_world_config": "Sélectionez le monde à modifier %s Configurer",
-    "configured.gui.info": "Ce menu a été généré dynamiquement par Configured. Clic ici opur ouvrir la page Curseforge de ce mod!",
+    "configured.gui.info": "Ce menu a été généré dynamiquement par Configured. Clic ici pour ouvrir la page Curseforge de ce mod!",
     "configured.gui.server_config_info": "Les configuratios basées sur le serveur sont unique pour chaque monde. Ça veut dire que n'importe quel changement fait à la configuration sera seulement appliqué au monde choisi.",
     "configured.gui.restore_message": "Êtes vous sur de vouloir réinitialisé toutes les valeurs? Si vous jouez avec un Pack de mods, cette configuration a peut-être été modifié par l'auteur et restorer va casser l'experience initiale du pack. §6Cette action est irréversible!",
     "configured.gui.unsaved_changes": "Il y a des changements non sauvegardés.Êtes vous sur de vouloir arrêté de modifier?",
