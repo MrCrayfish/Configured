@@ -268,10 +268,6 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             }
             if(type == UNKNOWN)
             {
-                type = fromList(holder.getValue());
-            }
-            if(type == UNKNOWN)
-            {
                 type = fromElementValidator(holder.getSpec());
             }
             return type;
@@ -302,15 +298,6 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             return UNKNOWN;
         }
 
-        protected static ListType fromList(List<?> list)
-        {
-            if(!list.isEmpty())
-            {
-                return fromObject(list.get(0));
-            }
-            return fromListAdd(list);
-        }
-
         /**
          * Attempts to determine the type of list from the element validator. This currently
          * used as a last resort since validation may fail even though it's the correct type.
@@ -329,39 +316,6 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             if(spec.test(Collections.singletonList(0)))
                 return INTEGER;
             return UNKNOWN;
-        }
-
-        private static ListType fromListAdd(List<?> list)
-        {
-            // Safe check since the tests will clear the list
-            if(!list.isEmpty())
-                return fromObject(list.get(0));
-            if(testAddValue(list, Boolean.TRUE))
-                return BOOLEAN;
-            if(testAddValue(list, "s"))
-                return STRING;
-            if(testAddValue(list, Double.MAX_VALUE))
-                return DOUBLE;
-            if(testAddValue(list, Long.MAX_VALUE))
-                return LONG;
-            if(testAddValue(list, Integer.MAX_VALUE))
-                return INTEGER;
-             return UNKNOWN;
-        }
-
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        private static boolean testAddValue(List list, Object v)
-        {
-            try
-            {
-                list.add(v);
-                list.clear();
-                return true;
-            }
-            catch(ClassCastException e)
-            {
-                return false;
-            }
         }
     }
 }
