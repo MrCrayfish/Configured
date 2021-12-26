@@ -42,6 +42,7 @@ import java.util.List;
 public class WorldSelectionScreen extends ListMenuScreen
 {
     private static final FolderName SERVER_CONFIG_FOLDER = new FolderName("serverconfig");
+    private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
 
     private final ModConfig config;
 
@@ -139,7 +140,7 @@ public class WorldSelectionScreen extends ListMenuScreen
         @Override
         public void render(MatrixStack matrixStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
-            WorldSelectionScreen.this.minecraft.getTextureManager().bindTexture(this.iconId);
+            WorldSelectionScreen.this.minecraft.getTextureManager().bindTexture(this.texture != null ? this.iconId : MISSING_ICON);
             blit(matrixStack, left + 4, top, 22, 22, 0, 0, 64, 64, 64, 64);
             AbstractGui.drawString(matrixStack, WorldSelectionScreen.this.minecraft.fontRenderer, this.worldName, left + 32, top + 2, 0xFFFFFF);
             AbstractGui.drawString(matrixStack, WorldSelectionScreen.this.minecraft.fontRenderer, this.folderName, left + 32, top + 12, 0xFFFFFF);
@@ -150,6 +151,8 @@ public class WorldSelectionScreen extends ListMenuScreen
 
         private DynamicTexture loadWorldIcon()
         {
+            if(this.iconFile == null)
+                return null;
             try(InputStream is = new FileInputStream(this.iconFile); NativeImage image = NativeImage.read(is))
             {
                 if(image.getWidth() != 64 || image.getHeight() != 64)
