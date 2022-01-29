@@ -15,13 +15,14 @@
     "configured.gui.no_permission": "您无权执行此操作",
     "configured.gui.not_installed": "服务器上没有安装Configured",
     "configured.gui.edit_world_config": "选择世界来编辑 %s 配置",
-    "configured.gui.info": "此菜单是由Configured动态生成的，单击此处打开此模组的CurseForge页面!",
+    "configured.gui.info": "此菜单是由Configured动态生成的，单击此处打开此模组的CurseForge页面！",
     "configured.gui.server_config_info": "基于服务器对于每个世界的配置都是独立的，这意味着对配置所做的任何更改将仅应用于选定的世界。",
     "configured.gui.restore_message": "您确定要重置所有值吗？如果您正在游玩整合包，此配置可能已被作者修改，恢复将破坏整合包的预期体验。§6这个操作是不可逆的！",
-    "configured.gui.unsaved_changes": "有未保存的更改。确定要停止编辑吗？",
+    "configured.gui.unsaved_changes": "有未保存的更改，确定要停止编辑吗？",
     "configured.gui.title.client_configuration": "客户端配置",
     "configured.gui.title.common_configuration": "通用配置",
     "configured.gui.title.server_configuration": "服务端配置",
     "key.configured.open_mod_list": "打开模组列表",
+    "configured.config.client.force_configured_menu": "强制Configured菜单",
     "key.categories.configured": "Configured"
 }
