@@ -23,5 +23,6 @@
     "configured.gui.title.common_configuration": "通用配置",
     "configured.gui.title.server_configuration": "服务端配置",
     "key.configured.open_mod_list": "打开模组列表",
+    "configured.config.client.force_configured_menu": "强制Configured菜单",
     "key.categories.configured": "Configured"
 }
