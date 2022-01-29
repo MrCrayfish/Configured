@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -42,6 +43,7 @@ import java.util.List;
 public class WorldSelectionScreen extends ListMenuScreen
 {
     private static final LevelResource SERVER_CONFIG_FOLDER = new LevelResource("serverconfig");
+    private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
 
     private final ModConfig config;
 
@@ -139,7 +141,7 @@ public class WorldSelectionScreen extends ListMenuScreen
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
-            RenderSystem.setShaderTexture(0, this.iconId);
+            RenderSystem.setShaderTexture(0, this.texture != null ? this.iconId : MISSING_ICON);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             blit(poseStack, left + 4, top, 22, 22, 0, 0, 64, 64, 64, 64);
             Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.worldName, left + 32, top + 2, 0xFFFFFF);
@@ -151,6 +153,8 @@ public class WorldSelectionScreen extends ListMenuScreen
 
         private DynamicTexture loadWorldIcon()
         {
+            if(this.iconFile == null)
+                return null;
             try(InputStream is = new FileInputStream(this.iconFile); NativeImage image = NativeImage.read(is))
             {
                 if(image.getWidth() != 64 || image.getHeight() != 64)
