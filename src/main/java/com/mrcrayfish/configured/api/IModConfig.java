@@ -36,8 +36,21 @@ public interface IModConfig
 	 */
 	public ModConfig.Type getConfigType();
 	
+	/**
+	 * @return the filename of the config
+	 */
 	public String getFileName();
+	/**
+	 * @return the modId of the config.
+	 */
 	public String getModId();
 	
+	/**
+	 * A Helper function that allows to load the config from the server into the config instance.
+	 * Since this is highly dynamic it has to be done on a per implementation basis.
+	 * @param path to the expected config folder.
+	 * @param result send self if self got updated. if nothing got updated dont push anything into the result
+	 * @throws IOException since its IO work the function will be expected to maybe throw IOExceptions
+	 */
 	public void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException;
 }

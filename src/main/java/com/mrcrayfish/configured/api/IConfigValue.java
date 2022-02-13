@@ -64,5 +64,8 @@ public interface IConfigValue<T>
 	@Nonnull
 	public String getPath();
 	
+	/**
+	 * If your config has a cache this is when it should be cleaned
+	 */
 	public void cleanCache();
 }
