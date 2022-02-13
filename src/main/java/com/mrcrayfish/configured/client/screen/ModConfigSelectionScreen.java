@@ -1,11 +1,25 @@
 package com.mrcrayfish.configured.client.screen;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mrcrayfish.configured.api.IConfigEntry;
+import com.mrcrayfish.configured.api.IConfigValue;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.impl.ForgeConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -13,7 +27,6 @@ import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -23,22 +36,15 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Author: MrCrayfish
  */
 public class ModConfigSelectionScreen extends ListMenuScreen
 {
-    private final Map<ModConfig.Type, Set<ModConfig>> configMap;
+    private final Map<ModConfig.Type, Set<IModConfig>> configMap;
 
-    public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<ModConfig>> configMap)
+    public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<IModConfig>> configMap)
     {
         super(parent, new StringTextComponent(displayName), background, 30);
         this.configMap = configMap;
@@ -47,7 +53,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     @Override
     protected void constructEntries(List<Item> entries)
     {
-        Set<ModConfig> clientConfigs = this.configMap.get(ModConfig.Type.CLIENT);
+        Set<IModConfig> clientConfigs = this.configMap.get(ModConfig.Type.CLIENT);
         if(clientConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.client_configuration").getString()));
@@ -56,7 +62,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 entries.add(new FileItem(config));
             });
         }
-        Set<ModConfig> commonConfigs = this.configMap.get(ModConfig.Type.COMMON);
+        Set<IModConfig> commonConfigs = this.configMap.get(ModConfig.Type.COMMON);
         if(commonConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.common_configuration").getString()));
@@ -65,7 +71,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 entries.add(new FileItem(config));
             });
         }
-        Set<ModConfig> serverConfigs = this.configMap.get(ModConfig.Type.SERVER);
+        Set<IModConfig> serverConfigs = this.configMap.get(ModConfig.Type.SERVER);
         if(serverConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.server_configuration").getString()));
@@ -86,24 +92,22 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     @OnlyIn(Dist.CLIENT)
     public class FileItem extends Item
     {
-        protected final ModConfig config;
+        protected final IModConfig config;
         protected final ITextComponent title;
         protected final ITextComponent fileName;
         protected final Button modifyButton;
         @Nullable
         protected final Button restoreButton;
-        private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
-        public FileItem(ModConfig config)
+        public FileItem(IModConfig config)
         {
             super(createLabelFromModConfig(config));
             this.config = config;
             this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
-            this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
             this.fileName = this.createTrimmedFileName(config.getFileName()).mergeStyle(TextFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
-            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
-            if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
+            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getConfigType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
+            if(config.getConfigType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
                 this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) ->
                 {
@@ -133,26 +137,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
             {
-                if(!result || this.allConfigValues == null)
+                if(!result)
                     return true;
-
+                IConfigEntry root = config.getRoot();
+                ConfigHelper.gatherAllConfigValues(root).forEach(IConfigValue::restore);
+                config.saveConfig(root);
                 // Resets all config values
-                CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
-                this.allConfigValues.forEach(pair ->
-                {
-                    ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
-                    ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                    newConfig.set(configValue.getPath(), valueSpec.getDefault());
-                });
                 this.updateRestoreDefaultButton();
-                this.config.getConfigData().putAll(newConfig);
                 ConfigHelper.resetCache(this.config);
-
-                // Post logic for server configs
-                if(this.config.getType() == ModConfig.Type.SERVER)
-                {
-                    ConfigHelper.sendConfigDataToServer(this.config);
-                }
                 return true;
             });
             confirmScreen.setBackground(background);
@@ -163,7 +155,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private boolean hasRequiredPermission()
         {
-            if(this.config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().player != null)
+            if(this.config.getConfigType() == ModConfig.Type.SERVER && Minecraft.getInstance().player != null)
             {
                 return Minecraft.getInstance().player.hasPermissionLevel(2);
             }
@@ -187,13 +179,13 @@ public class ModConfigSelectionScreen extends ListMenuScreen
          * @param config
          * @return
          */
-        private Button createModifyButton(ModConfig config)
+        private Button createModifyButton(IModConfig config)
         {
-            boolean serverConfig = config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().world == null;
+            boolean serverConfig = config.getConfigType() == ModConfig.Type.SERVER && Minecraft.getInstance().world == null;
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
             return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslationTextComponent(langKey), onPress ->
             {
-                if(ConfigScreen.isPlayingGame() && this.config.getType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
+                if(ConfigScreen.isPlayingGame() && this.config.getConfigType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
                     return;
 
                 if(serverConfig)
@@ -248,7 +240,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private int getIconU()
         {
-            switch(this.config.getType())
+            switch(this.config.getConfigType())
             {
                 case COMMON:
                     return 9;
@@ -288,7 +280,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
      * @param config
      * @return
      */
-    private static String createLabelFromModConfig(ModConfig config)
+    private static String createLabelFromModConfig(IModConfig config)
     {
         String fileName = config.getFileName();
         fileName = fileName.replace(config.getModId() + "-", "");
