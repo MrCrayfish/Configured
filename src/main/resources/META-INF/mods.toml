@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[39,)"
+loaderVersion="[40,)"
 license="GPL3"
 issueTrackerURL="https://github.com/MrCrayfish/Configured/issues"
 
@@ -18,13 +18,13 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
 [[dependencies.configured]]
     modId="forge"
     mandatory=true
-    versionRange="[39.0.45,)"
+    versionRange="[40,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.configured]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.18.1,1.19)"
+    versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.configured]]
