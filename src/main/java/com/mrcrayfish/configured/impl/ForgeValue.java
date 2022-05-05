@@ -1,11 +1,10 @@
 package com.mrcrayfish.configured.impl;
 
+import com.mrcrayfish.configured.api.IConfigValue;
+import net.minecraftforge.common.ForgeConfigSpec;
+
 import java.util.List;
 import java.util.Objects;
-
-import com.mrcrayfish.configured.api.IConfigValue;
-
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ForgeValue<T> implements IConfigValue<T>
 {
@@ -13,7 +12,7 @@ public class ForgeValue<T> implements IConfigValue<T>
     public final ForgeConfigSpec.ValueSpec valueSpec;
     private final T initialValue;
     protected T value;
-    
+
     public ForgeValue(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
         this.configValue = configValue;
@@ -21,75 +20,75 @@ public class ForgeValue<T> implements IConfigValue<T>
         this.initialValue = configValue.get();
         set(configValue.get());
     }
-    
-	@Override
-	public T get()
-	{
-		return value;
-	}
 
-	@Override
-	public void set(T value)
-	{
-		this.value = value;
-	}
+    @Override
+    public T get()
+    {
+        return value;
+    }
 
-	@Override
-	public boolean isDefault()
-	{
-		return Objects.equals(get(), valueSpec.getDefault());
-	}
+    @Override
+    public void set(T value)
+    {
+        this.value = value;
+    }
 
-	@Override
-	public boolean isChanged()
-	{
-		return !Objects.equals(get(), initialValue);
-	}
-	
-	@Override
-	public void restore()
-	{
-		set(getDefault());
-	}
+    @Override
+    public boolean isDefault()
+    {
+        return Objects.equals(get(), valueSpec.getDefault());
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public T getDefault()
-	{
-		return (T)valueSpec.getDefault();
-	}
+    @Override
+    public boolean isChanged()
+    {
+        return !Objects.equals(get(), initialValue);
+    }
 
-	@Override
-	public boolean isValid(T value)
-	{
-		return valueSpec.test(value);
-	}
+    @Override
+    public void restore()
+    {
+        set(getDefault());
+    }
 
-	@Override
-	public String getComment()
-	{
-		return valueSpec.getComment();
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public T getDefault()
+    {
+        return (T) valueSpec.getDefault();
+    }
 
-	@Override
-	public String getTranslationKey()
-	{
-		return valueSpec.getTranslationKey();
-	}
+    @Override
+    public boolean isValid(T value)
+    {
+        return valueSpec.test(value);
+    }
 
-	@Override
-	public String getPath()
-	{
-		return lastValue(configValue.getPath(), "");
-	}
-	
-	@Override
-	public void cleanCache()
-	{
-		configValue.clearCache();
-	}
+    @Override
+    public String getComment()
+    {
+        return valueSpec.getComment();
+    }
 
-	/**
+    @Override
+    public String getTranslationKey()
+    {
+        return valueSpec.getTranslationKey();
+    }
+
+    @Override
+    public String getPath()
+    {
+        return lastValue(configValue.getPath(), "");
+    }
+
+    @Override
+    public void cleanCache()
+    {
+        configValue.clearCache();
+    }
+
+    /**
      * Gets the last element in a list
      *
      * @param list         the list of get the value from

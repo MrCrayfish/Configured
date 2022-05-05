@@ -1,15 +1,5 @@
 package com.mrcrayfish.configured.client.screen;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
-import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -17,9 +7,7 @@ import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
-import com.mrcrayfish.configured.impl.ForgeConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DialogTexts;
@@ -33,9 +21,14 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
+import org.apache.commons.io.FilenameUtils;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Author: MrCrayfish
@@ -57,8 +50,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(clientConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.client_configuration").getString()));
-            clientConfigs.forEach(config ->
-            {
+            clientConfigs.forEach(config -> {
                 entries.add(new FileItem(config));
             });
         }
@@ -66,8 +58,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(commonConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.common_configuration").getString()));
-            commonConfigs.forEach(config ->
-            {
+            commonConfigs.forEach(config -> {
                 entries.add(new FileItem(config));
             });
         }
@@ -75,8 +66,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(serverConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.server_configuration").getString()));
-            serverConfigs.forEach(config ->
-            {
+            serverConfigs.forEach(config -> {
                 entries.add(new FileItem(config));
             });
         }
@@ -109,8 +99,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getConfigType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
             if(config.getConfigType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
-                this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) ->
-                {
+                this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) -> {
                     if(button.isHovered())
                     {
                         if(this.hasRequiredPermission() && button.active)
@@ -135,10 +124,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         @SuppressWarnings({"rawtypes", "unchecked"})
         private void showRestoreScreen()
         {
-            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result ->
-            {
-                if(!result)
-                    return true;
+            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslationTextComponent("configured.gui.restore_message"), result -> {
+                if(!result) return true;
                 IConfigEntry root = config.getRoot();
                 ConfigHelper.gatherAllConfigValues(root).forEach(IConfigValue::restore);
                 config.saveConfig(root);
@@ -176,6 +163,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
          * Creates and returns a new modify button instance. Since server configurations are handled
          * different, the label and click handler of this button is different if the given ModConfig
          * instance is of the server type.
+         *
          * @param config
          * @return
          */
@@ -183,10 +171,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             boolean serverConfig = config.getConfigType() == ModConfig.Type.SERVER && Minecraft.getInstance().world == null;
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslationTextComponent(langKey), onPress ->
-            {
+            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslationTextComponent(langKey), onPress -> {
                 if(ConfigScreen.isPlayingGame() && this.config.getConfigType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
+                {
                     return;
+                }
 
                 if(serverConfig)
                 {
@@ -194,13 +183,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 }
                 else
                 {
-                    ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
-                    {
+                    ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
                         Minecraft.getInstance().displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, new StringTextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
                     });
                 }
-            }, (button, matrixStack, mouseX, mouseY) ->
-            {
+            }, (button, matrixStack, mouseX, mouseY) -> {
                 if(button.isHovered())
                 {
                     if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())

@@ -1,12 +1,5 @@
 package com.mrcrayfish.configured.client.screen;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.Function;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -16,7 +9,6 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-
 import joptsimple.internal.Strings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.DialogTexts;
@@ -37,6 +29,12 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.config.ModConfig.Type;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * Author: MrCrayfish
@@ -71,7 +69,7 @@ public class ConfigScreen extends ListMenuScreen
         super(parent, title, background, 24);
         this.folderEntry = folderEntry;
     }
-    
+
     public ConfigScreen(Screen parent, ITextComponent title, IModConfig config, ResourceLocation background)
     {
         super(parent, title, background, 24);
@@ -79,7 +77,7 @@ public class ConfigScreen extends ListMenuScreen
         this.folderEntry = config.getRoot();
     }
 
-	@Override
+    @Override
     @SuppressWarnings("unchecked")
     protected void constructEntries(List<Item> entries)
     {
@@ -88,37 +86,37 @@ public class ConfigScreen extends ListMenuScreen
         {
             if(c.isLeaf())
             {
-            	IConfigValue<?> entry = c.getValue();
-            	if(entry == null) return;
-            	
+                IConfigValue<?> entry = c.getValue();
+                if(entry == null) return;
+
                 Object value = entry.get();
                 if(value instanceof Boolean)
                 {
-                    configEntries.add(new BooleanItem((IConfigValue<Boolean>)entry));
+                    configEntries.add(new BooleanItem((IConfigValue<Boolean>) entry));
                 }
                 else if(value instanceof Integer)
                 {
-                    configEntries.add(new IntegerItem((IConfigValue<Integer>)entry));
+                    configEntries.add(new IntegerItem((IConfigValue<Integer>) entry));
                 }
                 else if(value instanceof Double)
                 {
-                    configEntries.add(new DoubleItem((IConfigValue<Double>)entry));
+                    configEntries.add(new DoubleItem((IConfigValue<Double>) entry));
                 }
                 else if(value instanceof Long)
                 {
-                    configEntries.add(new LongItem((IConfigValue<Long>)entry));
+                    configEntries.add(new LongItem((IConfigValue<Long>) entry));
                 }
                 else if(value instanceof Enum)
                 {
-                    configEntries.add(new EnumItem((IConfigValue<Enum<?>>)entry));
+                    configEntries.add(new EnumItem((IConfigValue<Enum<?>>) entry));
                 }
                 else if(value instanceof String)
                 {
-                    configEntries.add(new StringItem((IConfigValue<String>)entry));
+                    configEntries.add(new StringItem((IConfigValue<String>) entry));
                 }
                 else if(value instanceof List<?>)
                 {
-                    configEntries.add(new ListItem((IConfigValue<List<?>>)entry));
+                    configEntries.add(new ListItem((IConfigValue<List<?>>) entry));
                 }
                 else
                 {
@@ -204,16 +202,16 @@ public class ConfigScreen extends ListMenuScreen
 
     private void restoreDefaults(IConfigEntry entry)
     {
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-        	if(child.isLeaf())
-        	{
-        		IConfigValue<?> value = child.getValue();
-        		if(value != null) value.restore();
-        		continue;
-        	}
-    		restoreDefaults(child);
-    	}
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(child.isLeaf())
+            {
+                IConfigValue<?> value = child.getValue();
+                if(value != null) value.restore();
+                continue;
+            }
+            restoreDefaults(child);
+        }
     }
 
     private void updateButtons()
@@ -276,7 +274,7 @@ public class ConfigScreen extends ListMenuScreen
         protected final IConfigValue<T> holder;
         protected final List<IGuiEventListener> eventListeners = Lists.newArrayList();
         protected final Button resetButton;
-        
+
         public ConfigItem(IConfigValue<T> holder)
         {
             super(createLabelFromHolder(holder));
@@ -294,7 +292,9 @@ public class ConfigScreen extends ListMenuScreen
             this.eventListeners.add(this.resetButton);
         }
 
-        protected void onResetValue() {}
+        protected void onResetValue()
+        {
+        }
 
         @Override
         public List<? extends IGuiEventListener> getEventListeners()
@@ -364,12 +364,11 @@ public class ConfigScreen extends ListMenuScreen
             super(holder);
             this.textField = new FocusedTextFieldWidget(ConfigScreen.this.font, 0, 0, 44, 18, this.label);
             this.textField.setText(holder.get().toString());
-            this.textField.setResponder((s) ->
-            {
+            this.textField.setResponder((s) -> {
                 try
                 {
                     Number n = parser.apply(s);
-                    if(holder.isValid((T)n))
+                    if(holder.isValid((T) n))
                     {
                         this.textField.setTextColor(14737632);
                         holder.set((T) n);
@@ -435,8 +434,7 @@ public class ConfigScreen extends ListMenuScreen
         public BooleanItem(IConfigValue<Boolean> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(holder.get()), button ->
-            {
+            this.button = new Button(10, 5, 46, 20, DialogTexts.optionsEnabled(holder.get()), button -> {
                 holder.set(!holder.get());
                 button.setMessage(DialogTexts.optionsEnabled(holder.get()));
                 ConfigScreen.this.updateButtons();
@@ -528,7 +526,7 @@ public class ConfigScreen extends ListMenuScreen
             this.button.render(matrixStack, mouseX, mouseY, partialTicks);
         }
     }
-    
+
     /**
      * Tries to create a readable label from the given config value and spec. This will
      * first attempt to create a label from the translation key in the spec, otherwise it
@@ -539,7 +537,7 @@ public class ConfigScreen extends ListMenuScreen
      */
     private static String createLabelFromHolder(IConfigValue<?> holder)
     {
-    	String s = holder.getTranslationKey();
+        String s = holder.getTranslationKey();
         if(s != null && I18n.hasKey(s))
         {
             return new TranslationTextComponent(s).getString();
@@ -575,32 +573,32 @@ public class ConfigScreen extends ListMenuScreen
     {
         return this.config == null || this.config.getConfigType() != Type.SERVER;
     }
-    
+
     public boolean isModified(IConfigEntry entry)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		return value != null && value.isDefault();
-    	}
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-    		if(isChanged(child)) return true;
-    	}
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            return value != null && value.isDefault();
+        }
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(isChanged(child)) return true;
+        }
         return false;
     }
 
     public boolean isChanged(IConfigEntry entry)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		return value != null && value.isChanged();
-    	}
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-    		if(isChanged(child)) return true;
-    	}
-    	return false;
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            return value != null && value.isChanged();
+        }
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(isChanged(child)) return true;
+        }
+        return false;
     }
 }

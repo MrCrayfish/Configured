@@ -1,18 +1,5 @@
 package com.mrcrayfish.configured.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
@@ -24,7 +11,6 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
-
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.play.ClientPlayNetHandler;
@@ -33,6 +19,17 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: MrCrayfish
@@ -59,17 +56,17 @@ public class ConfigHelper
      */
     public static List<IConfigValue<?>> gatherAllConfigValues(IModConfig config)
     {
-    	return gatherAllConfigValues(config.getRoot());
+        return gatherAllConfigValues(config.getRoot());
     }
-    
-     /**
+
+    /**
      * Gathers all the config values with a deep search. Used for resetting defaults
      */
     public static List<IConfigValue<?>> gatherAllConfigValues(IConfigEntry entry)
     {
-    	List<IConfigValue<?>> values = new ObjectArrayList<>();
-    	gatherValuesFromConfig(entry, values);
-    	return ImmutableList.copyOf(values);
+        List<IConfigValue<?>> values = new ObjectArrayList<>();
+        gatherValuesFromConfig(entry, values);
+        return ImmutableList.copyOf(values);
     }
 
     /**
@@ -78,16 +75,16 @@ public class ConfigHelper
      */
     private static void gatherValuesFromConfig(IConfigEntry entry, List<IConfigValue<?>> values)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		if(value != null) values.add(value);
-    		return;
-    	}
-    	for(IConfigEntry children : entry.getChildren())
-    	{
-    		gatherValuesFromConfig(children, values);
-    	}
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            if(value != null) values.add(value);
+            return;
+        }
+        for(IConfigEntry children : entry.getChildren())
+        {
+            gatherValuesFromConfig(children, values);
+        }
     }
 
     /**
@@ -120,7 +117,7 @@ public class ConfigHelper
             }
         });
     }
-    
+
     /**
      * Since ModConfig#setConfigData is not visible, this is a helper method to reflectively call the method
      *
@@ -192,8 +189,7 @@ public class ConfigHelper
     public static boolean isConfiguredInstalledOnServer()
     {
         ClientPlayNetHandler connection = Minecraft.getInstance().getConnection();
-        if(connection == null)
-            return false;
+        if(connection == null) return false;
         NetworkManager manager = connection.getNetworkManager();
         return PacketHandler.getPlayChannel().isRemotePresent(manager);
     }
@@ -223,15 +219,17 @@ public class ConfigHelper
 
     /**
      * Resets the spec cache for the given mod config
+     *
      * @param config
      */
     public static void resetCache(IModConfig config)
     {
         gatherAllConfigValues(config).forEach(IConfigValue::cleanCache);
     }
-    
+
     /**
      * Resets the spec cache for the given mod config
+     *
      * @param config
      */
     public static void resetCache(ModConfig config)

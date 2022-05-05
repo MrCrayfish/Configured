@@ -1,14 +1,14 @@
 package com.mrcrayfish.configured.impl;
 
-import java.util.List;
-
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
-
 import net.minecraftforge.common.ForgeConfigSpec;
+
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class ForgeFolderEntry implements IConfigEntry
 {
@@ -17,21 +17,21 @@ public class ForgeFolderEntry implements IConfigEntry
     private final ForgeConfigSpec spec;
     private final boolean root;
     private List<IConfigEntry> entries;
-	
-	public ForgeFolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
-	{
-		this.label = label;
-		this.config = config;
-		this.spec = spec;
-		this.root = root;
-	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public List<IConfigEntry> getChildren()
-	{
-		if(entries == null)
-		{
+    public ForgeFolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
+    {
+        this.label = label;
+        this.config = config;
+        this.spec = spec;
+        this.root = root;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<IConfigEntry> getChildren()
+    {
+        if(this.entries == null)
+        {
             ImmutableList.Builder<IConfigEntry> builder = ImmutableList.builder();
             this.config.valueMap().forEach((s, o) ->
             {
@@ -41,44 +41,44 @@ public class ForgeFolderEntry implements IConfigEntry
                 }
                 else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
                 {
-                    ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>)o;
+                    ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
                     if(configValue.get() instanceof List)
                     {
-                        builder.add(new ValueEntry(new ForgeListValue((ForgeConfigSpec.ConfigValue<List<?>>)configValue, spec.getRaw(configValue.getPath()))));                    	
+                        builder.add(new ValueEntry(new ForgeListValue((ForgeConfigSpec.ConfigValue<List<?>>) configValue, this.spec.getRaw(configValue.getPath()))));
                     }
                     else
                     {
-                        builder.add(new ValueEntry(new ForgeValue<>(configValue, spec.getRaw(configValue.getPath()))));
-
+                        builder.add(new ValueEntry(new ForgeValue<>(configValue, this.spec.getRaw(configValue.getPath()))));
                     }
                 }
             });
             this.entries = builder.build();
-		}
-		return entries;
-	}
-	
-	@Override
-	public boolean isRoot()
-	{
-		return root;
-	}
-	
-	@Override
-	public boolean isLeaf()
-	{
-		return false;
-	}
-	
-	@Override
-	public IConfigValue<?> getValue()
-	{
-		return null;
-	}
-	
-	@Override
-	public String getEntryName()
-	{
-		return label;
-	}
+        }
+        return this.entries;
+    }
+
+    @Override
+    public boolean isRoot()
+    {
+        return this.root;
+    }
+
+    @Override
+    public boolean isLeaf()
+    {
+        return false;
+    }
+
+    @Override
+    @Nullable
+    public IConfigValue<?> getValue()
+    {
+        return null;
+    }
+
+    @Override
+    public String getEntryName()
+    {
+        return this.label;
+    }
 }
