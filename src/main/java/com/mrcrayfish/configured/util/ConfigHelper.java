@@ -1,23 +1,5 @@
 package com.mrcrayfish.configured.util;
 
-import com.electronwill.nightconfig.core.AbstractConfig;
-import com.electronwill.nightconfig.core.CommentedConfig;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
-import com.electronwill.nightconfig.core.file.FileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
-import com.google.common.collect.ImmutableList;
-import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.network.NetworkManager;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.ModConfig;
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -26,6 +8,31 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.electronwill.nightconfig.core.AbstractConfig;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.toml.TomlFormat;
+import com.google.common.collect.ImmutableList;
+import com.mrcrayfish.configured.api.IConfigEntry;
+import com.mrcrayfish.configured.api.IConfigValue;
+import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.network.PacketHandler;
+import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
+import net.minecraft.network.NetworkManager;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.config.ConfigTracker;
+import net.minecraftforge.fml.config.ModConfig;
 
 /**
  * Author: MrCrayfish
@@ -42,17 +49,45 @@ public class ConfigHelper
      * @param config the mod config to test
      * @return true if the config is different
      */
-    public static boolean isModified(ModConfig config)
+    public static boolean isModified(IModConfig config)
     {
-        return gatherAllConfigValues(config).stream().anyMatch(pair -> !pair.getLeft().get().equals(pair.getRight().getDefault()));
+        return gatherAllConfigValues(config).stream().anyMatch(T -> !T.isDefault());
     }
 
     /**
      * Gathers all the config values with a deep search. Used for resetting defaults
      */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllConfigValues(ModConfig config)
+    public static List<IConfigValue<?>> gatherAllConfigValues(IModConfig config)
     {
-        return gatherAllConfigValues(config.getSpec().getValues(), config.getSpec());
+    	return gatherAllConfigValues(config.getRoot());
+    }
+    
+     /**
+     * Gathers all the config values with a deep search. Used for resetting defaults
+     */
+    public static List<IConfigValue<?>> gatherAllConfigValues(IConfigEntry entry)
+    {
+    	List<IConfigValue<?>> values = new ObjectArrayList<>();
+    	gatherValuesFromConfig(entry, values);
+    	return ImmutableList.copyOf(values);
+    }
+
+    /**
+     * Gathers all the config values from the given config and adds it's to the provided list. This
+     * will search deeper if it finds another config and recursively call itself.
+     */
+    private static void gatherValuesFromConfig(IConfigEntry entry, List<IConfigValue<?>> values)
+    {
+    	if(entry.isLeaf())
+    	{
+    		IConfigValue<?> value = entry.getValue();
+    		if(value != null) values.add(value);
+    		return;
+    	}
+    	for(IConfigEntry children : entry.getChildren())
+    	{
+    		gatherValuesFromConfig(children, values);
+    	}
     }
 
     /**
@@ -85,7 +120,7 @@ public class ConfigHelper
             }
         });
     }
-
+    
     /**
      * Since ModConfig#setConfigData is not visible, this is a helper method to reflectively call the method
      *
@@ -190,9 +225,17 @@ public class ConfigHelper
      * Resets the spec cache for the given mod config
      * @param config
      */
+    public static void resetCache(IModConfig config)
+    {
+        gatherAllConfigValues(config).forEach(IConfigValue::cleanCache);
+    }
+    
+    /**
+     * Resets the spec cache for the given mod config
+     * @param config
+     */
     public static void resetCache(ModConfig config)
     {
-        gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
+        gatherAllConfigValues(config.getSpec().getValues(), config.getSpec()).forEach(pair -> pair.getLeft().clearCache());
     }
-
 }

@@ -1,11 +1,21 @@
 package com.mrcrayfish.configured.client.screen;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+
 import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
@@ -18,39 +28,28 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.ForgeConfigSpec;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
  */
 public class EditListScreen extends Screen implements IBackgroundTexture
 {
-    private static final Map<ForgeConfigSpec.ConfigValue<?>, ListType> TYPE_CACHE = new HashMap<>();
+    private static final Map<IConfigValue<List<?>>, ListType> TYPE_CACHE = new HashMap<>();
 
     private final Screen parent;
     private final List<StringHolder> values = new ArrayList<>();
-    private final ForgeConfigSpec.ValueSpec valueSpec;
     private final ResourceLocation background;
-    private final ConfigScreen.ListValueHolder holder;
+    private final IConfigValue<List<?>> holder;
     private final ListType listType;
     private ObjectList list;
 
-    public EditListScreen(Screen parent, ITextComponent titleIn, ConfigScreen.ListValueHolder holder, ResourceLocation background)
+    public EditListScreen(Screen parent, ITextComponent titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
         this.holder = holder;
-        this.valueSpec = holder.getSpec();
         this.listType = getType(holder);
-        this.values.addAll(holder.getValue().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).collect(Collectors.toList()));
+        this.values.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).collect(Collectors.toList()));
         this.background = background;
     }
 
@@ -62,14 +61,13 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         this.children.add(this.list);
         this.addButton(new Button(this.width / 2 - 140, this.height - 29, 90, 20, DialogTexts.GUI_DONE, (button) -> {
             List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
-            this.valueSpec.correct(newValues);
-            this.holder.setValue(newValues);
+            this.holder.set(newValues);
             this.minecraft.displayGuiScreen(this.parent);
         }));
         this.addButton(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslationTextComponent("configured.gui.add_value"), (button) -> {
             this.minecraft.displayGuiScreen(new EditStringScreen(EditListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), "", s -> {
                 Object value = this.listType.getValueParser().apply(s);
-                return value != null && this.valueSpec.test(Collections.singletonList(value));
+                return value != null && this.holder.isValid(Collections.singletonList(value));
             }, s -> {
                 StringHolder holder = new StringHolder(s);
                 this.values.add(holder);
@@ -168,7 +166,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             this.editButton = new Button(0, 0, 42, 20, new StringTextComponent("Edit"), onPress -> {
                 EditListScreen.this.minecraft.displayGuiScreen(new EditStringScreen(EditListScreen.this, background, new TranslationTextComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
-                    return value != null && EditListScreen.this.valueSpec.test(Collections.singletonList(value));
+                    return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
                 }, s -> {
                     this.holder.setValue(s);
                 }));
@@ -225,9 +223,9 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         }
     }
 
-    protected static ListType getType(ConfigScreen.ListValueHolder holder)
+    protected static ListType getType(IConfigValue<List<?>> holder)
     {
-        return TYPE_CACHE.computeIfAbsent(holder.getConfigValue(), value -> ListType.fromHolder(holder));
+        return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder(holder));
     }
 
     protected enum ListType
@@ -258,17 +256,17 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             return this.valueParser;
         }
 
-        protected static ListType fromHolder(ConfigScreen.ListValueHolder holder)
+        protected static ListType fromHolder(IConfigValue<List<?>> holder)
         {
             ListType type = UNKNOWN;
-            List<?> defaultList = (List<?>) holder.getSpec().getDefault();
+            List<?> defaultList = holder.getDefault();
             if(!defaultList.isEmpty())
             {
                 type = fromObject(defaultList.get(0));
             }
             if(type == UNKNOWN)
             {
-                type = fromElementValidator(holder.getSpec());
+                type = fromElementValidator(holder);
             }
             return type;
         }
@@ -303,17 +301,17 @@ public class EditListScreen extends Screen implements IBackgroundTexture
          * used as a last resort since validation may fail even though it's the correct type.
          * It may also return the incorrect type if the validator accepts everything.
          */
-        private static ListType fromElementValidator(ForgeConfigSpec.ValueSpec spec)
+        private static ListType fromElementValidator(IConfigValue<List<?>> spec)
         {
-            if(spec.test(Collections.singletonList("s")))
+            if(spec.isValid(Collections.singletonList("s")))
                 return STRING;
-            if(spec.test(Collections.singletonList(true)))
+            if(spec.isValid(Collections.singletonList(true)))
                 return BOOLEAN;
-            if(spec.test(Collections.singletonList(0.0D)))
+            if(spec.isValid(Collections.singletonList(0.0D)))
                 return DOUBLE;
-            if(spec.test(Collections.singletonList(0L)))
+            if(spec.isValid(Collections.singletonList(0L)))
                 return LONG;
-            if(spec.test(Collections.singletonList(0)))
+            if(spec.isValid(Collections.singletonList(0)))
                 return INTEGER;
             return UNKNOWN;
         }
