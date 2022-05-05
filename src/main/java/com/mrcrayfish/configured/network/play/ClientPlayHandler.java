@@ -24,7 +24,7 @@ public class ClientPlayHandler
             Optional.ofNullable(ConfigHelper.getModConfig(message.getFileName())).ifPresent(config ->
             {
                 CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
-                ConfigHelper.setConfigData(config, data);
+                ConfigHelper.setModConfigData(config, data);
                 ConfigHelper.fireEvent(config, new ModConfigEvent.Reloading(config));
             });
         }

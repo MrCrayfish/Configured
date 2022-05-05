@@ -282,7 +282,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
                 @Override
                 public void updateNarration(NarrationElementOutput output)
                 {
-                    output.add(NarratedElementType.TITLE, label);
+                    output.add(NarratedElementType.TITLE, Item.this.label);
                 }
             });
         }

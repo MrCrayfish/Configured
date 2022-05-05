@@ -1,20 +1,18 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -26,7 +24,6 @@ import net.minecraft.world.level.storage.LevelStorageException;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.FileUtils;
 
 import java.io.File;
@@ -45,9 +42,9 @@ public class WorldSelectionScreen extends ListMenuScreen
     private static final LevelResource SERVER_CONFIG_FOLDER = new LevelResource("serverconfig");
     private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
 
-    private final ModConfig config;
+    private final IModConfig config;
 
-    public WorldSelectionScreen(Screen parent, ResourceLocation background, ModConfig config, Component title)
+    public WorldSelectionScreen(Screen parent, ResourceLocation background, IModConfig config, Component title)
     {
         super(parent, new TranslatableComponent("configured.gui.edit_world_config", title.plainCopy().withStyle(ChatFormatting.YELLOW)), background, 30);
         this.config = config;
@@ -181,10 +178,10 @@ public class WorldSelectionScreen extends ListMenuScreen
             {
                 Path serverConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
                 FileUtils.getOrCreateDirectory(serverConfigPath, "serverconfig");
-                final CommentedFileConfig data = config.getHandler().reader(serverConfigPath).apply(config);
-                ConfigHelper.setConfigData(config, data);
-                ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
-                    WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(parent, new TextComponent(worldName), config, background));
+                WorldSelectionScreen.this.config.loadServerConfig(serverConfigPath, T -> {
+                    ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
+                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, new TextComponent(worldName), T, WorldSelectionScreen.this.background));
+                    });
                 });
             }
             catch(IOException e)

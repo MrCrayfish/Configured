@@ -144,7 +144,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         @Override
         public ResourceLocation getBackgroundTexture()
         {
-            return background;
+            return ChangeEnumScreen.this.background;
         }
 
         @Override

@@ -1,13 +1,26 @@
 package com.mrcrayfish.configured.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.lwjgl.glfw.GLFW;
+
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
 import net.minecraft.client.KeyMapping;
+import com.mrcrayfish.configured.impl.ForgeConfig;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.screens.Screen;
@@ -27,15 +40,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.forgespi.language.IModInfo;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
@@ -61,7 +65,7 @@ public class ClientHandler
             if(container.getCustomExtension(ConfigGuiHandler.ConfigGuiFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
                 return;
 
-            Map<ModConfig.Type, Set<ModConfig>> modConfigMap = createConfigMap(container);
+            Map<ModConfig.Type, Set<IModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
                 Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
@@ -77,17 +81,16 @@ public class ClientHandler
         return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
     }
 
-    private static Map<ModConfig.Type, Set<ModConfig>> createConfigMap(ModContainer container)
+    public static Map<ModConfig.Type, Set<IModConfig>> createConfigMap(ModContainer container)
     {
-        Map<ModConfig.Type, Set<ModConfig>> modConfigMap = new HashMap<>();
+        Map<ModConfig.Type, Set<IModConfig>> modConfigMap = new HashMap<>();
         addConfigSetToMap(container, ModConfig.Type.CLIENT, modConfigMap);
         addConfigSetToMap(container, ModConfig.Type.COMMON, modConfigMap);
         addConfigSetToMap(container, ModConfig.Type.SERVER, modConfigMap);
         return modConfigMap;
     }
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    private static void addConfigSetToMap(ModContainer container, ModConfig.Type type, Map<ModConfig.Type, Set<ModConfig>> configMap)
+    private static void addConfigSetToMap(ModContainer container, ModConfig.Type type, Map<ModConfig.Type, Set<IModConfig>> configMap)
     {
         /* Optifine basically breaks Forge's client config, so it's simply not added */
         if(type == ModConfig.Type.CLIENT && OptiFineHelper.isLoaded() && container.getModId().equals("forge"))
@@ -99,7 +102,7 @@ public class ClientHandler
         Set<ModConfig> configSet = getConfigSets().get(type);
         synchronized(configSet)
         {
-            Set<ModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).collect(Collectors.toSet());
+            Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
             if(!filteredConfigSets.isEmpty())
             {
                 configMap.put(type, filteredConfigSets);
