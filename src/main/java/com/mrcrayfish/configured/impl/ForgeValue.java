@@ -18,13 +18,13 @@ public class ForgeValue<T> implements IConfigValue<T>
         this.configValue = configValue;
         this.valueSpec = valueSpec;
         this.initialValue = configValue.get();
-        set(configValue.get());
+        this.set(configValue.get());
     }
 
     @Override
     public T get()
     {
-        return value;
+        return this.value;
     }
 
     @Override
@@ -36,56 +36,56 @@ public class ForgeValue<T> implements IConfigValue<T>
     @Override
     public boolean isDefault()
     {
-        return Objects.equals(get(), valueSpec.getDefault());
+        return Objects.equals(this.get(), this.valueSpec.getDefault());
     }
 
     @Override
     public boolean isChanged()
     {
-        return !Objects.equals(get(), initialValue);
+        return !Objects.equals(this.get(), this.initialValue);
     }
 
     @Override
     public void restore()
     {
-        set(getDefault());
+        this.set(this.getDefault());
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public T getDefault()
     {
-        return (T) valueSpec.getDefault();
+        return (T) this.valueSpec.getDefault();
     }
 
     @Override
     public boolean isValid(T value)
     {
-        return valueSpec.test(value);
+        return this.valueSpec.test(value);
     }
 
     @Override
     public String getComment()
     {
-        return valueSpec.getComment();
+        return this.valueSpec.getComment();
     }
 
     @Override
     public String getTranslationKey()
     {
-        return valueSpec.getTranslationKey();
+        return this.valueSpec.getTranslationKey();
     }
 
     @Override
     public String getPath()
     {
-        return lastValue(configValue.getPath(), "");
+        return lastValue(this.configValue.getPath(), "");
     }
 
     @Override
     public void cleanCache()
     {
-        configValue.clearCache();
+        this.configValue.clearCache();
     }
 
     /**

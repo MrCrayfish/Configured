@@ -178,9 +178,11 @@ public class WorldSelectionScreen extends ListMenuScreen
             {
                 Path serverConfigPath = levelSave.resolveFilePath(SERVER_CONFIG_FOLDER);
                 FileUtils.getOrCreateDirectory(serverConfigPath, "serverconfig");
-                config.loadServerConfig(serverConfigPath, T -> {
-                    ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
-                        WorldSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(parent, new StringTextComponent(worldName), T, background));
+                WorldSelectionScreen.this.config.loadServerConfig(serverConfigPath, T ->
+                {
+                    ModList.get().getModContainerById(T.getModId()).ifPresent(container ->
+                    {
+                        WorldSelectionScreen.this.minecraft.displayGuiScreen(new ConfigScreen(WorldSelectionScreen.this.parent, new StringTextComponent(worldName), T, WorldSelectionScreen.this.background));
                     });                	
                 });
             }

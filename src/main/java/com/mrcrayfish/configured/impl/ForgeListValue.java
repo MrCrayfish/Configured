@@ -17,7 +17,7 @@ public class ForgeListValue extends ForgeValue<List<?>>
     public ForgeListValue(ConfigValue<List<?>> configValue, ValueSpec valueSpec)
     {
         super(configValue, valueSpec);
-        converter = createConverter(configValue);
+        this.converter = this.createConverter(configValue);
     }
 
     @Nullable
@@ -39,12 +39,12 @@ public class ForgeListValue extends ForgeValue<List<?>>
     @Override
     public void set(List<?> value)
     {
-        valueSpec.correct(value);
+        this.valueSpec.correct(value);
         super.set(new ArrayList<>(value));
     }
 
     public Function<List<?>, List<?>> getConverter()
     {
-        return converter;
+        return this.converter;
     }
 }

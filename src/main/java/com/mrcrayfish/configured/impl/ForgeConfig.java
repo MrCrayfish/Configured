@@ -61,7 +61,7 @@ public class ForgeConfig implements IModConfig
             }
         }
         this.config.getConfigData().putAll(newConfig);
-        if(getConfigType() == Type.SERVER)
+        if(this.getConfigType() == Type.SERVER)
         {
             if(!ListMenuScreen.isPlayingGame())
             {
@@ -85,32 +85,32 @@ public class ForgeConfig implements IModConfig
     @Override
     public IConfigEntry getRoot()
     {
-        return new ForgeFolderEntry("Root", config.getSpec().getValues(), config.getSpec(), true);
+        return new ForgeFolderEntry("Root", this.config.getSpec().getValues(), this.config.getSpec(), true);
     }
 
     @Override
     public Type getConfigType()
     {
-        return config.getType();
+        return this.config.getType();
     }
 
     @Override
     public String getFileName()
     {
-        return config.getFileName();
+        return this.config.getFileName();
     }
 
     @Override
     public String getModId()
     {
-        return config.getModId();
+        return this.config.getModId();
     }
 
     @Override
     public void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException
     {
-        final CommentedFileConfig data = config.getHandler().reader(path).apply(config);
-        ConfigHelper.setConfigData(config, data);
+        final CommentedFileConfig data = this.config.getHandler().reader(path).apply(this.config);
+        ConfigHelper.setConfigData(this.config, data);
         result.accept(this);
     }
 
