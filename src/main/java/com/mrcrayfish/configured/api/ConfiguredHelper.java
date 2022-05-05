@@ -27,7 +27,7 @@ public class ConfiguredHelper
      * Automatically picks the previous screen
      *
      * @param title      of the ConfigScreen that should be applied.
-     * @param mod        the mod the configs should be loaded from
+     * @param config     the mod the configs should be loaded from
      * @param background of the config screen
      * @return a new screen with config selection included
      */
@@ -66,7 +66,7 @@ public class ConfiguredHelper
     @OnlyIn(Dist.CLIENT)
     public static Screen createConfiguredScreen(Screen parent, ITextComponent title, Map<ModConfig.Type, Set<IModConfig>> configs, ResourceLocation background)
     {
-        return new ModConfigSelectionScreen(parent, title.getString(), background, configs);
+        return new ModConfigSelectionScreen(parent, title, background, configs);
     }
 
     /**

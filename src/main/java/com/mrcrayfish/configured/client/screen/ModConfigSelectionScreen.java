@@ -37,9 +37,9 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 {
     private final Map<ModConfig.Type, Set<IModConfig>> configMap;
 
-    public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<IModConfig>> configMap)
+    public ModConfigSelectionScreen(Screen parent, ITextComponent title, ResourceLocation background, Map<ModConfig.Type, Set<IModConfig>> configMap)
     {
-        super(parent, new StringTextComponent(displayName), background, 30);
+        super(parent, title, background, 30);
         this.configMap = configMap;
     }
 
