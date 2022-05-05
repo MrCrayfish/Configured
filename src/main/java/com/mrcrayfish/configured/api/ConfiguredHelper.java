@@ -31,7 +31,6 @@ public class ConfiguredHelper
      * @param background of the config screen
      * @return a new screen with config selection included
      */
-
     @OnlyIn(Dist.CLIENT)
     public static Screen createForgeConfiguredScreen(ITextComponent title, ModContainer config, ResourceLocation background)
     {
