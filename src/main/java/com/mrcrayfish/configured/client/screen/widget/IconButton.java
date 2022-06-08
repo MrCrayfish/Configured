@@ -6,8 +6,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
@@ -28,12 +28,12 @@ public class IconButton extends Button
 
     public IconButton(int x, int y, int u, int v, OnPress onPress, OnTooltip onTooltip)
     {
-        this(x, y, u, v, 20, TextComponent.EMPTY, onPress, onTooltip);
+        this(x, y, u, v, 20, CommonComponents.EMPTY, onPress, onTooltip);
     }
 
     public IconButton(int x, int y, int u, int v, int width, Component label, OnPress onPress, OnTooltip onTooltip)
     {
-        super(x, y, width, 20, TextComponent.EMPTY, onPress, onTooltip);
+        super(x, y, width, 20, CommonComponents.EMPTY, onPress, onTooltip);
         this.label = label;
         this.u = u;
         this.v = v;

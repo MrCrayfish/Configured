@@ -21,8 +21,6 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraftforge.api.distmarker.Dist;
@@ -141,7 +139,7 @@ public class ConfigScreen extends ListMenuScreen
 
         if(this.folderEntry.isRoot())
         {
-            this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) ->
+            this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, Component.translatable("configured.gui.save"), (button) ->
             {
                 if(this.config != null)
                 {
@@ -149,7 +147,7 @@ public class ConfigScreen extends ListMenuScreen
                 }
                 this.minecraft.setScreen(this.parent);
             }));
-            this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) ->
+            this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, Component.translatable("configured.gui.reset_all"), (button) ->
             {
                 if(this.folderEntry.isRoot())
                 {
@@ -160,7 +158,7 @@ public class ConfigScreen extends ListMenuScreen
             {
                 if(this.isChanged(this.folderEntry))
                 {
-                    this.minecraft.setScreen(new ConfirmationScreen(this, new TranslatableComponent("configured.gui.unsaved_changes"), result -> {
+                    this.minecraft.setScreen(new ConfirmationScreen(this, Component.translatable("configured.gui.unsaved_changes"), result -> {
                         if(!result) return true;
                         this.minecraft.setScreen(this.parent);
                         return false;
@@ -247,7 +245,7 @@ public class ConfigScreen extends ListMenuScreen
 
     private void showRestoreScreen()
     {
-        ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslatableComponent("configured.gui.restore_message"), result ->
+        ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, Component.translatable("configured.gui.restore_message"), result ->
         {
             if(!result) return true;
             this.restoreDefaults(this.folderEntry);
@@ -255,7 +253,7 @@ public class ConfigScreen extends ListMenuScreen
             return true;
         });
         confirmScreen.setBackground(background);
-        confirmScreen.setPositiveText(new TranslatableComponent("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        confirmScreen.setPositiveText(Component.translatable("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
         Minecraft.getInstance().setScreen(confirmScreen);
     }
@@ -307,8 +305,8 @@ public class ConfigScreen extends ListMenuScreen
 
         public FolderItem(FolderEntry folderEntry)
         {
-            super(new TextComponent(createLabel(folderEntry.label)));
-            this.button = new Button(10, 5, 44, 20, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
+            super(Component.literal(createLabel(folderEntry.label)));
+            this.button = new Button(10, 5, 44, 20, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
             });
@@ -346,7 +344,7 @@ public class ConfigScreen extends ListMenuScreen
                 this.tooltip = this.createToolTip(holder);
             }
             int maxTooltipWidth = Math.max(ConfigScreen.this.width / 2 - 43, 170);
-            Button.OnTooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, new TranslatableComponent("configured.gui.reset"), maxTooltipWidth);
+            Button.OnTooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, Component.translatable("configured.gui.reset"), maxTooltipWidth);
             this.resetButton = new IconButton(0, 0, 0, 0, onPress -> {
                 this.holder.restoreDefaultValue();
                 this.onResetValue();
@@ -382,7 +380,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             if(ConfigScreen.this.minecraft.font.width(this.label) > maxWidth)
             {
-                return new TextComponent(ConfigScreen.this.minecraft.font.substrByWidth(this.label, maxWidth).getString() + "...");
+                return Component.literal(ConfigScreen.this.minecraft.font.substrByWidth(this.label, maxWidth).getString() + "...");
             }
             return this.label;
         }
@@ -390,9 +388,9 @@ public class ConfigScreen extends ListMenuScreen
         private List<FormattedCharSequence> createToolTip(ValueHolder<T> holder)
         {
             Font font = Minecraft.getInstance().font;
-            List<FormattedText> lines = font.getSplitter().splitLines(new TextComponent(holder.valueSpec.getComment()), 200, Style.EMPTY);
+            List<FormattedText> lines = font.getSplitter().splitLines(Component.literal(holder.valueSpec.getComment()), 200, Style.EMPTY);
             String name = lastValue(holder.configValue.getPath(), "");
-            lines.add(0, new TextComponent(name).withStyle(ChatFormatting.YELLOW));
+            lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
             int rangeIndex = -1;
             for(int i = 0; i < lines.size(); i++)
             {
@@ -407,7 +405,7 @@ public class ConfigScreen extends ListMenuScreen
             {
                 for(int i = rangeIndex; i < lines.size(); i++)
                 {
-                    lines.set(i, new TextComponent(lines.get(i).getString()).withStyle(ChatFormatting.GRAY));
+                    lines.set(i, Component.literal(lines.get(i).getString()).withStyle(ChatFormatting.GRAY));
                 }
             }
             return Language.getInstance().getVisualOrder(lines);
@@ -527,7 +525,7 @@ public class ConfigScreen extends ListMenuScreen
         public StringItem(ValueHolder<String> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, background, this.label, holder.getValue(), holder.valueSpec::test, s -> {
+            this.button = new Button(10, 5, 46, 20, Component.translatable("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, background, this.label, holder.getValue(), holder.valueSpec::test, s -> {
                 holder.setValue(s);
                 ConfigScreen.this.updateButtons();
             })));
@@ -551,7 +549,7 @@ public class ConfigScreen extends ListMenuScreen
         public ListItem(ListValueHolder holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, background)));
+            this.button = new Button(10, 5, 46, 20, Component.translatable("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, background)));
             this.eventListeners.add(this.button);
         }
 
@@ -572,7 +570,7 @@ public class ConfigScreen extends ListMenuScreen
         public EnumItem(ValueHolder<Enum<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, holder.getValue(), e -> {
+            this.button = new Button(10, 5, 46, 20, Component.translatable("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, holder.getValue(), e -> {
                 holder.setValue(e);
                 ConfigScreen.this.updateButtons();
             })));
@@ -618,7 +616,7 @@ public class ConfigScreen extends ListMenuScreen
     {
         if(holder.valueSpec.getTranslationKey() != null && I18n.exists(holder.valueSpec.getTranslationKey()))
         {
-            return new TranslatableComponent(holder.valueSpec.getTranslationKey()).getString();
+            return Component.translatable(holder.valueSpec.getTranslationKey()).getString();
         }
         return createLabel(lastValue(holder.configValue.getPath(), ""));
     }

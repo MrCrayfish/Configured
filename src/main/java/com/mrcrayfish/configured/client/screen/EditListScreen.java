@@ -15,8 +15,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -68,8 +66,8 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             this.holder.setValue(newValues);
             this.minecraft.setScreen(this.parent);
         }));
-        this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
+        this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, Component.translatable("configured.gui.add_value"), (button) -> {
+            this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, background, Component.translatable("configured.gui.edit_value"), "", s -> {
                 Object value = this.listType.getValueParser().apply(s);
                 return value != null && this.valueSpec.test(Collections.singletonList(value));
             }, s -> {
@@ -167,8 +165,8 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         {
             this.list = list;
             this.holder = holder;
-            this.editButton = new Button(0, 0, 42, 20, new TextComponent("Edit"), onPress -> {
-                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
+            this.editButton = new Button(0, 0, 42, 20, Component.literal("Edit"), onPress -> {
+                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, background, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
                     return value != null && EditListScreen.this.valueSpec.test(Collections.singletonList(value));
                 }, s -> {
@@ -177,7 +175,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             });
             Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHoveredOrFocused()) {
-                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(Component.translatable("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
             };
             this.deleteButton = new IconButton(0, 0, 11, 0, onPress -> {
@@ -189,7 +187,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            EditListScreen.this.minecraft.font.draw(poseStack, new TextComponent(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
+            EditListScreen.this.minecraft.font.draw(poseStack, Component.literal(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
             this.editButton.visible = true;
             this.editButton.x = left + width - 65;
             this.editButton.y = top;

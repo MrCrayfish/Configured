@@ -13,8 +13,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -58,7 +56,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         this.list.setSelected(this.list.children().stream().filter(entry -> entry.getEnumValue() == this.selectedValue).findFirst().orElse(null));
         this.addWidget(this.list);
 
-        this.searchTextField = new EditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TextComponent("Search"));
+        this.searchTextField = new EditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.literal("Search"));
         this.searchTextField.setResponder(s ->
         {
             ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
@@ -113,7 +111,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.activeTooltip = this.minecraft.font.split(new TranslatableComponent("configured.gui.info"), 200);
+            this.activeTooltip = this.minecraft.font.split(Component.translatable("configured.gui.info"), 200);
         }
         if(this.activeTooltip != null)
         {
@@ -165,7 +163,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         public Entry(Enum<?> enumValue)
         {
             this.enumValue = enumValue;
-            this.label = new TextComponent(ConfigScreen.createLabel(enumValue.name().toLowerCase(Locale.ENGLISH)));
+            this.label = Component.literal(ConfigScreen.createLabel(enumValue.name().toLowerCase(Locale.ENGLISH)));
         }
 
         public Enum<?> getEnumValue()
@@ -187,7 +185,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         @Override
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            Component label = new TextComponent(this.label.getString()).withStyle(ChangeEnumScreen.this.list.getSelected() == this ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
+            Component label = Component.literal(this.label.getString()).withStyle(ChangeEnumScreen.this.list.getSelected() == this ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
             Screen.drawString(poseStack, ChangeEnumScreen.this.minecraft.font, label, left + 5, top + 4, 0xFFFFFF);
         }
 

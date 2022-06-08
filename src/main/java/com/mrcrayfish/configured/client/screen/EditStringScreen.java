@@ -7,7 +7,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.function.Consumer;
@@ -39,7 +38,7 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
     @Override
     protected void init()
     {
-        this.textField = new EditBox(this.font, this.width / 2 - 150, this.height / 2 - 25, 300, 20, TextComponent.EMPTY);
+        this.textField = new EditBox(this.font, this.width / 2 - 150, this.height / 2 - 25, 300, 20, CommonComponents.EMPTY);
         this.textField.setMaxLength(32500);
         this.textField.setValue(this.originalValue);
         this.textField.setResponder(s -> this.updateValidation());

@@ -19,8 +19,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraftforge.api.distmarker.Dist;
@@ -69,7 +67,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.addWidget(this.list);
 
         // Adds a search text field to the top of the screen
-        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TextComponent("Search"));
+        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.literal("Search"));
         this.searchTextField.setResponder(s ->
         {
             ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
@@ -108,7 +106,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(this.minecraft.font.split(new TranslatableComponent("configured.gui.info"), 200));
+            this.setActiveTooltip(this.minecraft.font.split(Component.translatable("configured.gui.info"), 200));
         }
     }
 
@@ -248,7 +246,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         public Item(String label)
         {
-            this.label = new TextComponent(label);
+            this.label = Component.literal(label);
         }
 
         @Override
@@ -297,7 +295,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         public TitleItem(String title)
         {
-            super(new TextComponent(title).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.YELLOW));
+            super(Component.literal(title).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.YELLOW));
         }
 
         @Override

@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import java.util.Comparator;
 import java.util.List;
@@ -58,7 +57,7 @@ public class ScreenUtil
         }
         else
         {
-            editBox.setSuggestion(new TranslatableComponent("configured.gui.search").getString());
+            editBox.setSuggestion(Component.translatable("configured.gui.search").getString());
         }
     }
 }

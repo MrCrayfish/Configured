@@ -14,8 +14,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -39,7 +37,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
     public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<ModConfig>> configMap)
     {
-        super(parent, new TextComponent(displayName), background, 30);
+        super(parent, Component.literal(displayName), background, 30);
         this.configMap = configMap;
     }
 
@@ -49,7 +47,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         Set<ModConfig> clientConfigs = this.configMap.get(ModConfig.Type.CLIENT);
         if(clientConfigs != null)
         {
-            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.client_configuration").getString()));
+            entries.add(new TitleItem(Component.translatable("configured.gui.title.client_configuration").getString()));
             clientConfigs.forEach(config ->
             {
                 entries.add(new FileItem(config));
@@ -58,7 +56,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         Set<ModConfig> commonConfigs = this.configMap.get(ModConfig.Type.COMMON);
         if(commonConfigs != null)
         {
-            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.common_configuration").getString()));
+            entries.add(new TitleItem(Component.translatable("configured.gui.title.common_configuration").getString()));
             commonConfigs.forEach(config ->
             {
                 entries.add(new FileItem(config));
@@ -67,7 +65,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         Set<ModConfig> serverConfigs = this.configMap.get(ModConfig.Type.SERVER);
         if(serverConfigs != null)
         {
-            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
+            entries.add(new TitleItem(Component.translatable("configured.gui.title.server_configuration").getString()));
             serverConfigs.forEach(config ->
             {
                 entries.add(new FileItem(config));
@@ -110,11 +108,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                     {
                         if(this.hasRequiredPermission() && button.active)
                         {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.reset_all"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(Component.translatable("configured.gui.reset_all"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                         }
                         else if(!this.hasRequiredPermission())
                         {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(Component.translatable("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                         }
                     }
                 });
@@ -130,7 +128,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         @SuppressWarnings({"rawtypes", "unchecked"})
         private void showRestoreScreen()
         {
-            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslatableComponent("configured.gui.restore_message"), result ->
+            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, Component.translatable("configured.gui.restore_message"), result ->
             {
                 if(!result || this.allConfigValues == null)
                     return true;
@@ -155,7 +153,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 return true;
             });
             confirmScreen.setBackground(background);
-            confirmScreen.setPositiveText(new TranslatableComponent("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+            confirmScreen.setPositiveText(Component.translatable("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
             Minecraft.getInstance().setScreen(confirmScreen);
         }
@@ -171,10 +169,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private MutableComponent createTrimmedFileName(String fileName)
         {
-            MutableComponent trimmedFileName = new TextComponent(fileName);
+            MutableComponent trimmedFileName = Component.literal(fileName);
             if(Minecraft.getInstance().font.width(fileName) > 150)
             {
-                trimmedFileName = new TextComponent(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140) + "...");
+                trimmedFileName = Component.literal(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140) + "...");
             }
             return trimmedFileName;
         }
@@ -190,7 +188,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             boolean serverConfig = config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().level == null;
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslatableComponent(langKey), onPress ->
+            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, Component.translatable(langKey), onPress ->
             {
                 if(ConfigScreen.isPlayingGame() && this.config.getType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
                     return;
@@ -203,7 +201,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
                     {
-                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
+                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, Component.literal(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
                     });
                 }
             }, (button, poseStack, mouseX, mouseY) ->
@@ -212,11 +210,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(Component.translatable("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }
                     else if(!this.hasRequiredPermission())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(Component.translatable("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }
                 }
             });
