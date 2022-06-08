@@ -11,7 +11,6 @@ import com.mrcrayfish.configured.util.ConfigHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,6 +19,7 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
@@ -76,7 +76,7 @@ public class ConfigScreen extends ListMenuScreen
     public ConfigScreen(Screen parent, Component title, ModConfig config, ResourceLocation background)
     {
         super(parent, title, background, 24);
-        this.folderEntry = new FolderEntry("Root", ((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec(), true);
+        this.folderEntry = new FolderEntry(((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec());
         this.config = config;
     }
 
@@ -305,11 +305,15 @@ public class ConfigScreen extends ListMenuScreen
 
         public FolderItem(FolderEntry folderEntry)
         {
-            super(Component.literal(createLabel(folderEntry.label)));
+            super(folderEntry.getTranslationKey() != null && I18n.exists(folderEntry.getTranslationKey()) ? Component.translatable(folderEntry.getTranslationKey()) : Component.literal(createLabel(folderEntry.getLabel())));
             this.button = new Button(10, 5, 44, 20, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
             });
+            if (folderEntry.getComment() != null)
+            {
+                this.tooltip = Language.getInstance().getVisualOrder(getTranslatableComment(folderEntry));
+            }
         }
 
         @Override
@@ -321,6 +325,11 @@ public class ConfigScreen extends ListMenuScreen
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                ConfigScreen.this.setActiveTooltip(this.tooltip);
+            }
+
             this.button.x = left - 1;
             this.button.y = top;
             this.button.setWidth(width);
@@ -339,7 +348,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             super(createLabelFromHolder(holder));
             this.holder = holder;
-            if(this.holder.valueSpec.getComment() != null)
+            if(this.holder.getComment() != null)
             {
                 this.tooltip = this.createToolTip(holder);
             }
@@ -387,8 +396,7 @@ public class ConfigScreen extends ListMenuScreen
 
         private List<FormattedCharSequence> createToolTip(ValueHolder<T> holder)
         {
-            Font font = Minecraft.getInstance().font;
-            List<FormattedText> lines = font.getSplitter().splitLines(Component.literal(holder.valueSpec.getComment()), 200, Style.EMPTY);
+            List<FormattedText> lines = getTranslatableComment(holder);
             String name = lastValue(holder.configValue.getPath(), "");
             lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
             int rangeIndex = -1;
@@ -410,6 +418,24 @@ public class ConfigScreen extends ListMenuScreen
             }
             return Language.getInstance().getVisualOrder(lines);
         }
+    }
+
+    private List<FormattedText> getTranslatableComment(ICommentedTranslatable entry)
+    {
+        MutableComponent comment = Component.literal(entry.getComment());
+        String key = entry.getTranslationKey();
+        if(key != null && I18n.exists(key + ".tooltip"))
+        {
+            comment = Component.translatable(key + ".tooltip");
+            String text = entry.getComment();
+            int rangeIndex = text.indexOf("Range: ");
+            int allowedValIndex = text.indexOf("Allowed Values: ");
+            if(rangeIndex >= 0 || allowedValIndex >= 0)
+            {
+                comment.append(Component.literal(entry.getComment().substring(Math.max(rangeIndex, allowedValIndex) - 1)));
+            }
+        }
+        return Minecraft.getInstance().font.getSplitter().splitLines(comment, 200, Style.EMPTY);
     }
 
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
@@ -650,7 +676,13 @@ public class ConfigScreen extends ListMenuScreen
         return this.config == null || this.config.getType() != ModConfig.Type.SERVER;
     }
 
-    public class ValueHolder<T>
+    public interface ICommentedTranslatable
+    {
+        String getComment();
+        String getTranslationKey();
+    }
+
+    public class ValueHolder<T> implements ICommentedTranslatable
     {
         private final ForgeConfigSpec.ConfigValue<T> configValue;
         private final ForgeConfigSpec.ValueSpec valueSpec;
@@ -701,6 +733,18 @@ public class ConfigScreen extends ListMenuScreen
         {
             return this.valueSpec;
         }
+
+        @Override
+        public String getComment()
+        {
+            return this.valueSpec.getComment();
+        }
+
+        @Override
+        public String getTranslationKey()
+        {
+            return this.valueSpec.getTranslationKey();
+        }
     }
 
     public class ListValueHolder extends ValueHolder<List<?>>
@@ -745,20 +789,23 @@ public class ConfigScreen extends ListMenuScreen
 
     public interface IEntry {}
 
-    public class FolderEntry implements IEntry
+    public class FolderEntry implements IEntry, ICommentedTranslatable
     {
-        private final String label;
+        private final List<String> path;
         private final UnmodifiableConfig config;
         private final ForgeConfigSpec spec;
-        private final boolean root;
         private List<IEntry> entries;
 
-        public FolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
+        public FolderEntry(UnmodifiableConfig config, ForgeConfigSpec spec)
         {
-            this.label = label;
+            this(new ArrayList<>(), config, spec);
+        }
+
+        public FolderEntry(List<String> path, UnmodifiableConfig config, ForgeConfigSpec spec)
+        {
+            this.path = path;
             this.config = config;
             this.spec = spec;
-            this.root = root;
             this.init();
         }
 
@@ -771,7 +818,9 @@ public class ConfigScreen extends ListMenuScreen
                 {
                     if(o instanceof UnmodifiableConfig)
                     {
-                        builder.add(new FolderEntry(s, (UnmodifiableConfig) o, this.spec, false));
+                        List<String> path = new ArrayList<>(this.path);
+                        path.add(s);
+                        builder.add(new FolderEntry(path, (UnmodifiableConfig) o, this.spec));
                     }
                     else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
                     {
@@ -786,7 +835,7 @@ public class ConfigScreen extends ListMenuScreen
 
         public boolean isRoot()
         {
-            return this.root;
+            return this.path.isEmpty();
         }
 
         public boolean isInitialized()
@@ -797,6 +846,23 @@ public class ConfigScreen extends ListMenuScreen
         public List<IEntry> getEntries()
         {
             return this.entries;
+        }
+
+        public String getLabel()
+        {
+            return lastValue(this.path, "Root");
+        }
+
+        @Override
+        public String getComment()
+        {
+            return this.spec.getLevelComment(this.path);
+        }
+
+        @Override
+        public String getTranslationKey()
+        {
+            return this.spec.getLevelTranslationKey(this.path);
         }
     }
 
