@@ -678,7 +678,10 @@ public class ConfigScreen extends ListMenuScreen
 
     public interface ICommentedTranslatable
     {
+        @Nullable
         String getComment();
+
+        @Nullable
         String getTranslationKey();
     }
 
@@ -734,12 +737,14 @@ public class ConfigScreen extends ListMenuScreen
             return this.valueSpec;
         }
 
+        @Nullable
         @Override
         public String getComment()
         {
             return this.valueSpec.getComment();
         }
 
+        @Nullable
         @Override
         public String getTranslationKey()
         {
@@ -853,12 +858,14 @@ public class ConfigScreen extends ListMenuScreen
             return lastValue(this.path, "Root");
         }
 
+        @Nullable
         @Override
         public String getComment()
         {
             return this.spec.getLevelComment(this.path);
         }
 
+        @Nullable
         @Override
         public String getTranslationKey()
         {
