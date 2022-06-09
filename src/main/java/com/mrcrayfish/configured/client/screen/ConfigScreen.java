@@ -305,7 +305,7 @@ public class ConfigScreen extends ListMenuScreen
 
         public FolderItem(FolderEntry folderEntry)
         {
-            super(folderEntry.getTranslationKey() != null && I18n.exists(folderEntry.getTranslationKey()) ? Component.translatable(folderEntry.getTranslationKey()) : Component.literal(createLabel(folderEntry.getLabel())));
+            super(createLabelForFolderEntry(folderEntry));
             this.button = new Button(10, 5, 44, 20, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
@@ -334,6 +334,15 @@ public class ConfigScreen extends ListMenuScreen
             this.button.y = top;
             this.button.setWidth(width);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
+        }
+
+        private static Component createLabelForFolderEntry(FolderEntry folderEntry)
+        {
+            if(folderEntry.getTranslationKey() != null && I18n.exists(folderEntry.getTranslationKey()))
+            {
+                return Component.translatable(folderEntry.getTranslationKey());
+            }
+            return Component.literal(createLabel(folderEntry.getLabel()));
         }
     }
 
