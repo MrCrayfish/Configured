@@ -33,9 +33,11 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Function;
 
@@ -45,6 +47,7 @@ import java.util.function.Function;
 @OnlyIn(Dist.CLIENT)
 public class ConfigScreen extends ListMenuScreen
 {
+    public static final int TOOLTIP_WIDTH = 200;
     public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->
     {
         if(o1 instanceof FolderItem && o2 instanceof FolderItem)
@@ -310,9 +313,9 @@ public class ConfigScreen extends ListMenuScreen
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
             });
-            if (folderEntry.getComment() != null)
+            if(folderEntry.getComment() != null)
             {
-                this.tooltip = Language.getInstance().getVisualOrder(getTranslatableComment(folderEntry));
+                this.tooltip = Language.getInstance().getVisualOrder(ConfigScreen.this.getTranslatableComment(folderEntry));
             }
         }
 
@@ -405,46 +408,55 @@ public class ConfigScreen extends ListMenuScreen
 
         private List<FormattedCharSequence> createToolTip(ValueHolder<T> holder)
         {
-            List<FormattedText> lines = getTranslatableComment(holder);
-            String name = lastValue(holder.configValue.getPath(), "");
-            lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
-            int rangeIndex = -1;
-            for(int i = 0; i < lines.size(); i++)
+            List<FormattedText> lines = ConfigScreen.this.getTranslatableComment(holder);
+            if(lines != null)
             {
-                String text = lines.get(i).getString();
-                if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                String name = lastValue(holder.configValue.getPath(), "");
+                lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
+                for(int i = 1; i < lines.size(); i++) // Search will never match index 0
                 {
-                    rangeIndex = i;
-                    break;
+                    String text = lines.get(i).getString();
+                    if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                    {
+                        for(int j = i; j < lines.size(); j++)
+                        {
+                            lines.set(j, Component.literal(lines.get(j).getString()).withStyle(ChatFormatting.GRAY));
+                        }
+                        break;
+                    }
                 }
+                return Language.getInstance().getVisualOrder(lines);
             }
-            if(rangeIndex != -1)
-            {
-                for(int i = rangeIndex; i < lines.size(); i++)
-                {
-                    lines.set(i, Component.literal(lines.get(i).getString()).withStyle(ChatFormatting.GRAY));
-                }
-            }
-            return Language.getInstance().getVisualOrder(lines);
+            return null;
         }
     }
 
+    /**
+     * Creates a translatable comment for tooltip
+     *
+     * @param entry a commented translatable to use for creating tooltip lines
+     * @return a list of formatted text representing the tooltip lines or null if no comment exists
+     */
+    @Nullable
     private List<FormattedText> getTranslatableComment(ICommentedTranslatable entry)
     {
-        MutableComponent comment = Component.literal(entry.getComment());
+        String rawComment = entry.getComment();
         String key = entry.getTranslationKey();
-        if(key != null && I18n.exists(key + ".tooltip"))
+        if(key != null && I18n.exists(key + ".tooltip")) // Still check for translation even if rawComment is null
         {
-            comment = Component.translatable(key + ".tooltip");
-            String text = entry.getComment();
-            int rangeIndex = text.indexOf("Range: ");
-            int allowedValIndex = text.indexOf("Allowed Values: ");
-            if(rangeIndex >= 0 || allowedValIndex >= 0)
+            MutableComponent comment = Component.translatable(key + ".tooltip");
+            if(rawComment != null)
             {
-                comment.append(Component.literal(entry.getComment().substring(Math.max(rangeIndex, allowedValIndex) - 1)));
+                int rangeIndex = rawComment.indexOf("Range: ");
+                int allowedValIndex = rawComment.indexOf("Allowed Values: ");
+                if(rangeIndex >= 0 || allowedValIndex >= 0)
+                {
+                    comment.append(Component.literal(rawComment.substring(Math.max(rangeIndex, allowedValIndex) - 1))); // - 1 to include new line char
+                }
             }
+            return splitTooltip(comment);
         }
-        return Minecraft.getInstance().font.getSplitter().splitLines(comment, 200, Style.EMPTY);
+        return rawComment != null ? splitTooltip(Component.literal(rawComment)) : null;
     }
 
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
@@ -677,6 +689,17 @@ public class ConfigScreen extends ListMenuScreen
         // Finally join words. Some mods have inputs like "Foo_Bar" and this causes a double space.
         // To fix this any whitespace is replaced with a single space
         return Strings.join(words, " ").replaceAll("\\s++", " ");
+    }
+
+    /**
+     * Word wraps formatted text for tooltips using a standardised width
+     *
+     * @param text the text to wrap
+     * @return a list of formatted text representing each wrapped line
+     */
+    private static List<FormattedText> splitTooltip(FormattedText text)
+    {
+        return Minecraft.getInstance().font.getSplitter().splitLines(text, TOOLTIP_WIDTH, Style.EMPTY);
     }
 
     @Override
