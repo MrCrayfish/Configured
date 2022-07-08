@@ -11,7 +11,6 @@ import com.mrcrayfish.configured.util.ConfigHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,6 +19,7 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
@@ -33,9 +33,11 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Function;
 
@@ -45,6 +47,7 @@ import java.util.function.Function;
 @OnlyIn(Dist.CLIENT)
 public class ConfigScreen extends ListMenuScreen
 {
+    public static final int TOOLTIP_WIDTH = 200;
     public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->
     {
         if(o1 instanceof FolderItem && o2 instanceof FolderItem)
@@ -76,7 +79,7 @@ public class ConfigScreen extends ListMenuScreen
     public ConfigScreen(Screen parent, Component title, ModConfig config, ResourceLocation background)
     {
         super(parent, title, background, 24);
-        this.folderEntry = new FolderEntry("Root", ((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec(), true);
+        this.folderEntry = new FolderEntry(((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec());
         this.config = config;
     }
 
@@ -305,11 +308,15 @@ public class ConfigScreen extends ListMenuScreen
 
         public FolderItem(FolderEntry folderEntry)
         {
-            super(Component.literal(createLabel(folderEntry.label)));
+            super(createLabelForFolderEntry(folderEntry));
             this.button = new Button(10, 5, 44, 20, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
             });
+            if(folderEntry.getComment() != null)
+            {
+                this.tooltip = Language.getInstance().getVisualOrder(ConfigScreen.this.getTranslatableComment(folderEntry));
+            }
         }
 
         @Override
@@ -321,10 +328,24 @@ public class ConfigScreen extends ListMenuScreen
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                ConfigScreen.this.setActiveTooltip(this.tooltip);
+            }
+
             this.button.x = left - 1;
             this.button.y = top;
             this.button.setWidth(width);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
+        }
+
+        private static Component createLabelForFolderEntry(FolderEntry folderEntry)
+        {
+            if(folderEntry.getTranslationKey() != null && I18n.exists(folderEntry.getTranslationKey()))
+            {
+                return Component.translatable(folderEntry.getTranslationKey());
+            }
+            return Component.literal(createLabel(folderEntry.getLabel()));
         }
     }
 
@@ -339,7 +360,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             super(createLabelFromHolder(holder));
             this.holder = holder;
-            if(this.holder.valueSpec.getComment() != null)
+            if(this.holder.getComment() != null)
             {
                 this.tooltip = this.createToolTip(holder);
             }
@@ -387,29 +408,55 @@ public class ConfigScreen extends ListMenuScreen
 
         private List<FormattedCharSequence> createToolTip(ValueHolder<T> holder)
         {
-            Font font = Minecraft.getInstance().font;
-            List<FormattedText> lines = font.getSplitter().splitLines(Component.literal(holder.valueSpec.getComment()), 200, Style.EMPTY);
-            String name = lastValue(holder.configValue.getPath(), "");
-            lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
-            int rangeIndex = -1;
-            for(int i = 0; i < lines.size(); i++)
+            List<FormattedText> lines = ConfigScreen.this.getTranslatableComment(holder);
+            if(lines != null)
             {
-                String text = lines.get(i).getString();
-                if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                String name = lastValue(holder.configValue.getPath(), "");
+                lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
+                for(int i = 1; i < lines.size(); i++) // Search will never match index 0
                 {
-                    rangeIndex = i;
-                    break;
+                    String text = lines.get(i).getString();
+                    if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                    {
+                        for(int j = i; j < lines.size(); j++)
+                        {
+                            lines.set(j, Component.literal(lines.get(j).getString()).withStyle(ChatFormatting.GRAY));
+                        }
+                        break;
+                    }
                 }
+                return Language.getInstance().getVisualOrder(lines);
             }
-            if(rangeIndex != -1)
-            {
-                for(int i = rangeIndex; i < lines.size(); i++)
-                {
-                    lines.set(i, Component.literal(lines.get(i).getString()).withStyle(ChatFormatting.GRAY));
-                }
-            }
-            return Language.getInstance().getVisualOrder(lines);
+            return null;
         }
+    }
+
+    /**
+     * Creates a translatable comment for tooltip
+     *
+     * @param entry a commented translatable to use for creating tooltip lines
+     * @return a list of formatted text representing the tooltip lines or null if no comment exists
+     */
+    @Nullable
+    private List<FormattedText> getTranslatableComment(ICommentedTranslatable entry)
+    {
+        String rawComment = entry.getComment();
+        String key = entry.getTranslationKey();
+        if(key != null && I18n.exists(key + ".tooltip")) // Still check for translation even if rawComment is null
+        {
+            MutableComponent comment = Component.translatable(key + ".tooltip");
+            if(rawComment != null)
+            {
+                int rangeIndex = rawComment.indexOf("Range: ");
+                int allowedValIndex = rawComment.indexOf("Allowed Values: ");
+                if(rangeIndex >= 0 || allowedValIndex >= 0)
+                {
+                    comment.append(Component.literal(rawComment.substring(Math.max(rangeIndex, allowedValIndex) - 1))); // - 1 to include new line char
+                }
+            }
+            return splitTooltip(comment);
+        }
+        return rawComment != null ? splitTooltip(Component.literal(rawComment)) : null;
     }
 
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
@@ -644,13 +691,33 @@ public class ConfigScreen extends ListMenuScreen
         return Strings.join(words, " ").replaceAll("\\s++", " ");
     }
 
+    /**
+     * Word wraps formatted text for tooltips using a standardised width
+     *
+     * @param text the text to wrap
+     * @return a list of formatted text representing each wrapped line
+     */
+    private static List<FormattedText> splitTooltip(FormattedText text)
+    {
+        return Minecraft.getInstance().font.getSplitter().splitLines(text, TOOLTIP_WIDTH, Style.EMPTY);
+    }
+
     @Override
     public boolean shouldCloseOnEsc()
     {
         return this.config == null || this.config.getType() != ModConfig.Type.SERVER;
     }
 
-    public class ValueHolder<T>
+    public interface ICommentedTranslatable
+    {
+        @Nullable
+        String getComment();
+
+        @Nullable
+        String getTranslationKey();
+    }
+
+    public class ValueHolder<T> implements ICommentedTranslatable
     {
         private final ForgeConfigSpec.ConfigValue<T> configValue;
         private final ForgeConfigSpec.ValueSpec valueSpec;
@@ -701,6 +768,20 @@ public class ConfigScreen extends ListMenuScreen
         {
             return this.valueSpec;
         }
+
+        @Nullable
+        @Override
+        public String getComment()
+        {
+            return this.valueSpec.getComment();
+        }
+
+        @Nullable
+        @Override
+        public String getTranslationKey()
+        {
+            return this.valueSpec.getTranslationKey();
+        }
     }
 
     public class ListValueHolder extends ValueHolder<List<?>>
@@ -745,20 +826,23 @@ public class ConfigScreen extends ListMenuScreen
 
     public interface IEntry {}
 
-    public class FolderEntry implements IEntry
+    public class FolderEntry implements IEntry, ICommentedTranslatable
     {
-        private final String label;
+        private final List<String> path;
         private final UnmodifiableConfig config;
         private final ForgeConfigSpec spec;
-        private final boolean root;
         private List<IEntry> entries;
 
-        public FolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
+        public FolderEntry(UnmodifiableConfig config, ForgeConfigSpec spec)
         {
-            this.label = label;
+            this(new ArrayList<>(), config, spec);
+        }
+
+        public FolderEntry(List<String> path, UnmodifiableConfig config, ForgeConfigSpec spec)
+        {
+            this.path = path;
             this.config = config;
             this.spec = spec;
-            this.root = root;
             this.init();
         }
 
@@ -771,7 +855,9 @@ public class ConfigScreen extends ListMenuScreen
                 {
                     if(o instanceof UnmodifiableConfig)
                     {
-                        builder.add(new FolderEntry(s, (UnmodifiableConfig) o, this.spec, false));
+                        List<String> path = new ArrayList<>(this.path);
+                        path.add(s);
+                        builder.add(new FolderEntry(path, (UnmodifiableConfig) o, this.spec));
                     }
                     else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
                     {
@@ -786,7 +872,7 @@ public class ConfigScreen extends ListMenuScreen
 
         public boolean isRoot()
         {
-            return this.root;
+            return this.path.isEmpty();
         }
 
         public boolean isInitialized()
@@ -797,6 +883,25 @@ public class ConfigScreen extends ListMenuScreen
         public List<IEntry> getEntries()
         {
             return this.entries;
+        }
+
+        public String getLabel()
+        {
+            return lastValue(this.path, "Root");
+        }
+
+        @Nullable
+        @Override
+        public String getComment()
+        {
+            return this.spec.getLevelComment(this.path);
+        }
+
+        @Nullable
+        @Override
+        public String getTranslationKey()
+        {
+            return this.spec.getLevelTranslationKey(this.path);
         }
     }
 
