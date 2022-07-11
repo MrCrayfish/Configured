@@ -14,7 +14,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.ConfigGuiHandler;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.gui.ModListScreen;
@@ -27,6 +26,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.forgespi.language.IModInfo;
+import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
@@ -48,7 +48,7 @@ public class ClientHandler
 
     public static void registerKeyBindings()
     {
-        ClientRegistry.registerKeyBinding(KEY_OPEN_MOD_LIST);
+        Minecraft.getInstance().options.keyMappings = ArrayUtils.add(Minecraft.getInstance().options.keyMappings, KEY_OPEN_MOD_LIST);
     }
 
     // This is where the magic happens
@@ -154,7 +154,7 @@ public class ClientHandler
     }
 
     @SubscribeEvent
-    public static void onKeyPress(InputEvent.KeyInputEvent event)
+    public static void onKeyPress(InputEvent.Key event)
     {
         if(event.getAction() == GLFW.GLFW_PRESS && KEY_OPEN_MOD_LIST.isDown())
         {
