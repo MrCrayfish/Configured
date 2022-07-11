@@ -44,7 +44,7 @@ public class Configured
     {
         if(FMLLoader.getDist() == Dist.CLIENT)
         {
-            ClientHandler.registerKeyBindings();
+            ClientHandler.registerKeyBinding(ClientHandler.KEY_OPEN_MOD_LIST);
             ClientHandler.generateConfigFactories();
         }
     }

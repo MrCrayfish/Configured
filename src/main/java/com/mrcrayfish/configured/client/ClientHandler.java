@@ -46,9 +46,14 @@ public class ClientHandler
 {
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
 
-    public static void registerKeyBindings()
+    /**
+     * Registers a KeyBinding.
+     * Call this during {@link net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent}.
+     * This method is safe to call during parallel mod loading.
+     */
+    public static synchronized void registerKeyBinding(KeyMapping key)
     {
-        Minecraft.getInstance().options.keyMappings = ArrayUtils.add(Minecraft.getInstance().options.keyMappings, KEY_OPEN_MOD_LIST);
+        Minecraft.getInstance().options.keyMappings = ArrayUtils.add(Minecraft.getInstance().options.keyMappings, key);
     }
 
     // This is where the magic happens

@@ -27,13 +27,10 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.FileUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
