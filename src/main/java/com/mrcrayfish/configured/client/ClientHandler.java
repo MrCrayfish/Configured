@@ -14,9 +14,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.ConfigGuiHandler;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.gui.ModListScreen;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModContainer;
@@ -46,9 +46,9 @@ public class ClientHandler
 {
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
 
-    public static void registerKeyBindings()
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event)
     {
-        ClientRegistry.registerKeyBinding(KEY_OPEN_MOD_LIST);
+        event.register(ClientHandler.KEY_OPEN_MOD_LIST);
     }
 
     // This is where the magic happens
@@ -154,7 +154,7 @@ public class ClientHandler
     }
 
     @SubscribeEvent
-    public static void onKeyPress(InputEvent.KeyInputEvent event)
+    public static void onKeyPress(InputEvent.Key event)
     {
         if(event.getAction() == GLFW.GLFW_PRESS && KEY_OPEN_MOD_LIST.isDown())
         {

@@ -3,6 +3,9 @@ package com.mrcrayfish.configured;
 import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.network.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -30,22 +33,26 @@ public class Configured
             ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.testSpec, "configured_test_config.toml");
         }
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        bus.addListener(this::onCommonSetup);
+        bus.addListener(this::onLoadComplete);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> bus.addListener(ClientHandler::onRegisterKeyMappings));
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event)
     {
-        PacketHandler.registerPlayMessages();
+        event.enqueueWork(PacketHandler::registerPlayMessages);
     }
 
     private void onLoadComplete(FMLLoadCompleteEvent event)
     {
-        if(FMLLoader.getDist() == Dist.CLIENT)
+        event.enqueueWork(() ->
         {
-            ClientHandler.registerKeyBindings();
-            ClientHandler.generateConfigFactories();
-        }
+            if(FMLLoader.getDist() == Dist.CLIENT)
+            {
+                ClientHandler.generateConfigFactories();
+            }
+        });
     }
 }
