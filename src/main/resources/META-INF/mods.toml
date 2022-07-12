@@ -18,7 +18,7 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
 [[dependencies.configured]]
     modId="forge"
     mandatory=true
-    versionRange="[41.0.64,)"
+    versionRange="[41.0.94,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.configured]]
