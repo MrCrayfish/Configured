@@ -1,29 +1,19 @@
 package com.mrcrayfish.configured.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.lwjgl.glfw.GLFW;
-
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
-import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
-import net.minecraft.client.KeyMapping;
 import com.mrcrayfish.configured.impl.ForgeConfig;
-
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
@@ -39,6 +29,15 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.forgespi.language.IModInfo;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
@@ -69,7 +68,9 @@ public class ClientHandler
                 Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
-                container.registerExtensionPoint(ConfigGuiHandler.ConfigGuiFactory.class, () -> new ConfigGuiHandler.ConfigGuiFactory((mc, screen) -> new ModConfigSelectionScreen(screen, displayName, backgroundTexture, modConfigMap)));
+                container.registerExtensionPoint(ConfigGuiHandler.ConfigGuiFactory.class, () -> new ConfigGuiHandler.ConfigGuiFactory((mc, screen) -> {
+                    return ConfiguredHelper.createSelectionScreen(screen, new TextComponent(displayName), modConfigMap, backgroundTexture);
+                }));
             }
         });
     }
