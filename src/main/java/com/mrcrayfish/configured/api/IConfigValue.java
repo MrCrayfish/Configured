@@ -1,14 +1,13 @@
 package com.mrcrayfish.configured.api;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * 
+ *
  * @author Speiger
- * 
+ *
  * @param <T>
- * 
+ *
  * A Temporary Data Holder that allows to make changes to a Config File without actually changing the config file.
  * This makes changing the config for the user a lot simpler since the user gets time to validate all its changes.
  */
@@ -51,7 +50,7 @@ public interface IConfigValue<T>
 	 */
 	@Nullable
 	String getComment();
-	/** 
+	/**
 	 * If the config has translation support included this can return the translation key into the config
 	 * @return the translation key
 	 */
@@ -62,7 +61,7 @@ public interface IConfigValue<T>
 	 */
 
 	String getPath();
-	
+
 	/**
 	 * If your config has a cache this is when it should be cleaned
 	 */

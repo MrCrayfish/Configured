@@ -25,26 +25,17 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.function.Function;
 
 /**
  * Author: MrCrayfish
  */
-@OnlyIn(Dist.CLIENT)
 public class ConfigScreen extends ListMenuScreen
 {
     public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->

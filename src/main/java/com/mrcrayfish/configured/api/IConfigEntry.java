@@ -1,14 +1,12 @@
 package com.mrcrayfish.configured.api;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 /**
- * 
+ *
  * @author Speiger
- * 
+ *
  * Helper interface that allows to visualize the ConfigTree.
  * It contains all methods that Configured needs to do its work.
  */

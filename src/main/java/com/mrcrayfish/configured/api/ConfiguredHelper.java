@@ -7,8 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.config.ModConfig;
 
@@ -16,11 +14,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 
+ *
  * @author Speiger
  *
  * Simple Helper class that allows you to easier find the starting point of how to add your own configured screen.
- * 
+ *
  */
 public class ConfiguredHelper
 {
@@ -32,13 +30,11 @@ public class ConfiguredHelper
 	 * @param background of the config screen
 	 * @return a new screen with config selection included
 	 */
-
-	@OnlyIn(Dist.CLIENT)
-	public static Screen createForgeConfiguredScreen(Component title, ModContainer mod, ResourceLocation background)
+	public static Screen createForgeConfigSelectionScreen(Component title, ModContainer mod, ResourceLocation background)
 	{
-		return createForgeConfiguredScreen(Minecraft.getInstance().screen, title, mod, background);
+		return createForgeConfigSelectionScreen(Minecraft.getInstance().screen, title, mod, background);
 	}
-	
+
 	/**
 	 * Multi Config Screen that automatically loads configs out of a mod if present
 	 * @param parent screen that should be returned to after this new gui was closed
@@ -47,13 +43,12 @@ public class ConfiguredHelper
 	 * @param background of the config screen
 	 * @return a new screen with config selection included
 	 */
-	@OnlyIn(Dist.CLIENT)
-	public static Screen createForgeConfiguredScreen(Screen parent, Component title, ModContainer mod, ResourceLocation background)
+	public static Screen createForgeConfigSelectionScreen(Screen parent, Component title, ModContainer mod, ResourceLocation background)
 	{
 		Map<ModConfig.Type, Set<IModConfig>> configs = ClientHandler.createConfigMap(mod);
-		return createConfiguredScreen(parent, title, configs, background);
+		return createSelectionScreen(parent, title, configs, background);
 	}
-	
+
 	/**
 	 * Multi Config Screen that allows you to sleect multiple configs at once.
 	 * @param parent screen that should be returned to after this new gui was closed
@@ -62,12 +57,11 @@ public class ConfiguredHelper
 	 * @param background of the config screen
 	 * @return a new screen with config selection included
 	 */
-	@OnlyIn(Dist.CLIENT)
-	public static Screen createConfiguredScreen(Screen parent, Component title, Map<ModConfig.Type, Set<IModConfig>> configs, ResourceLocation background)
+	public static Screen createSelectionScreen(Screen parent, Component title, Map<ModConfig.Type, Set<IModConfig>> configs, ResourceLocation background)
 	{
-		return new ModConfigSelectionScreen(parent, title.getString(), background, configs);
+		return new ModConfigSelectionScreen(parent, title, background, configs);
 	}
-	
+
 	/**
 	 * Simple single config screen generator.
 	 * Automatically picks the previous screen
@@ -76,12 +70,11 @@ public class ConfiguredHelper
 	 * @param background of the config screen
 	 * @return Screen for 1 single config file
 	 */
-	@OnlyIn(Dist.CLIENT)
-	public static Screen createConfiguredScreen(Component title, IModConfig config, ResourceLocation background)
+	public static Screen createSelectionScreen(Component title, IModConfig config, ResourceLocation background)
 	{
-		return createConfiguredScreen(Minecraft.getInstance().screen, title, config, background);
+		return createSelectionScreen(Minecraft.getInstance().screen, title, config, background);
 	}
-	
+
 	/**
 	 * Simple single config screen generator.
 	 * @param parent screen that should be returned to after this new gui was closed
@@ -90,8 +83,7 @@ public class ConfiguredHelper
 	 * @param background of the config screen
 	 * @return Screen for 1 single config file
 	 */
-	@OnlyIn(Dist.CLIENT)
-	public static Screen createConfiguredScreen(Screen parent, Component title, IModConfig config, ResourceLocation background)
+	public static Screen createSelectionScreen(Screen parent, Component title, IModConfig config, ResourceLocation background)
 	{
 		return new ConfigScreen(parent, title, config, background);
 	}

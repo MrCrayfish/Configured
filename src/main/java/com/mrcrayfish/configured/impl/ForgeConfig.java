@@ -1,13 +1,5 @@
 package com.mrcrayfish.configured.impl;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Queue;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mrcrayfish.configured.Configured;
@@ -16,11 +8,18 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.util.ConfigHelper;
-
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.config.ModConfig.Type;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Queue;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class ForgeConfig implements IModConfig
 {

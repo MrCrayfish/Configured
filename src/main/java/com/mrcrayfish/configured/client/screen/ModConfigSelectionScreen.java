@@ -19,8 +19,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.io.FilenameUtils;
@@ -37,9 +35,9 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 {
     private final Map<ModConfig.Type, Set<IModConfig>> configMap;
 
-    public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<IModConfig>> configMap)
+    public ModConfigSelectionScreen(Screen parent, Component title, ResourceLocation background, Map<ModConfig.Type, Set<IModConfig>> configMap)
     {
-        super(parent, new TextComponent(displayName), background, 30);
+        super(parent, title, background, 30);
         this.configMap = configMap;
     }
 
@@ -79,7 +77,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
     }
 
-    @OnlyIn(Dist.CLIENT)
     public class FileItem extends Item
     {
         protected final IModConfig config;

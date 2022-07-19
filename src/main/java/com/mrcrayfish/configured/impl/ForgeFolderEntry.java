@@ -1,14 +1,13 @@
 package com.mrcrayfish.configured.impl;
 
-import java.util.List;
-
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
-
 import net.minecraftforge.common.ForgeConfigSpec;
+
+import java.util.List;
 
 public class ForgeFolderEntry implements IConfigEntry
 {

@@ -23,8 +23,6 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -307,7 +305,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     protected class FocusedEditBox extends EditBox
     {
         public FocusedEditBox(Font font, int x, int y, int width, int height, Component label)

@@ -1,12 +1,8 @@
 package com.mrcrayfish.configured.client.util;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-
 /**
  * Author: MrCrayfish
  */
-@OnlyIn(Dist.CLIENT)
 public class OptiFineHelper
 {
     private static Boolean loaded = null;

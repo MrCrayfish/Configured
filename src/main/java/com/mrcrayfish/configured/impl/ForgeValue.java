@@ -1,11 +1,10 @@
 package com.mrcrayfish.configured.impl;
 
+import com.mrcrayfish.configured.api.IConfigValue;
+import net.minecraftforge.common.ForgeConfigSpec;
+
 import java.util.List;
 import java.util.Objects;
-
-import com.mrcrayfish.configured.api.IConfigValue;
-
-import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ForgeValue<T> implements IConfigValue<T>
 {

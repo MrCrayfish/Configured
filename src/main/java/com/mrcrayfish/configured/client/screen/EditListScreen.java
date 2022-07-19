@@ -19,8 +19,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,7 +93,6 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         return this.background;
     }
 
-    @OnlyIn(Dist.CLIENT)
     public class ObjectList extends ContainerObjectSelectionList<StringEntry> implements IBackgroundTexture
     {
         public ObjectList()

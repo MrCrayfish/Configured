@@ -1,12 +1,11 @@
 package com.mrcrayfish.configured.api;
 
+import com.mrcrayfish.configured.impl.ForgeConfig;
+import net.minecraftforge.fml.config.ModConfig;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;
-
-import com.mrcrayfish.configured.impl.ForgeConfig;
-
-import net.minecraftforge.fml.config.ModConfig;
 
 /**
  * 
