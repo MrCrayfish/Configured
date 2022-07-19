@@ -569,6 +569,12 @@ public class ConfigScreen extends ListMenuScreen
         return this.config == null || this.config.getConfigType() != ModConfig.Type.SERVER;
     }
 
+    /**
+     * Checks if the entry has been changed compared to its default value.
+     *
+     * @param entry the config entry to check
+     * @return true if this entry is different from its default
+     */
     public boolean isModified(IConfigEntry entry)
     {
     	if(entry.isLeaf())
@@ -583,6 +589,12 @@ public class ConfigScreen extends ListMenuScreen
         return false;
     }
 
+    /**
+     * Checks if the entry has been changed compared to its initial value.
+     *
+     * @param entry the config entry to check
+     * @return true if this entry is different from its initial value
+     */
     public boolean isChanged(IConfigEntry entry)
     {
     	if(entry.isLeaf())
