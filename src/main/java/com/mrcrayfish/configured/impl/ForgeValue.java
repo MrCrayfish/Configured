@@ -12,83 +12,83 @@ public class ForgeValue<T> implements IConfigValue<T>
     public final ForgeConfigSpec.ValueSpec valueSpec;
     private final T initialValue;
     protected T value;
-    
+
     public ForgeValue(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
         this.configValue = configValue;
         this.valueSpec = valueSpec;
         this.initialValue = configValue.get();
-		this.set(configValue.get());
+        this.set(configValue.get());
     }
-    
-	@Override
-	public T get()
-	{
-		return this.value;
-	}
 
-	@Override
-	public void set(T value)
-	{
-		this.value = value;
-	}
+    @Override
+    public T get()
+    {
+        return this.value;
+    }
 
-	@Override
-	public boolean isDefault()
-	{
-		return Objects.equals(this.get(), this.valueSpec.getDefault());
-	}
+    @Override
+    public void set(T value)
+    {
+        this.value = value;
+    }
 
-	@Override
-	public boolean isChanged()
-	{
-		return !Objects.equals(this.get(), this.initialValue);
-	}
-	
-	@Override
-	public void restore()
-	{
-		this.set(this.getDefault());
-	}
+    @Override
+    public boolean isDefault()
+    {
+        return Objects.equals(this.get(), this.valueSpec.getDefault());
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public T getDefault()
-	{
-		return (T) this.valueSpec.getDefault();
-	}
+    @Override
+    public boolean isChanged()
+    {
+        return !Objects.equals(this.get(), this.initialValue);
+    }
 
-	@Override
-	public boolean isValid(T value)
-	{
-		return this.valueSpec.test(value);
-	}
+    @Override
+    public void restore()
+    {
+        this.set(this.getDefault());
+    }
 
-	@Override
-	public String getComment()
-	{
-		return this.valueSpec.getComment();
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public T getDefault()
+    {
+        return (T) this.valueSpec.getDefault();
+    }
 
-	@Override
-	public String getTranslationKey()
-	{
-		return this.valueSpec.getTranslationKey();
-	}
+    @Override
+    public boolean isValid(T value)
+    {
+        return this.valueSpec.test(value);
+    }
 
-	@Override
-	public String getPath()
-	{
-		return lastValue(this.configValue.getPath(), "");
-	}
-	
-	@Override
-	public void cleanCache()
-	{
-		this.configValue.clearCache();
-	}
+    @Override
+    public String getComment()
+    {
+        return this.valueSpec.getComment();
+    }
 
-	/**
+    @Override
+    public String getTranslationKey()
+    {
+        return this.valueSpec.getTranslationKey();
+    }
+
+    @Override
+    public String getPath()
+    {
+        return lastValue(this.configValue.getPath(), "");
+    }
+
+    @Override
+    public void cleanCache()
+    {
+        this.configValue.clearCache();
+    }
+
+    /**
      * Gets the last element in a list
      *
      * @param list         the list of get the value from

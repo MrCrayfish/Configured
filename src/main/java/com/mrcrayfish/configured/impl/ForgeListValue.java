@@ -13,13 +13,13 @@ import java.util.function.Function;
 public class ForgeListValue extends ForgeValue<List<?>>
 {
     private final Function<List<?>, List<?>> converter;
-	
-	public ForgeListValue(ConfigValue<List<?>> configValue, ValueSpec valueSpec)
-	{
-		super(configValue, valueSpec);
+
+    public ForgeListValue(ConfigValue<List<?>> configValue, ValueSpec valueSpec)
+    {
+        super(configValue, valueSpec);
         this.converter = this.createConverter(configValue);
-	}
-	
+    }
+
     @Nullable
     private Function<List<?>, List<?>> createConverter(ForgeConfigSpec.ConfigValue<List<?>> configValue)
     {
@@ -35,16 +35,16 @@ public class ForgeListValue extends ForgeValue<List<?>>
         // TODO allow developers to hook custom list
         return null;
     }
-    
+
     @Override
     public void set(List<?> value)
     {
         this.valueSpec.correct(value);
-    	super.set(new ArrayList<>(value));
+        super.set(new ArrayList<>(value));
     }
-	
-	public Function<List<?>, List<?>> getConverter()
-	{
-		return this.converter;
-	}
+
+    public Function<List<?>, List<?>> getConverter()
+    {
+        return this.converter;
+    }
 }
