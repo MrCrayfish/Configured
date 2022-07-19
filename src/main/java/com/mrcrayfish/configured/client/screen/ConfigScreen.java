@@ -185,9 +185,9 @@ public class ConfigScreen extends ListMenuScreen
     private void saveConfig()
     {
         // Don't need to save if nothing changed
-        if(!this.isChanged(this.folderEntry) || config == null)
+        if(!this.isChanged(this.folderEntry) || this.config == null)
             return;
-        config.saveConfig(folderEntry);
+        this.config.saveConfig(this.folderEntry);
     }
 
     private void showRestoreScreen()
@@ -199,7 +199,7 @@ public class ConfigScreen extends ListMenuScreen
             this.updateButtons();
             return true;
         });
-        confirmScreen.setBackground(background);
+        confirmScreen.setBackground(this.background);
         confirmScreen.setPositiveText(new TranslatableComponent("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
         Minecraft.getInstance().setScreen(confirmScreen);
@@ -254,7 +254,7 @@ public class ConfigScreen extends ListMenuScreen
             super(new TextComponent(createLabel(folderEntry.getEntryName())));
             this.button = new Button(10, 5, 44, 20, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
-                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, background, folderEntry));
+                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.background, folderEntry));
             });
         }
 
@@ -470,7 +470,7 @@ public class ConfigScreen extends ListMenuScreen
         public StringItem(IConfigValue<String> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, background, this.label, holder.get(), holder::isValid, s -> {
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
                 holder.set(s);
                 ConfigScreen.this.updateButtons();
             })));
@@ -494,7 +494,7 @@ public class ConfigScreen extends ListMenuScreen
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, background)));
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, ConfigScreen.this.background)));
             this.eventListeners.add(this.button);
         }
 
@@ -515,7 +515,7 @@ public class ConfigScreen extends ListMenuScreen
         public EnumItem(IConfigValue<Enum<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, background, holder.get(), e -> {
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, ConfigScreen.this.background, holder.get(), e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));
@@ -587,7 +587,7 @@ public class ConfigScreen extends ListMenuScreen
     	}
     	for(IConfigEntry child : entry.getChildren())
     	{
-    		if(isChanged(child)) return true;
+    		if(this.isChanged(child)) return true;
     	}
         return false;
     }
@@ -601,7 +601,7 @@ public class ConfigScreen extends ListMenuScreen
     	}
     	for(IConfigEntry child : entry.getChildren())
     	{
-    		if(isChanged(child)) return true;
+    		if(this.isChanged(child)) return true;
     	}
     	return false;
     }

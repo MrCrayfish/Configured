@@ -66,7 +66,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             this.minecraft.setScreen(this.parent);
         }));
         this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
+            this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
                 Object value = this.listType.getValueParser().apply(s);
                 return value != null && this.holder.isValid(Collections.singletonList(value));
             }, s -> {
@@ -149,13 +149,13 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         @Override
         public ResourceLocation getBackgroundTexture()
         {
-            return background;
+            return EditListScreen.this.background;
         }
     }
 
     public class StringEntry extends ContainerObjectSelectionList.Entry<StringEntry>
     {
-        private StringHolder holder;
+        private final StringHolder holder;
         private final ObjectList list;
         private final Button editButton;
         private final Button deleteButton;
@@ -165,7 +165,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             this.list = list;
             this.holder = holder;
             this.editButton = new Button(0, 0, 42, 20, new TextComponent("Edit"), onPress -> {
-                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
+                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
                     return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
                 }, s -> {
