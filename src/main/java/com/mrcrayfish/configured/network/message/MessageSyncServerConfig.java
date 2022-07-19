@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.network.message;
 import com.mrcrayfish.configured.network.play.ClientPlayHandler;
 import com.mrcrayfish.configured.network.play.ServerPlayHandler;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -42,7 +43,11 @@ public class MessageSyncServerConfig implements IMessage<MessageSyncServerConfig
     {
         if(supplier.get().getDirection() == NetworkDirection.PLAY_TO_SERVER)
         {
-            IMessage.enqueueTask(supplier, () -> ServerPlayHandler.handleSyncServerConfigMessage(supplier.get().getSender(), message));
+            ServerPlayer player = supplier.get().getSender();
+            if(player != null)
+            {
+                IMessage.enqueueTask(supplier, () -> ServerPlayHandler.handleSyncServerConfigMessage(player, message));
+            }
         }
         else
         {

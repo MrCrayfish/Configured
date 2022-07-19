@@ -38,7 +38,6 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     private EnumList list;
     private List<Entry> entries;
     private EditBox searchTextField;
-    private List<FormattedCharSequence> activeTooltip;
 
     protected ChangeEnumScreen(Screen parent, Component title, ResourceLocation background, Enum<?> value, Consumer<Enum<?>> onSave)
     {
@@ -86,10 +85,10 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        Object value = this.selectedValue;
+        Enum<?> value = this.selectedValue;
         if(value != null)
         {
-            Object[] enums = ((Enum<?>) value).getDeclaringClass().getEnumConstants();
+            Object[] enums = value.getDeclaringClass().getEnumConstants();
             for(Object e : enums)
             {
                 entries.add(new Entry((Enum<?>) e));
@@ -102,7 +101,6 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
-        this.activeTooltip = null;
         this.renderBackground(poseStack);
         this.list.render(poseStack, mouseX, mouseY, partialTicks);
         this.searchTextField.render(poseStack, mouseX, mouseY, partialTicks);
@@ -113,11 +111,8 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.activeTooltip = this.minecraft.font.split(new TranslatableComponent("configured.gui.info"), 200);
-        }
-        if(this.activeTooltip != null)
-        {
-            this.renderTooltip(poseStack, this.activeTooltip, mouseX, mouseY);
+            List<FormattedCharSequence> toolTip = this.minecraft.font.split(new TranslatableComponent("configured.gui.info"), 200);
+            this.renderTooltip(poseStack, toolTip, mouseX, mouseY);
         }
     }
 

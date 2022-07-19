@@ -109,9 +109,8 @@ public class ConfigHelper
             {
                 gatherValuesFromConfig((UnmodifiableConfig) o, spec, values);
             }
-            else if(o instanceof ForgeConfigSpec.ConfigValue<?>)
+            else if(o instanceof ForgeConfigSpec.ConfigValue<?> configValue)
             {
-                ForgeConfigSpec.ConfigValue<?> configValue = (ForgeConfigSpec.ConfigValue<?>) o;
                 ForgeConfigSpec.ValueSpec valueSpec = spec.getRaw(configValue.getPath());
                 values.add(Pair.of(configValue, valueSpec));
             }

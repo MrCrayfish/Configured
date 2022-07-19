@@ -165,9 +165,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
                 EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
                     return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
-                }, s -> {
-                    this.holder.setValue(s);
-                }));
+                }, this.holder::setValue));
             });
             Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHoveredOrFocused()) {
@@ -271,7 +269,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             return this.valueParser;
         }
 
-        protected static ListType fromHolder(IConfigValue<List<?>> holder)
+        private static ListType fromHolder(IConfigValue<List<?>> holder)
         {
             ListType type = UNKNOWN;
             List<?> defaultList = holder.getDefault();
@@ -286,7 +284,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             return type;
         }
 
-        protected static ListType fromObject(Object o)
+        private static ListType fromObject(Object o)
         {
             if(o instanceof Boolean)
             {
@@ -311,15 +309,6 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             return UNKNOWN;
         }
 
-        protected static ListType fromList(List<?> list)
-        {
-            if(!list.isEmpty())
-            {
-                return fromObject(list.get(0));
-            }
-            return UNKNOWN;
-        }
-
         /**
          * Attempts to determine the type of list from the element validator. This currently
          * used as a last resort since validation may fail even though it's the correct type.
@@ -338,21 +327,6 @@ public class EditListScreen extends Screen implements IBackgroundTexture
             if(spec.isValid(Collections.singletonList(0)))
                 return INTEGER;
             return UNKNOWN;
-        }
-
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        private static boolean testAddValue(List list, Object v)
-        {
-            try
-            {
-                list.add(v);
-                list.clear();
-                return true;
-            }
-            catch(ClassCastException e)
-            {
-                return false;
-            }
         }
     }
 }

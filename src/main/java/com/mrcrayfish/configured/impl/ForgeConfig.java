@@ -108,7 +108,7 @@ public class ForgeConfig implements IModConfig
     }
 
     @Override
-    public void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException
+    public void loadServerConfig(Path path, Consumer<IModConfig> result)
     {
         final CommentedFileConfig data = this.config.getHandler().reader(path).apply(this.config);
         ConfigHelper.setModConfigData(this.config, data);

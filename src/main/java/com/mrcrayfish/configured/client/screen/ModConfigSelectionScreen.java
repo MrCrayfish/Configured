@@ -48,25 +48,19 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(clientConfigs != null)
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.client_configuration").getString()));
-            clientConfigs.forEach(config -> {
-                entries.add(new FileItem(config));
-            });
+            clientConfigs.forEach(config -> entries.add(new FileItem(config)));
         }
         Set<IModConfig> commonConfigs = this.configMap.get(ModConfig.Type.COMMON);
         if(commonConfigs != null)
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.common_configuration").getString()));
-            commonConfigs.forEach(config -> {
-                entries.add(new FileItem(config));
-            });
+            commonConfigs.forEach(config -> entries.add(new FileItem(config)));
         }
         Set<IModConfig> serverConfigs = this.configMap.get(ModConfig.Type.SERVER);
         if(serverConfigs != null)
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
-            serverConfigs.forEach(config -> {
-                entries.add(new FileItem(config));
-            });
+            serverConfigs.forEach(config -> entries.add(new FileItem(config)));
         }
     }
 
@@ -96,7 +90,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getConfigType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
             if(config.getConfigType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
-                this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) -> {
+                this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
+                {
                     if(button.isHoveredOrFocused())
                     {
                         if(this.hasRequiredPermission() && button.active)
@@ -223,15 +218,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private int getIconU()
         {
-            switch(this.config.getConfigType())
+            return switch(this.config.getConfigType())
             {
-                case COMMON:
-                    return 9;
-                case SERVER:
-                    return 18;
-                default:
-                    return 0;
-            }
+                case COMMON -> 9;
+                case SERVER -> 18;
+                default -> 0;
+            };
         }
 
         @Override

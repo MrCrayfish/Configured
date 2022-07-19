@@ -99,13 +99,10 @@ public class ClientHandler
         }
 
         Set<ModConfig> configSet = getConfigSets().get(type);
-        synchronized(configSet)
+        Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
+        if(!filteredConfigSets.isEmpty())
         {
-            Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
-            if(!filteredConfigSets.isEmpty())
-            {
-                configMap.put(type, filteredConfigSets);
-            }
+            configMap.put(type, filteredConfigSets);
         }
     }
 
