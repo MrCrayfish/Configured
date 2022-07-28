@@ -63,15 +63,10 @@ public class WorldSelectionScreen extends ListMenuScreen
         try
         {
             LevelStorageSource source = Minecraft.getInstance().getLevelSource();
-            CompletableFuture<List<LevelSummary>> future = source.loadLevelSummaries(source.findLevelCandidates()).exceptionally((throwable) -> {
-                Minecraft.getInstance().delayCrash(CrashReport.forThrowable(throwable, "Couldn't load level list"));
-                return List.of();
-            });
-            List<LevelSummary> levelList = future.get(100L, TimeUnit.MILLISECONDS);
-            Collections.sort(levelList);
-            levelList.forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
+            List<LevelSummary> levels = source.loadLevelSummaries(source.findLevelCandidates()).join();
+            levels.forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
         }
-        catch(LevelStorageException | ExecutionException | InterruptedException | TimeoutException e)
+        catch(LevelStorageException e)
         {
             e.printStackTrace();
         }
