@@ -6,6 +6,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
@@ -30,6 +32,12 @@ public class ConfigTest
     public ConfigTest()
     {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, testSpec, "configured_test_config.toml");
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onConfigLoad);
+    }
+
+    private void onConfigLoad(ModConfigEvent.Loading event)
+    {
+        System.out.println(event.getConfig());
     }
 
     public static class Test
