@@ -16,7 +16,7 @@ import com.mrcrayfish.configured.api.config.SimpleProperty;
 import com.mrcrayfish.configured.api.config.StorageType;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLConfig;
@@ -161,6 +161,13 @@ public class ConfigManager
         this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(entry -> {
             entry.load(serverConfig);
         });
+    }
+
+    @SubscribeEvent
+    public void onServerStopped(ServerStoppedEvent event)
+    {
+        Configured.LOGGER.info("Unloading world configs...");
+        this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(ConfigEntry::unload);
     }
 
     private static final class ConfigEntry
