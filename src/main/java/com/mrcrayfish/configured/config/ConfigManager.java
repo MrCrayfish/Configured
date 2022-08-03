@@ -1,9 +1,9 @@
 package com.mrcrayfish.configured.config;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.core.file.FileWatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mrcrayfish.configured.api.config.ConfigProperty;
@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -128,7 +131,8 @@ public class ConfigManager
         private final Object instance;
         private final Map<String, ConfigProperty<?>> properties;
         private final ConfigSpec spec;
-        private UnmodifiableConfig config;
+        private final CommentedFileConfig config;
+        private final ClassLoader classLoader;
 
         private ConfigEntry(Map<String, Object> data, Object instance)
         {
@@ -139,17 +143,41 @@ public class ConfigManager
             this.instance = instance;
             this.properties = gatherConfigProperties(instance);
             this.spec = createSpec(this.properties);
-            this.init();
+            this.config = this.createConfig();
+            this.classLoader = Thread.currentThread().getContextClassLoader();
         }
 
-        private void init()
+        private CommentedFileConfig createConfig()
         {
             String fileName = String.format("%s.%s.toml", this.id, this.name);
             File file = new File(FMLPaths.CONFIGDIR.get().toFile(), fileName);
-            FileConfig config = CommentedFileConfig.builder(file).autoreload().autosave().build();
+            CommentedFileConfig config = CommentedFileConfig.builder(file).autosave().sync().build();
             config.load();
-            this.spec.correct(config);
-            config.save();
+            if(!this.spec.isCorrect(config))
+            {
+                this.spec.correct(config);
+                config.save();
+            }
+            this.properties.forEach((path, property) -> property.initialize(new ConfigSupplier<>(() -> config.get(path), v -> config.set(path, v))));
+            try
+            {
+                FileWatcher.defaultInstance().addWatch(file, this::changeCallback);
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+            return config;
+        }
+
+        private void changeCallback()
+        {
+            Thread.currentThread().setContextClassLoader(this.classLoader);
+            if(!this.spec.isCorrect(this.config))
+            {
+                this.spec.correct(this.config);
+                this.config.save();
+            }
         }
 
         public String id()
@@ -196,6 +224,28 @@ public class ConfigManager
         public String toString()
         {
             return "ConfigInfo[" + "id=" + this.id + ", " + "name=" + this.name + ", " + "sync=" + this.sync + ", " + "instance=" + this.instance + ']';
+        }
+    }
+
+    public static class ConfigSupplier<T>
+    {
+        private final Supplier<T> getter;
+        private final Consumer<T> setter;
+
+        private ConfigSupplier(Supplier<T> getter, Consumer<T> setter)
+        {
+            this.getter = getter;
+            this.setter = setter;
+        }
+
+        public Supplier<T> getGetter()
+        {
+            return this.getter;
+        }
+
+        public Consumer<T> getSetter()
+        {
+            return this.setter;
         }
     }
 }

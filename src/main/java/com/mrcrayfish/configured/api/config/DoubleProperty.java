@@ -2,8 +2,6 @@ package com.mrcrayfish.configured.api.config;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
 
-import java.util.ArrayList;
-
 /**
  * Author: MrCrayfish
  */
