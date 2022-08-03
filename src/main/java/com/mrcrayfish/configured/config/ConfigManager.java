@@ -1,24 +1,38 @@
 package com.mrcrayfish.configured.config;
 
+import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.api.config.ConfigProperty;
 import com.mrcrayfish.configured.api.config.SimpleConfig;
 import com.mrcrayfish.configured.api.config.SimpleProperty;
 import com.mrcrayfish.configured.api.config.StorageType;
+import net.minecraft.world.level.storage.LevelResource;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.loading.FileUtils;
+import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,8 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -36,6 +48,7 @@ import java.util.stream.Stream;
  */
 public class ConfigManager
 {
+    private static final LevelResource SERVER_CONFIG = new LevelResource("serverconfig");
     private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
 
     private static ConfigManager instance;
@@ -53,7 +66,7 @@ public class ConfigManager
 
     private ConfigManager()
     {
-       this.configs = this.getAllSimpleConfigs();
+        this.configs = this.getAllSimpleConfigs();
     }
 
     private List<ConfigEntry> getAllSimpleConfigs()
@@ -122,6 +135,34 @@ public class ConfigManager
         }));
     }
 
+    private static boolean initConfigFile(final Path file, final ConfigFormat<?> format, final String fileName) throws IOException
+    {
+        Files.createDirectories(file.getParent());
+        Path defaultConfigPath = FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
+        Path defaultConfigFile = defaultConfigPath.resolve(fileName);
+        if(Files.exists(defaultConfigFile))
+        {
+            Files.copy(defaultConfigFile, file);
+        }
+        else
+        {
+            Files.createFile(file);
+            format.initEmptyFile(file);
+        }
+        return true;
+    }
+
+    @SubscribeEvent
+    public void onServerStarting(ServerAboutToStartEvent event)
+    {
+        Configured.LOGGER.info("Loading world configs...");
+        Path serverConfig = event.getServer().getWorldPath(SERVER_CONFIG);
+        FileUtils.getOrCreateDirectory(serverConfig, "serverconfig");
+        this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(entry -> {
+            entry.load(serverConfig);
+        });
+    }
+
     private static final class ConfigEntry
     {
         private final String id;
@@ -131,52 +172,88 @@ public class ConfigManager
         private final Object instance;
         private final Map<String, ConfigProperty<?>> properties;
         private final ConfigSpec spec;
-        private final CommentedFileConfig config;
         private final ClassLoader classLoader;
+        @Nullable
+        private CommentedFileConfig config;
 
         private ConfigEntry(Map<String, Object> data, Object instance)
         {
+            Preconditions.checkArgument(data.get("id") instanceof String, "The 'id' of the config is not a String");
+            Preconditions.checkArgument(!((String) data.get("id")).trim().isEmpty(), "The 'id' of the config cannot be empty");
+            Preconditions.checkArgument(ModList.get().isLoaded(((String) data.get("id"))), "The 'id' of the config must match a mod id");
+            Preconditions.checkArgument(data.get("name") instanceof String, "The 'name' of the config is not a String");
+            Preconditions.checkArgument(!((String) data.get("name")).trim().isEmpty(), "The 'name' of the config cannot be empty");
+            Preconditions.checkArgument(((String) data.get("name")).length() <= 64, "The 'name' of the config must be 64 characters or less");
+
             this.id = (String) data.get("id");
             this.name = (String) data.get("name");
             this.sync = (Boolean) data.getOrDefault("sync", false);
-            this.storage = null;//(StorageType) data.computeIfPresent("storage", StorageType.GLOBAL);
+            this.storage = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> StorageType.valueOf(holder.getValue())).orElse(StorageType.GLOBAL);
             this.instance = instance;
             this.properties = gatherConfigProperties(instance);
             this.spec = createSpec(this.properties);
-            this.config = this.createConfig();
             this.classLoader = Thread.currentThread().getContextClassLoader();
+
+            if(this.storage == StorageType.GLOBAL) // Load global configs immediately
+            {
+                this.load(FMLPaths.CONFIGDIR.get());
+            }
         }
 
-        private CommentedFileConfig createConfig()
+        private void load(Path folder)
         {
             String fileName = String.format("%s.%s.toml", this.id, this.name);
-            File file = new File(FMLPaths.CONFIGDIR.get().toFile(), fileName);
-            CommentedFileConfig config = CommentedFileConfig.builder(file).autosave().sync().build();
-            config.load();
-            if(!this.spec.isCorrect(config))
-            {
-                this.spec.correct(config);
-                config.save();
-            }
-            this.properties.forEach((path, property) -> property.initialize(new ConfigSupplier<>(() -> config.get(path), v -> config.set(path, v))));
+            File file = new File(folder.toFile(), fileName);
+            CommentedFileConfig config = CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfigFile(file1, configFormat, fileName)).build();
             try
             {
-                FileWatcher.defaultInstance().addWatch(file, this::changeCallback);
+                config.load();
+            }
+            catch(Exception ignored)
+            {
+                //TODO error handling
+            }
+            this.correct(config);
+            this.properties.forEach((path, property) -> property.updateProxy(new ValueProxy(config, path)));
+            try
+            {
+                FileWatcher.defaultInstance().addWatch(config.getFile(), this::changeCallback);
             }
             catch(IOException e)
             {
                 throw new RuntimeException(e);
             }
-            return config;
+            this.config = config;
+        }
+
+        private void unload()
+        {
+            if(this.config != null)
+            {
+                FileWatcher.defaultInstance().removeWatch(this.config.getFile());
+                this.properties.forEach((path, property) -> property.updateProxy(ValueProxy.EMPTY));
+                this.config.close();
+                this.config = null;
+            }
         }
 
         private void changeCallback()
         {
             Thread.currentThread().setContextClassLoader(this.classLoader);
-            if(!this.spec.isCorrect(this.config))
+            if(this.config != null)
             {
-                this.spec.correct(this.config);
-                this.config.save();
+                this.config.load();
+                this.correct(this.config);
+                this.properties.values().forEach(ConfigProperty::invalidateCache);
+            }
+        }
+
+        private void correct(FileConfig config)
+        {
+            if(!this.spec.isCorrect(config))
+            {
+                this.spec.correct(config);
+                config.save();
             }
         }
 
@@ -200,52 +277,72 @@ public class ConfigManager
             return this.storage;
         }
 
-        public Object instance()
-        {
-            return this.instance;
-        }
-
         @Override
         public boolean equals(Object obj)
         {
             if(obj == this) return true;
             if(obj == null || obj.getClass() != this.getClass()) return false;
             var that = (ConfigEntry) obj;
-            return Objects.equals(this.id, that.id) && Objects.equals(this.name, that.name) && this.sync == that.sync && Objects.equals(this.instance, that.instance);
+            return Objects.equals(this.id, that.id) && Objects.equals(this.name, that.name);
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash(this.id, this.name, this.sync, this.instance);
+            return Objects.hash(this.id, this.name);
         }
 
         @Override
         public String toString()
         {
-            return "ConfigInfo[" + "id=" + this.id + ", " + "name=" + this.name + ", " + "sync=" + this.sync + ", " + "instance=" + this.instance + ']';
+            return "ConfigInfo[" + "id=" + this.id + ", " + "name=" + this.name + ", " + "sync=" + this.sync + ", " + "storage=" + this.storage + ']';
         }
     }
 
-    public static class ConfigSupplier<T>
+    /**
+     * Creates a tunnel from a ConfigProperty to a value in Config. This allows for a ConfigProperty
+     * to be linked to any config and easily swappable.
+     */
+    public static class ValueProxy
     {
-        private final Supplier<T> getter;
-        private final Consumer<T> setter;
+        private static final ValueProxy EMPTY = new ValueProxy();
 
-        private ConfigSupplier(Supplier<T> getter, Consumer<T> setter)
+        private final Config config;
+        private final String path;
+
+        private ValueProxy()
         {
-            this.getter = getter;
-            this.setter = setter;
+            this.config = null;
+            this.path = null;
         }
 
-        public Supplier<T> getGetter()
+        private ValueProxy(Config config, String path)
         {
-            return this.getter;
+            this.config = config;
+            this.path = path;
         }
 
-        public Consumer<T> getSetter()
+        public boolean isLinked()
         {
-            return this.setter;
+            return this != EMPTY;
+        }
+
+        @Nullable
+        public <T> T get()
+        {
+            if(this.isLinked() && this.config != null)
+            {
+                return this.config.get(this.path);
+            }
+            return null;
+        }
+
+        public <T> void set(T value)
+        {
+            if(this.isLinked() && this.config != null)
+            {
+                this.config.set(this.path, value);
+            }
         }
     }
 }

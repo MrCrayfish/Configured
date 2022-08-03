@@ -3,9 +3,6 @@ package com.mrcrayfish.configured.api.config;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.mrcrayfish.configured.config.ConfigManager;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 /**
  * Author: MrCrayfish
  */
@@ -13,22 +10,25 @@ public abstract sealed class ConfigProperty<T> permits DoubleProperty, IntProper
 {
     protected final T defaultValue;
     private T value;
-    private boolean loaded;
     private boolean cached;
-    private Supplier<T> getter;
-    private Consumer<T> setter;
+    private ConfigManager.ValueProxy proxy;
 
     public ConfigProperty(T defaultValue)
     {
         this.defaultValue = defaultValue;
     }
 
+    private boolean isLinked()
+    {
+        return this.proxy != null && this.proxy.isLinked();
+    }
+
     public T get()
     {
-        if(!this.loaded)
-            throw new IllegalStateException("Config property is not loaded yet");
+        if(!this.isLinked())
+            throw new IllegalStateException("Config property is not linked yet");
         if(!this.cached) {
-            this.value = this.getter.get();
+            this.value = this.proxy.get();
             this.cached = true;
         }
         return this.value;
@@ -36,10 +36,10 @@ public abstract sealed class ConfigProperty<T> permits DoubleProperty, IntProper
 
     public void set(T value)
     {
-        if(!this.loaded)
-            throw new IllegalStateException("Config property is not loaded yet");
+        if(!this.isLinked())
+            throw new IllegalStateException("Config property is not linked yet");
         this.value = value;
-        this.setter.accept(value);
+        this.proxy.set(value);
     }
 
     public T getDefaultValue()
@@ -47,13 +47,19 @@ public abstract sealed class ConfigProperty<T> permits DoubleProperty, IntProper
         return this.defaultValue;
     }
 
+    public void invalidateCache()
+    {
+        this.cached = false;
+    }
+
     public abstract void defineSpec(ConfigSpec spec, String path);
 
-    public final void initialize(ConfigManager.ConfigSupplier<T> supplier)
+    public final void updateProxy(ConfigManager.ValueProxy proxy)
     {
-        if(this.loaded || supplier == null) return;
-        this.getter = supplier.getGetter();
-        this.setter = supplier.getSetter();
-        this.loaded = true;
+        if(proxy != null)
+        {
+            this.proxy = proxy;
+            this.invalidateCache();
+        }
     }
 }
