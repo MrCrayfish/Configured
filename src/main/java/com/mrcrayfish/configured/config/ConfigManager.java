@@ -1,5 +1,6 @@
 package com.mrcrayfish.configured.config;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.ConfigSpec;
@@ -181,7 +182,7 @@ public class ConfigManager
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
         @Nullable
-        private CommentedFileConfig config;
+        private Config config;
 
         private ConfigEntry(Map<String, Object> data, Object instance)
         {
@@ -205,41 +206,27 @@ public class ConfigManager
             {
                 this.load(FMLPaths.CONFIGDIR.get());
             }
+            else if(this.storage == StorageType.MEMORY)
+            {
+                this.load(null);
+            }
         }
 
-        private void load(Path folder)
+        private void load(@Nullable Path folder)
         {
-            String fileName = String.format("%s.%s.toml", this.id, this.name);
-            File file = new File(folder.toFile(), fileName);
-            CommentedFileConfig config = CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfigFile(file1, configFormat, fileName)).build();
-            try
-            {
-                config.load();
-            }
-            catch(Exception ignored)
-            {
-                //TODO error handling
-            }
+            Config config = folder != null ? createConfigFromFile(folder, this) : CommentedConfig.inMemory();
             this.correct(config);
             this.properties.forEach((path, property) -> property.updateProxy(new ValueProxy(config, path)));
-            try
-            {
-                FileWatcher.defaultInstance().addWatch(config.getFile(), this::changeCallback);
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException(e);
-            }
             this.config = config;
+            this.startWatching();
         }
 
         private void unload()
         {
             if(this.config != null)
             {
-                FileWatcher.defaultInstance().removeWatch(this.config.getFile());
                 this.properties.forEach((path, property) -> property.updateProxy(ValueProxy.EMPTY));
-                this.config.close();
+                this.closeConfig();
                 this.config = null;
             }
         }
@@ -249,18 +236,42 @@ public class ConfigManager
             Thread.currentThread().setContextClassLoader(this.classLoader);
             if(this.config != null)
             {
-                this.config.load();
+                loadConfig(this.config);
                 this.correct(this.config);
                 this.properties.values().forEach(ConfigProperty::invalidateCache);
             }
         }
 
-        private void correct(FileConfig config)
+        private void correct(Config config)
         {
             if(!this.spec.isCorrect(config))
             {
                 this.spec.correct(config);
-                config.save();
+                saveConfig(config);
+            }
+        }
+
+        private void startWatching()
+        {
+            if(this.config instanceof FileConfig fileConfig)
+            {
+                try
+                {
+                    FileWatcher.defaultInstance().addWatch(fileConfig.getFile(), this::changeCallback);
+                }
+                catch(IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        private void closeConfig()
+        {
+            if(this.config instanceof FileConfig fileConfig)
+            {
+                FileWatcher.defaultInstance().removeWatch(fileConfig.getFile());
+                fileConfig.close();
             }
         }
 
@@ -303,6 +314,38 @@ public class ConfigManager
         public String toString()
         {
             return "ConfigInfo[" + "id=" + this.id + ", " + "name=" + this.name + ", " + "sync=" + this.sync + ", " + "storage=" + this.storage + ']';
+        }
+
+        private static FileConfig createConfigFromFile(Path folder, ConfigEntry entry)
+        {
+            String fileName = String.format("%s.%s.toml", entry.id, entry.name);
+            File file = new File(folder.toFile(), fileName);
+            FileConfig config = CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfigFile(file1, configFormat, fileName)).build();
+            loadConfig(config);
+            return config;
+        }
+
+        private static void loadConfig(Config config)
+        {
+            if(config instanceof FileConfig fileConfig)
+            {
+                try
+                {
+                    fileConfig.load();
+                }
+                catch(Exception ignored)
+                {
+                    //TODO error handling
+                }
+            }
+        }
+
+        private static void saveConfig(Config config)
+        {
+            if(config instanceof FileConfig fileConfig)
+            {
+                fileConfig.save();
+            }
         }
     }
 

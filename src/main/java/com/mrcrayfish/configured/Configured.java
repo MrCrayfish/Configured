@@ -4,6 +4,7 @@ import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.config.ConfigManager;
 import com.mrcrayfish.configured.network.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -30,7 +31,7 @@ public class Configured
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
-        ConfigManager.getInstance();
+        MinecraftForge.EVENT_BUS.register(ConfigManager.getInstance());
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event)
