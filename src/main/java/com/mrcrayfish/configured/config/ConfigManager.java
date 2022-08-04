@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -49,6 +51,7 @@ import java.util.stream.Stream;
  */
 public class ConfigManager
 {
+    private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z_]+$").asMatchPredicate();
     private static final LevelResource SERVER_CONFIG = new LevelResource("serverconfig");
     private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
 
@@ -95,18 +98,18 @@ public class ConfigManager
         return ImmutableList.copyOf(configs);
     }
 
-    private static Map<String, ConfigProperty<?>> gatherConfigProperties(Object object)
-    {
-        Map<String, ConfigProperty<?>> map = new HashMap<>();
-        readFields(map, new Stack<>(), object);
-        return ImmutableMap.copyOf(map);
-    }
-
     private static ConfigSpec createSpec(Map<String, ConfigProperty<?>> map)
     {
         ConfigSpec spec = new ConfigSpec();
         map.forEach((path, property) -> property.defineSpec(spec, path));
         return spec;
+    }
+
+    private static Map<String, ConfigProperty<?>> gatherConfigProperties(Object object)
+    {
+        Map<String, ConfigProperty<?>> map = new HashMap<>();
+        readFields(map, new Stack<>(), object);
+        return ImmutableMap.copyOf(map);
     }
 
     private static void readFields(Map<String, ConfigProperty<?>> map, Stack<String> path, Object instance)
@@ -134,23 +137,6 @@ public class ConfigManager
             }
             path.pop();
         }));
-    }
-
-    private static boolean initConfigFile(final Path file, final ConfigFormat<?> format, final String fileName) throws IOException
-    {
-        Files.createDirectories(file.getParent());
-        Path defaultConfigPath = FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
-        Path defaultConfigFile = defaultConfigPath.resolve(fileName);
-        if(Files.exists(defaultConfigFile))
-        {
-            Files.copy(defaultConfigFile, file);
-        }
-        else
-        {
-            Files.createFile(file);
-            format.initEmptyFile(file);
-        }
-        return true;
     }
 
     @SubscribeEvent
@@ -192,6 +178,7 @@ public class ConfigManager
             Preconditions.checkArgument(data.get("name") instanceof String, "The 'name' of the config is not a String");
             Preconditions.checkArgument(!((String) data.get("name")).trim().isEmpty(), "The 'name' of the config cannot be empty");
             Preconditions.checkArgument(((String) data.get("name")).length() <= 64, "The 'name' of the config must be 64 characters or less");
+            Preconditions.checkArgument(NAME_PATTERN.test((String) data.get("name")), "The 'name' of the config is invalid. It can only contain 'a-z' and '_'");
 
             this.id = (String) data.get("id");
             this.name = (String) data.get("name");
@@ -212,13 +199,21 @@ public class ConfigManager
             }
         }
 
-        private void load(@Nullable Path folder)
+        /**
+         * Loads the config from the given path. If the path is null then a memory config will be
+         * loaded instead.
+         *
+         * @param configDir the path of the configuration directory
+         */
+        private void load(@Nullable Path configDir)
         {
-            Config config = folder != null ? createConfigFromFile(folder, this) : CommentedConfig.inMemory();
+            Preconditions.checkState(this.config == null, "Config is already loaded. Unload before loading again.");
+            Config config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
+            ConfigUtil.loadFileConfig(config);
             this.correct(config);
             this.properties.forEach((path, property) -> property.updateProxy(new ValueProxy(config, path)));
             this.config = config;
-            this.startWatching();
+            ConfigUtil.watchFileConfig(config, this::changeCallback);
         }
 
         private void unload()
@@ -226,7 +221,7 @@ public class ConfigManager
             if(this.config != null)
             {
                 this.properties.forEach((path, property) -> property.updateProxy(ValueProxy.EMPTY));
-                this.closeConfig();
+                ConfigUtil.closeFileConfig(this.config);
                 this.config = null;
             }
         }
@@ -236,7 +231,7 @@ public class ConfigManager
             Thread.currentThread().setContextClassLoader(this.classLoader);
             if(this.config != null)
             {
-                loadConfig(this.config);
+                ConfigUtil.loadFileConfig(this.config);
                 this.correct(this.config);
                 this.properties.values().forEach(ConfigProperty::invalidateCache);
             }
@@ -247,31 +242,7 @@ public class ConfigManager
             if(!this.spec.isCorrect(config))
             {
                 this.spec.correct(config);
-                saveConfig(config);
-            }
-        }
-
-        private void startWatching()
-        {
-            if(this.config instanceof FileConfig fileConfig)
-            {
-                try
-                {
-                    FileWatcher.defaultInstance().addWatch(fileConfig.getFile(), this::changeCallback);
-                }
-                catch(IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        private void closeConfig()
-        {
-            if(this.config instanceof FileConfig fileConfig)
-            {
-                FileWatcher.defaultInstance().removeWatch(fileConfig.getFile());
-                fileConfig.close();
+                ConfigUtil.saveFileConfig(config);
             }
         }
 
@@ -296,56 +267,9 @@ public class ConfigManager
         }
 
         @Override
-        public boolean equals(Object obj)
-        {
-            if(obj == this) return true;
-            if(obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (ConfigEntry) obj;
-            return Objects.equals(this.id, that.id) && Objects.equals(this.name, that.name);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash(this.id, this.name);
-        }
-
-        @Override
         public String toString()
         {
             return "ConfigInfo[" + "id=" + this.id + ", " + "name=" + this.name + ", " + "sync=" + this.sync + ", " + "storage=" + this.storage + ']';
-        }
-
-        private static FileConfig createConfigFromFile(Path folder, ConfigEntry entry)
-        {
-            String fileName = String.format("%s.%s.toml", entry.id, entry.name);
-            File file = new File(folder.toFile(), fileName);
-            FileConfig config = CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfigFile(file1, configFormat, fileName)).build();
-            loadConfig(config);
-            return config;
-        }
-
-        private static void loadConfig(Config config)
-        {
-            if(config instanceof FileConfig fileConfig)
-            {
-                try
-                {
-                    fileConfig.load();
-                }
-                catch(Exception ignored)
-                {
-                    //TODO error handling
-                }
-            }
-        }
-
-        private static void saveConfig(Config config)
-        {
-            if(config instanceof FileConfig fileConfig)
-            {
-                fileConfig.save();
-            }
         }
     }
 
