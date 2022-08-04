@@ -8,6 +8,7 @@ import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
+import com.mrcrayfish.configured.config.ConfigManager;
 import com.mrcrayfish.configured.impl.ForgeConfig;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -100,6 +101,7 @@ public class ClientHandler
 
         Set<ModConfig> configSet = getConfigSets().get(type);
         Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
+        ConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId()) && entry.getConfigType() == type).forEach(filteredConfigSets::add);
         if(!filteredConfigSets.isEmpty())
         {
             configMap.put(type, filteredConfigSets);

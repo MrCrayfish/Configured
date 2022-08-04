@@ -6,7 +6,7 @@ import com.mrcrayfish.configured.config.ConfigManager;
 /**
  * Author: MrCrayfish
  */
-public abstract sealed class ConfigProperty<T> permits DoubleProperty, IntProperty
+public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits DoubleProperty, IntProperty
 {
     protected final T defaultValue;
     private T value;

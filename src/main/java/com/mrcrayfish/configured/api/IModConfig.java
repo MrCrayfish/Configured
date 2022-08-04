@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.api;
 import com.mrcrayfish.configured.impl.ForgeConfig;
 import net.minecraftforge.fml.config.ModConfig;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -48,6 +49,15 @@ public interface IModConfig
      * @return the modId of the config.
      */
     String getModId();
+
+    /**
+     * @return the name to display on the file list
+     */
+    @Nullable
+    default String getTranslationKey()
+    {
+        return null;
+    }
 
     /**
      * A Helper function that allows to load the config from the server into the config instance.

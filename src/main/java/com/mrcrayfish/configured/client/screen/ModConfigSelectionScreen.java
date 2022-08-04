@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -257,9 +258,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
      */
     private static String createLabelFromModConfig(IModConfig config)
     {
+        if(config.getTranslationKey() != null) {
+            return I18n.get(config.getTranslationKey());
+        }
         String fileName = config.getFileName();
         fileName = fileName.replace(config.getModId() + "-", "");
-        fileName = fileName.substring(0, fileName.length() - ".toml".length());
+        if(fileName.endsWith(".toml")) {
+            fileName = fileName.substring(0, fileName.length() - ".toml".length());
+        }
         fileName = FilenameUtils.getName(fileName);
         fileName = ConfigScreen.createLabel(fileName);
         return fileName;

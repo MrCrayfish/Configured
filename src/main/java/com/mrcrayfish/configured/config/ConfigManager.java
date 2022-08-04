@@ -2,46 +2,46 @@ package com.mrcrayfish.configured.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
-import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.ConfigSpec;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.core.file.FileConfig;
-import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.api.IConfigEntry;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.config.ConfigProperty;
 import com.mrcrayfish.configured.api.config.SimpleConfig;
 import com.mrcrayfish.configured.api.config.SimpleProperty;
 import com.mrcrayfish.configured.api.config.StorageType;
+import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLConfig;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Stack;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -66,19 +66,23 @@ public class ConfigManager
         return instance;
     }
 
-    private final List<ConfigEntry> configs;
+    private final List<SimpleConfigEntry> configs;
 
     private ConfigManager()
     {
         this.configs = this.getAllSimpleConfigs();
     }
 
-    private List<ConfigEntry> getAllSimpleConfigs()
+    public List<SimpleConfigEntry> getConfigs()
+    {
+        return ImmutableList.copyOf(this.configs);
+    }
+
+    private List<SimpleConfigEntry> getAllSimpleConfigs()
     {
         List<ModFileScanData.AnnotationData> annotations = ModList.get().getAllScanData().stream().map(ModFileScanData::getAnnotations).flatMap(Collection::stream).filter(a -> SIMPLE_CONFIG.equals(a.annotationType())).toList();
-        List<ConfigEntry> configs = new ArrayList<>();
-        annotations.forEach(data ->
-        {
+        List<SimpleConfigEntry> configs = new ArrayList<>();
+        annotations.forEach(data -> {
             try
             {
                 Class<?> configClass = Class.forName(data.clazz().getClassName());
@@ -87,7 +91,7 @@ public class ConfigManager
                 Object object = field.get(null);
                 if(!object.getClass().isPrimitive())
                 {
-                    configs.add(new ConfigEntry(data.annotationData(), object));
+                    configs.add(new SimpleConfigEntry(data.annotationData(), object));
                 }
             }
             catch(NoSuchFieldException | ClassNotFoundException | IllegalAccessException e)
@@ -115,8 +119,7 @@ public class ConfigManager
     private static void readFields(Map<String, ConfigProperty<?>> map, Stack<String> path, Object instance)
     {
         Field[] fields = instance.getClass().getDeclaredFields();
-        Stream.of(fields).forEach(field -> Optional.ofNullable(field.getDeclaredAnnotation(SimpleProperty.class)).ifPresent(sp ->
-        {
+        Stream.of(fields).forEach(field -> Optional.ofNullable(field.getDeclaredAnnotation(SimpleProperty.class)).ifPresent(sp -> {
             path.push(sp.value());
             try
             {
@@ -154,10 +157,15 @@ public class ConfigManager
     public void onServerStopped(ServerStoppedEvent event)
     {
         Configured.LOGGER.info("Unloading world configs...");
-        this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(ConfigEntry::unload);
+        this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(SimpleConfigEntry::unload);
     }
 
-    private static final class ConfigEntry
+    public static final class SimpleConfigProperty
+    {
+        private String label;
+    }
+
+    public static final class SimpleConfigEntry implements IModConfig
     {
         private final String id;
         private final String name;
@@ -165,12 +173,13 @@ public class ConfigManager
         private final StorageType storage;
         private final Object instance;
         private final Map<String, ConfigProperty<?>> properties;
+        private final ConfigMap configMap;
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
         @Nullable
         private Config config;
 
-        private ConfigEntry(Map<String, Object> data, Object instance)
+        private SimpleConfigEntry(Map<String, Object> data, Object instance)
         {
             Preconditions.checkArgument(data.get("id") instanceof String, "The 'id' of the config is not a String");
             Preconditions.checkArgument(!((String) data.get("id")).trim().isEmpty(), "The 'id' of the config cannot be empty");
@@ -186,6 +195,7 @@ public class ConfigManager
             this.storage = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> StorageType.valueOf(holder.getValue())).orElse(StorageType.GLOBAL);
             this.instance = instance;
             this.properties = gatherConfigProperties(instance);
+            this.configMap = new ConfigMap(this.properties);
             this.spec = createSpec(this.properties);
             this.classLoader = Thread.currentThread().getContextClassLoader();
 
@@ -246,30 +256,93 @@ public class ConfigManager
             }
         }
 
-        public String id()
+        @Override
+        public void saveConfig(IConfigEntry entry)
+        {
+
+        }
+
+        @Override
+        public IConfigEntry getRoot()
+        {
+            return new SimpleFolderEntry("Root", this.configMap, true);
+        }
+
+        @Override
+        public ModConfig.Type getConfigType()
+        {
+            return this.storage == StorageType.WORLD ? ModConfig.Type.SERVER : ModConfig.Type.COMMON;
+        }
+
+        @Override
+        public String getFileName()
+        {
+            return String.format("%s.%s.toml", this.id, this.name);
+        }
+
+        @Override
+        public String getTranslationKey()
+        {
+            return String.format("simpleconfig.%s.%s", this.id, this.name);
+        }
+
+        @Override
+        public String getModId()
         {
             return this.id;
         }
 
-        public String name()
-        {
-            return this.name;
-        }
-
-        public boolean sync()
-        {
-            return this.sync;
-        }
-
-        public StorageType storage()
-        {
-            return this.storage;
-        }
-
         @Override
-        public String toString()
+        public void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException
         {
-            return "ConfigInfo[" + "id=" + this.id + ", " + "name=" + this.name + ", " + "sync=" + this.sync + ", " + "storage=" + this.storage + ']';
+
+        }
+    }
+
+    public static class ConfigMap implements IMapEntry
+    {
+        private final Map<String, IMapEntry> map = new HashMap<>();
+
+        private ConfigMap(String name) {}
+
+        private ConfigMap(Map<String, ConfigProperty<?>> properties)
+        {
+            properties.forEach((rawPath, property) ->
+            {
+                ConfigMap current = this;
+                Queue<String> path = split(rawPath);
+                while(path.size() > 1)
+                {
+                    current = (ConfigMap) current.map.computeIfAbsent(path.poll(), ConfigMap::new);
+                }
+                current.map.put(path.poll(), property);
+            });
+        }
+
+        public List<Pair<String, ConfigMap>> getConfigMaps()
+        {
+            return this.map.entrySet().stream()
+                    .filter(entry -> entry.getValue() instanceof ConfigMap)
+                    .map(entry -> Pair.of(entry.getKey(), (ConfigMap) entry.getValue()))
+                    .toList();
+        }
+
+        public List<Pair<String, ConfigProperty<?>>> getConfigProperties()
+        {
+            List<Pair<String, ConfigProperty<?>>> properties = new ArrayList<>();
+            this.map.forEach((name, entry) ->
+            {
+                if(entry instanceof ConfigProperty<?> property)
+                {
+                    properties.add(Pair.of(name, property));
+                }
+            });
+            return properties;
+        }
+
+        private static Queue<String> split(String rawPath)
+        {
+            return new ArrayDeque<>(com.electronwill.nightconfig.core.utils.StringUtils.split(rawPath, '.'));
         }
     }
 
@@ -318,5 +391,9 @@ public class ConfigManager
                 this.config.set(this.path, value);
             }
         }
+    }
+
+    public interface IMapEntry
+    {
     }
 }
