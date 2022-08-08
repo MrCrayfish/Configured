@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.api.config;
+package com.mrcrayfish.configured.api.simple;
 
 /**
  * Author: MrCrayfish

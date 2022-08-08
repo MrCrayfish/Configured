@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.api.config;
+package com.mrcrayfish.configured.api.simple;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,7 +1,7 @@
 package com.mrcrayfish.configured.impl.simple;
 
 import com.mrcrayfish.configured.api.IConfigValue;
-import com.mrcrayfish.configured.api.config.ConfigProperty;
+import com.mrcrayfish.configured.api.simple.ConfigProperty;
 
 import javax.annotation.Nullable;
 import java.util.Objects;

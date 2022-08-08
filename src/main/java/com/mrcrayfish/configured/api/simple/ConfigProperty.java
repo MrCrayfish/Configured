@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.api.config;
+package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.mrcrayfish.configured.config.ConfigManager;

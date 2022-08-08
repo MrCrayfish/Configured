@@ -1,10 +1,10 @@
 package test.simpleconfig;
 
-import com.mrcrayfish.configured.api.config.DoubleProperty;
-import com.mrcrayfish.configured.api.config.IntProperty;
-import com.mrcrayfish.configured.api.config.SimpleConfig;
-import com.mrcrayfish.configured.api.config.SimpleProperty;
-import com.mrcrayfish.configured.api.config.StorageType;
+import com.mrcrayfish.configured.api.simple.DoubleProperty;
+import com.mrcrayfish.configured.api.simple.IntProperty;
+import com.mrcrayfish.configured.api.simple.SimpleConfig;
+import com.mrcrayfish.configured.api.simple.SimpleProperty;
+import com.mrcrayfish.configured.api.simple.StorageType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
