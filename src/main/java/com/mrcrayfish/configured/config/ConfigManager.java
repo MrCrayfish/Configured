@@ -160,11 +160,6 @@ public class ConfigManager
         this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(SimpleConfigEntry::unload);
     }
 
-    public static final class SimpleConfigProperty
-    {
-        private String label;
-    }
-
     public static final class SimpleConfigEntry implements IModConfig
     {
         private final String id;
@@ -173,7 +168,7 @@ public class ConfigManager
         private final StorageType storage;
         private final Object instance;
         private final Map<String, ConfigProperty<?>> properties;
-        private final ConfigMap configMap;
+        private final PropertyMap propertyMap;
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
         @Nullable
@@ -195,7 +190,7 @@ public class ConfigManager
             this.storage = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> StorageType.valueOf(holder.getValue())).orElse(StorageType.GLOBAL);
             this.instance = instance;
             this.properties = gatherConfigProperties(instance);
-            this.configMap = new ConfigMap(this.properties);
+            this.propertyMap = new PropertyMap(this.properties);
             this.spec = createSpec(this.properties);
             this.classLoader = Thread.currentThread().getContextClassLoader();
 
@@ -265,7 +260,7 @@ public class ConfigManager
         @Override
         public IConfigEntry getRoot()
         {
-            return new SimpleFolderEntry("Root", this.configMap, true);
+            return new SimpleFolderEntry("Root", this.propertyMap, true);
         }
 
         @Override
@@ -299,31 +294,31 @@ public class ConfigManager
         }
     }
 
-    public static class ConfigMap implements IMapEntry
+    public static class PropertyMap implements IMapEntry
     {
         private final Map<String, IMapEntry> map = new HashMap<>();
 
-        private ConfigMap(String name) {}
+        private PropertyMap(String name) {}
 
-        private ConfigMap(Map<String, ConfigProperty<?>> properties)
+        private PropertyMap(Map<String, ConfigProperty<?>> properties)
         {
             properties.forEach((rawPath, property) ->
             {
-                ConfigMap current = this;
+                PropertyMap current = this;
                 Queue<String> path = split(rawPath);
                 while(path.size() > 1)
                 {
-                    current = (ConfigMap) current.map.computeIfAbsent(path.poll(), ConfigMap::new);
+                    current = (PropertyMap) current.map.computeIfAbsent(path.poll(), PropertyMap::new);
                 }
                 current.map.put(path.poll(), property);
             });
         }
 
-        public List<Pair<String, ConfigMap>> getConfigMaps()
+        public List<Pair<String, PropertyMap>> getConfigMaps()
         {
             return this.map.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof ConfigMap)
-                    .map(entry -> Pair.of(entry.getKey(), (ConfigMap) entry.getValue()))
+                    .filter(entry -> entry.getValue() instanceof PropertyMap)
+                    .map(entry -> Pair.of(entry.getKey(), (PropertyMap) entry.getValue()))
                     .toList();
         }
 

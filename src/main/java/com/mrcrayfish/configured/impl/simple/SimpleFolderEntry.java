@@ -15,11 +15,11 @@ import java.util.List;
 public class SimpleFolderEntry implements IConfigEntry
 {
     private final String label;
-    private final ConfigManager.ConfigMap map;
+    private final ConfigManager.PropertyMap map;
     private final boolean root;
     private List<IConfigEntry> entries;
 
-    public SimpleFolderEntry(String label, ConfigManager.ConfigMap map, boolean root)
+    public SimpleFolderEntry(String label, ConfigManager.PropertyMap map, boolean root)
     {
         this.label = label;
         this.map = map;
