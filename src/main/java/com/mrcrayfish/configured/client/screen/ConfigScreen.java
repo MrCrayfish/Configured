@@ -36,7 +36,7 @@ import java.util.function.Function;
 /**
  * Author: MrCrayfish
  */
-public class ConfigScreen extends ListMenuScreen
+public class ConfigScreen extends ListMenuScreen implements IEditing
 {
     public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->
     {
@@ -56,13 +56,14 @@ public class ConfigScreen extends ListMenuScreen
     };
 
     protected final IConfigEntry folderEntry;
-    protected IModConfig config;
+    protected final IModConfig config;
     protected Button saveButton;
     protected Button restoreButton;
 
-    private ConfigScreen(Screen parent, Component title, ResourceLocation background, IConfigEntry folderEntry)
+    private ConfigScreen(Screen parent, Component title, IModConfig config, ResourceLocation background, IConfigEntry folderEntry)
     {
         super(parent, title, background, 24);
+        this.config = config;
         this.folderEntry = folderEntry;
     }
 
@@ -73,7 +74,13 @@ public class ConfigScreen extends ListMenuScreen
         this.folderEntry = config.getRoot();
     }
 
-	@Override
+    @Override
+    public IModConfig getActiveConfig()
+    {
+        return this.config;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     protected void constructEntries(List<Item> entries)
     {
@@ -154,7 +161,7 @@ public class ConfigScreen extends ListMenuScreen
             {
                 if(this.isChanged(this.folderEntry))
                 {
-                    this.minecraft.setScreen(new ConfirmationScreen(this, new TranslatableComponent("configured.gui.unsaved_changes"), result -> {
+                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.unsaved_changes"), result -> {
                         if(!result) return true;
                         this.minecraft.setScreen(this.parent);
                         return false;
@@ -183,7 +190,7 @@ public class ConfigScreen extends ListMenuScreen
 
     private void showRestoreScreen()
     {
-        ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslatableComponent("configured.gui.restore_message"), result ->
+        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), result ->
         {
             if(!result) return true;
             this.restoreDefaults(this.folderEntry);
@@ -245,7 +252,7 @@ public class ConfigScreen extends ListMenuScreen
             super(new TextComponent(createLabel(folderEntry.getEntryName())));
             this.button = new Button(10, 5, 44, 20, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
-                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.background, folderEntry));
+                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, folderEntry));
             });
         }
 
@@ -485,7 +492,7 @@ public class ConfigScreen extends ListMenuScreen
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, ConfigScreen.this.background)));
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
             this.eventListeners.add(this.button);
         }
 
@@ -506,7 +513,7 @@ public class ConfigScreen extends ListMenuScreen
         public EnumItem(IConfigValue<Enum<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, ConfigScreen.this.background, holder.get(), e -> {
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));

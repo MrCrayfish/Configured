@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.api.IModConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -16,7 +17,7 @@ import java.util.function.Function;
 /**
  * Author: MrCrayfish
  */
-public class EditStringScreen extends Screen implements IBackgroundTexture
+public class EditStringScreen extends Screen implements IBackgroundTexture, IEditing
 {
     private final Screen parent;
     private final ResourceLocation background;
@@ -74,6 +75,12 @@ public class EditStringScreen extends Screen implements IBackgroundTexture
         this.textField.render(poseStack, mouseX, mouseY, partialTicks);
         drawCenteredString(poseStack, this.font, this.title, this.width / 2, this.height / 2 - 40, 0xFFFFFF);
         super.render(poseStack, mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public IModConfig getActiveConfig()
+    {
+        return null;
     }
 
     @Override

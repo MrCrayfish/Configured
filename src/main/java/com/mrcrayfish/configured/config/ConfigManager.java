@@ -16,10 +16,12 @@ import com.mrcrayfish.configured.api.StorageType;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
+import com.mrcrayfish.configured.client.screen.IEditing;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -70,6 +72,7 @@ public class ConfigManager
     }
 
     private final List<SimpleConfigEntry> configs;
+    private IModConfig editingConfig;
 
     private ConfigManager()
     {
@@ -162,6 +165,31 @@ public class ConfigManager
     {
         Configured.LOGGER.info("Unloading world configs...");
         this.configs.stream().filter(entry -> entry.storageType == StorageType.WORLD).forEach(SimpleConfigEntry::unload);
+    }
+
+    @SubscribeEvent
+    public void onScreenOpen(ScreenOpenEvent event)
+    {
+        // Keeps track of the config currently being editing and runs events accordingly
+        if(event.getScreen() instanceof IEditing editing)
+        {
+            if(this.editingConfig == null)
+            {
+                this.editingConfig = editing.getActiveConfig();
+                this.editingConfig.startEditing();
+                Configured.LOGGER.info("Started editing '" + this.editingConfig.getFileName() + "'");
+            }
+            else if(this.editingConfig != editing.getActiveConfig())
+            {
+                throw new IllegalStateException("Trying to edit a config while one is already loaded. This should not happen!");
+            }
+        }
+        else if(this.editingConfig != null)
+        {
+            Configured.LOGGER.info("Stopped editing '" + this.editingConfig.getFileName() + "'");
+            this.editingConfig.stopEditing();
+            this.editingConfig = null;
+        }
     }
 
     public static final class SimpleConfigEntry implements IModConfig
@@ -349,11 +377,27 @@ public class ConfigManager
             result.accept(this);
         }
 
+        @Override
+        public void stopEditing()
+        {
+            // Attempts to unload the server config if player simply just went back
+            if(this.config != null && this.getStorage() == StorageType.WORLD)
+            {
+                if(!ListMenuScreen.isPlayingGame())
+                {
+                    this.unloadServerConfig();
+                }
+            }
+        }
+
         private void unloadServerConfig()
         {
-            this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
-            if(this.config instanceof FileConfig fileConfig) fileConfig.close();
-            this.config = null;
+            if(this.config != null)
+            {
+                this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
+                if(this.config instanceof FileConfig fileConfig) fileConfig.close();
+                this.config = null;
+            }
         }
     }
 

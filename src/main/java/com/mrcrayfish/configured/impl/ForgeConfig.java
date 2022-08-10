@@ -128,4 +128,18 @@ public class ForgeConfig implements IModConfig
         result.accept(this);
     }
 
+    @Override
+    public void stopEditing()
+    {
+        // Attempts to unload the server config if player simply just went back
+        if(this.config != null && this.getStorage() == StorageType.WORLD)
+        {
+            if(!ListMenuScreen.isPlayingGame())
+            {
+                // Unload server configs since still in main menu
+                this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
+                ConfigHelper.setModConfigData(this.config, null);
+            }
+        }
+    }
 }

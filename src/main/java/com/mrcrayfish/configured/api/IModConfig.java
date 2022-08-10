@@ -75,4 +75,15 @@ public interface IModConfig
      */
     void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException;
 
+    /**
+     * An event that is fired when this config is starting to be edited by the player using the
+     * in-game menu. This is only fired once during the initial opening of the config.
+     */
+    default void startEditing() {}
+
+    /**
+     * An event that is fired when this config is no longer being edited by the player using the
+     * in-game menu. This is only fired once after the player has exited the menu.
+     */
+    default void stopEditing() {}
 }

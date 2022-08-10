@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -29,9 +30,10 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class ChangeEnumScreen extends Screen implements IBackgroundTexture
+public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEditing
 {
     private final Screen parent;
+    private final IModConfig config;
     private final Consumer<Enum<?>> onSave;
     private final ResourceLocation background;
     private Enum<?> selectedValue;
@@ -39,10 +41,11 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     private List<Entry> entries;
     private EditBox searchTextField;
 
-    protected ChangeEnumScreen(Screen parent, Component title, ResourceLocation background, Enum<?> value, Consumer<Enum<?>> onSave)
+    protected ChangeEnumScreen(Screen parent, IModConfig config, Component title, ResourceLocation background, Enum<?> value, Consumer<Enum<?>> onSave)
     {
         super(title);
         this.parent = parent;
+        this.config = config;
         this.onSave = onSave;
         this.background = background;
         this.selectedValue = value;
@@ -114,6 +117,12 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
             List<FormattedCharSequence> toolTip = this.minecraft.font.split(new TranslatableComponent("configured.gui.info"), 200);
             this.renderTooltip(poseStack, toolTip, mouseX, mouseY);
         }
+    }
+
+    @Override
+    public IModConfig getActiveConfig()
+    {
+        return this.config;
     }
 
     @Override

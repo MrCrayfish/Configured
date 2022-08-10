@@ -6,6 +6,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IConfigValue;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -31,21 +32,23 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class EditListScreen extends Screen implements IBackgroundTexture
+public class EditListScreen extends Screen implements IBackgroundTexture, IEditing
 {
     private static final Map<IConfigValue<List<?>>, ListType> TYPE_CACHE = new HashMap<>();
 
     private final Screen parent;
+    private final IModConfig config;
     private final List<StringHolder> values = new ArrayList<>();
     private final ResourceLocation background;
     private final IConfigValue<List<?>> holder;
     private final ListType listType;
     private ObjectList list;
 
-    public EditListScreen(Screen parent, Component titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
+    public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
+        this.config = config;
         this.holder = holder;
         this.listType = getType(holder);
         this.values.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
@@ -85,6 +88,12 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         this.list.render(poseStack, mouseX, mouseY, partialTicks);
         drawCenteredString(poseStack, this.font, this.title, this.width / 2, 14, 0xFFFFFF);
         super.render(poseStack, mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public IModConfig getActiveConfig()
+    {
+        return this.config;
     }
 
     @Override
