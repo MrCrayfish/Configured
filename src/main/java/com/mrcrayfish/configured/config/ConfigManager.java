@@ -305,12 +305,12 @@ public class ConfigManager
             properties.forEach((rawPath, property) ->
             {
                 PropertyMap current = this;
-                Queue<String> path = split(rawPath);
-                while(path.size() > 1)
+                List<String> path = com.electronwill.nightconfig.core.utils.StringUtils.split(rawPath, '.');
+                for(int i = 0; i < path.size() - 1; i++)
                 {
-                    current = (PropertyMap) current.map.computeIfAbsent(path.poll(), PropertyMap::new);
+                    current = (PropertyMap) current.map.computeIfAbsent(path.get(i), PropertyMap::new);
                 }
-                current.map.put(path.poll(), property);
+                current.map.put(path.get(path.size() - 1), property);
             });
         }
 
@@ -333,11 +333,6 @@ public class ConfigManager
                 }
             });
             return properties;
-        }
-
-        private static Queue<String> split(String rawPath)
-        {
-            return new ArrayDeque<>(com.electronwill.nightconfig.core.utils.StringUtils.split(rawPath, '.'));
         }
     }
 
