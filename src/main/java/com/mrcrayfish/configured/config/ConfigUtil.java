@@ -31,6 +31,13 @@ public class ConfigUtil
         return fallback.get();
     }
 
+    public static Config createTempServerConfig(Path folder, String id, String name)
+    {
+        String fileName = String.format("%s.%s.toml", id, name);
+        File file = new File(folder.toFile(), fileName);
+        return CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
+    }
+
     private static boolean initConfig(final Path file, final ConfigFormat<?> format, final String fileName) throws IOException
     {
         Files.createDirectories(file.getParent());

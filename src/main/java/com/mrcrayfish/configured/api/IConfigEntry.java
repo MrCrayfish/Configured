@@ -1,7 +1,11 @@
 package com.mrcrayfish.configured.api;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * @author Speiger
@@ -44,4 +48,27 @@ public interface IConfigEntry
      * @return name of the current folder.
      */
     String getEntryName();
+
+    default Set<IConfigValue<?>> getChangedValues()
+    {
+        Set<IConfigValue<?>> changed = new HashSet<>();
+        Queue<IConfigEntry> found = new ArrayDeque<>();
+        found.add(this);
+        while(!found.isEmpty())
+        {
+            IConfigEntry toSave = found.poll();
+            if(!toSave.isLeaf())
+            {
+                found.addAll(toSave.getChildren());
+                continue;
+            }
+
+            IConfigValue<?> value = toSave.getValue();
+            if(value != null && value.isChanged())
+            {
+                changed.add(value);
+            }
+        }
+        return changed;
+    }
 }

@@ -18,8 +18,8 @@ public final class IntProperty extends ConfigProperty<Integer>
     }
 
     @Override
-    public void defineSpec(ConfigSpec spec, String path)
+    public void defineSpec(ConfigSpec spec)
     {
-        spec.defineInRange(path, this.defaultValue, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        spec.defineInRange(this.getPath(), this.defaultValue, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 }

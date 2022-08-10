@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.api.StorageType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
@@ -25,7 +26,6 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -116,7 +116,7 @@ public class ConfigScreen extends ListMenuScreen
                 }
                 else
                 {
-                    Configured.LOGGER.info("Unsupported config value: " + entry.getPath());
+                    Configured.LOGGER.info("Unsupported config value: " + entry.getName());
                 }
             }
             else
@@ -178,7 +178,7 @@ public class ConfigScreen extends ListMenuScreen
         // Don't need to save if nothing changed
         if(!this.isChanged(this.folderEntry) || this.config == null)
             return;
-        this.config.saveConfig(this.folderEntry);
+        this.config.update(this.folderEntry);
     }
 
     private void showRestoreScreen()
@@ -325,7 +325,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             Font font = Minecraft.getInstance().font;
             List<FormattedText> lines = font.getSplitter().splitLines(new TextComponent(holder.getComment()), 200, Style.EMPTY);
-            String name = holder.getPath();
+            String name = holder.getName();
             lines.add(0, new TextComponent(name).withStyle(ChatFormatting.YELLOW));
             int rangeIndex = -1;
             for(int i = 0; i < lines.size(); i++)
@@ -537,7 +537,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             return new TranslatableComponent(holder.getTranslationKey()).getString();
         }
-        return createLabel(holder.getPath());
+        return createLabel(holder.getName());
     }
 
     /**
@@ -566,7 +566,7 @@ public class ConfigScreen extends ListMenuScreen
     @Override
     public boolean shouldCloseOnEsc()
     {
-        return this.config == null || this.config.getConfigType() != ModConfig.Type.SERVER;
+        return this.config == null || this.config.getStorage() != StorageType.WORLD;
     }
 
     /**

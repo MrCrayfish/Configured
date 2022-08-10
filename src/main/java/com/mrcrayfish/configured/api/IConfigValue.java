@@ -66,7 +66,7 @@ public interface IConfigValue<T>
     /**
      * @return current directory name of the config entry this value is in.
      */
-    String getPath();
+    String getName();
 
     /**
      * If your config has a cache this is when it should be cleaned

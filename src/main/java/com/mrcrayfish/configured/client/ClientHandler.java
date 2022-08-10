@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
@@ -35,6 +36,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -63,7 +65,7 @@ public class ClientHandler
             if(container.getCustomExtension(ConfigGuiHandler.ConfigGuiFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
                 return;
 
-            Map<ModConfig.Type, Set<IModConfig>> modConfigMap = createConfigMap(container);
+            Map<ConfigType, Set<IModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
                 Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
@@ -81,16 +83,24 @@ public class ClientHandler
         return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
     }
 
-    public static Map<ModConfig.Type, Set<IModConfig>> createConfigMap(ModContainer container)
+    public static Map<ConfigType, Set<IModConfig>> createConfigMap(ModContainer container)
     {
-        Map<ModConfig.Type, Set<IModConfig>> modConfigMap = new HashMap<>();
-        addConfigSetToMap(container, ModConfig.Type.CLIENT, modConfigMap);
-        addConfigSetToMap(container, ModConfig.Type.COMMON, modConfigMap);
-        addConfigSetToMap(container, ModConfig.Type.SERVER, modConfigMap);
+        Map<ConfigType, Set<IModConfig>> modConfigMap = new HashMap<>();
+
+        // Add Forge configurations
+        addForgeConfigSetToMap(container, ModConfig.Type.CLIENT, ConfigType.CLIENT, modConfigMap);
+        addForgeConfigSetToMap(container, ModConfig.Type.COMMON, ConfigType.COMMON, modConfigMap);
+        addForgeConfigSetToMap(container, ModConfig.Type.SERVER, ConfigType.SERVER, modConfigMap);
+
+        // Add SimpleConfig configurations
+        ConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId())).forEach(entry -> {
+            modConfigMap.computeIfAbsent(entry.getConfigType(), type -> new LinkedHashSet<>()).add(entry);
+        });
+
         return modConfigMap;
     }
 
-    private static void addConfigSetToMap(ModContainer container, ModConfig.Type type, Map<ModConfig.Type, Set<IModConfig>> configMap)
+    private static void addForgeConfigSetToMap(ModContainer container, ModConfig.Type type, ConfigType configType, Map<ConfigType, Set<IModConfig>> configMap)
     {
         /* Optifine basically breaks Forge's client config, so it's simply not added */
         if(type == ModConfig.Type.CLIENT && OptiFineHelper.isLoaded() && container.getModId().equals("forge"))
@@ -101,10 +111,9 @@ public class ClientHandler
 
         Set<ModConfig> configSet = getConfigSets().get(type);
         Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
-        ConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId()) && entry.getConfigType() == type).forEach(filteredConfigSets::add);
         if(!filteredConfigSets.isEmpty())
         {
-            configMap.put(type, filteredConfigSets);
+            configMap.put(configType, filteredConfigSets);
         }
     }
 

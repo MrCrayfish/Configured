@@ -27,9 +27,9 @@ public final class DoubleProperty extends ConfigProperty<Double>
         return this.maxValue;
     }
 
-    public void defineSpec(ConfigSpec spec, String path)
+    public void defineSpec(ConfigSpec spec)
     {
-        spec.defineInRange(path, this.defaultValue, this.minValue, this.maxValue);
+        spec.defineInRange(this.getPath(), this.defaultValue, this.minValue, this.maxValue);
     }
 
     public static DoubleProperty create(double defaultValue, double minValue, double maxValue)

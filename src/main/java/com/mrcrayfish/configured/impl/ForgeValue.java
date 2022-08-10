@@ -77,7 +77,7 @@ public class ForgeValue<T> implements IConfigValue<T>
     }
 
     @Override
-    public String getPath()
+    public String getName()
     {
         return lastValue(this.configValue.getPath(), "");
     }

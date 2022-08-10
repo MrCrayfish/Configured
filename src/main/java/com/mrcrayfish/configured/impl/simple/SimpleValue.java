@@ -85,7 +85,7 @@ public class SimpleValue<T> implements IConfigValue<T>
     }
 
     @Override
-    public String getPath()
+    public String getName()
     {
         return this.name;
     }
@@ -94,5 +94,11 @@ public class SimpleValue<T> implements IConfigValue<T>
     public void cleanCache()
     {
         this.property.invalidateCache();
+    }
+
+    @Nullable
+    public String getPath()
+    {
+        return this.property.getPath();
     }
 }

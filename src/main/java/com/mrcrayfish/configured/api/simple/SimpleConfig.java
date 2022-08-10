@@ -1,5 +1,7 @@
 package com.mrcrayfish.configured.api.simple;
 
+import com.mrcrayfish.configured.api.StorageType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

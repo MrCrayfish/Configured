@@ -3,43 +3,46 @@ package com.mrcrayfish.configured.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.file.FileConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
+import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.api.StorageType;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
-import com.mrcrayfish.configured.api.simple.StorageType;
+import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
+import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -53,7 +56,7 @@ public class ConfigManager
 {
     private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z_]+$").asMatchPredicate();
     private static final LevelResource SERVER_CONFIG = new LevelResource("serverconfig");
-    private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
+    private static final org.objectweb.asm.Type SIMPLE_CONFIG = org.objectweb.asm.Type.getType(SimpleConfig.class);
 
     private static ConfigManager instance;
 
@@ -102,21 +105,21 @@ public class ConfigManager
         return ImmutableList.copyOf(configs);
     }
 
-    private static ConfigSpec createSpec(Map<String, ConfigProperty<?>> map)
+    private static ConfigSpec createSpec(Set<ConfigProperty<?>> properties)
     {
         ConfigSpec spec = new ConfigSpec();
-        map.forEach((path, property) -> property.defineSpec(spec, path));
+        properties.forEach(p -> p.defineSpec(spec));
         return spec;
     }
 
-    private static Map<String, ConfigProperty<?>> gatherConfigProperties(Object object)
+    private static Set<ConfigProperty<?>> gatherConfigProperties(Object object)
     {
-        Map<String, ConfigProperty<?>> map = new HashMap<>();
-        readFields(map, new Stack<>(), object);
-        return ImmutableMap.copyOf(map);
+        Set<ConfigProperty<?>> properties = new HashSet<>();
+        readFields(properties, new Stack<>(), object);
+        return ImmutableSet.copyOf(properties);
     }
 
-    private static void readFields(Map<String, ConfigProperty<?>> map, Stack<String> path, Object instance)
+    private static void readFields(Set<ConfigProperty<?>> properties, Stack<String> path, Object instance)
     {
         Field[] fields = instance.getClass().getDeclaredFields();
         Stream.of(fields).forEach(field -> Optional.ofNullable(field.getDeclaredAnnotation(SimpleProperty.class)).ifPresent(sp -> {
@@ -127,11 +130,12 @@ public class ConfigManager
                 Object obj = field.get(instance);
                 if(obj instanceof ConfigProperty<?> property)
                 {
-                    map.put(StringUtils.join(path, "."), property);
+                    property.initPath(new ValuePath(StringUtils.join(path, ".")));
+                    properties.add(property);
                 }
                 else
                 {
-                    readFields(map, path, obj);
+                    readFields(properties, path, obj);
                 }
             }
             catch(IllegalAccessException e)
@@ -148,7 +152,7 @@ public class ConfigManager
         Configured.LOGGER.info("Loading world configs...");
         Path serverConfig = event.getServer().getWorldPath(SERVER_CONFIG);
         FileUtils.getOrCreateDirectory(serverConfig, "serverconfig");
-        this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(entry -> {
+        this.configs.stream().filter(entry -> entry.storageType == StorageType.WORLD).forEach(entry -> {
             entry.load(serverConfig);
         });
     }
@@ -157,7 +161,7 @@ public class ConfigManager
     public void onServerStopped(ServerStoppedEvent event)
     {
         Configured.LOGGER.info("Unloading world configs...");
-        this.configs.stream().filter(entry -> entry.storage == StorageType.WORLD).forEach(SimpleConfigEntry::unload);
+        this.configs.stream().filter(entry -> entry.storageType == StorageType.WORLD).forEach(SimpleConfigEntry::unload);
     }
 
     public static final class SimpleConfigEntry implements IModConfig
@@ -165,9 +169,9 @@ public class ConfigManager
         private final String id;
         private final String name;
         private final boolean sync;
-        private final StorageType storage;
+        private final StorageType storageType;
         private final Object instance;
-        private final Map<String, ConfigProperty<?>> properties;
+        private final Set<ConfigProperty<?>> allProperties;
         private final PropertyMap propertyMap;
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
@@ -187,18 +191,18 @@ public class ConfigManager
             this.id = (String) data.get("id");
             this.name = (String) data.get("name");
             this.sync = (Boolean) data.getOrDefault("sync", false);
-            this.storage = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> StorageType.valueOf(holder.getValue())).orElse(StorageType.GLOBAL);
+            this.storageType = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> StorageType.valueOf(holder.getValue())).orElse(StorageType.GLOBAL);
             this.instance = instance;
-            this.properties = gatherConfigProperties(instance);
-            this.propertyMap = new PropertyMap(this.properties);
-            this.spec = createSpec(this.properties);
+            this.allProperties = gatherConfigProperties(instance);
+            this.propertyMap = new PropertyMap(this.allProperties);
+            this.spec = createSpec(this.allProperties);
             this.classLoader = Thread.currentThread().getContextClassLoader();
 
-            if(this.storage == StorageType.GLOBAL) // Load global configs immediately
+            if(this.storageType == StorageType.GLOBAL) // Load global configs immediately
             {
                 this.load(FMLPaths.CONFIGDIR.get());
             }
-            else if(this.storage == StorageType.MEMORY)
+            else if(this.storageType == StorageType.MEMORY)
             {
                 this.load(null);
             }
@@ -216,7 +220,7 @@ public class ConfigManager
             Config config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
-            this.properties.forEach((path, property) -> property.updateProxy(new ValueProxy(config, path)));
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
             this.config = config;
             ConfigUtil.watchFileConfig(config, this::changeCallback);
         }
@@ -225,7 +229,7 @@ public class ConfigManager
         {
             if(this.config != null)
             {
-                this.properties.forEach((path, property) -> property.updateProxy(ValueProxy.EMPTY));
+                this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
                 ConfigUtil.closeFileConfig(this.config);
                 this.config = null;
             }
@@ -238,7 +242,7 @@ public class ConfigManager
             {
                 ConfigUtil.loadFileConfig(this.config);
                 this.correct(this.config);
-                this.properties.values().forEach(ConfigProperty::invalidateCache);
+                this.allProperties.forEach(ConfigProperty::invalidateCache);
             }
         }
 
@@ -252,9 +256,48 @@ public class ConfigManager
         }
 
         @Override
-        public void saveConfig(IConfigEntry entry)
+        public void update(IConfigEntry entry)
         {
+            Preconditions.checkState(this.config != null, "Tried to update a config that is not loaded");
 
+            // Find changed values and update config if necessary
+            Set<IConfigValue<?>> changedValues = entry.getChangedValues();
+            if(!changedValues.isEmpty())
+            {
+                CommentedConfig newConfig = CommentedConfig.copy(this.config);
+                changedValues.forEach(value ->
+                {
+                    if(value instanceof SimpleValue<?> simpleValue)
+                    {
+                        newConfig.set(simpleValue.getPath(), simpleValue.get());
+                    }
+                });
+                this.correct(newConfig);
+                this.config.putAll(newConfig);
+                this.allProperties.forEach(ConfigProperty::invalidateCache);
+            }
+
+            // Post handling
+            if(this.getStorage() == StorageType.WORLD)
+            {
+                if(!ListMenuScreen.isPlayingGame())
+                {
+                    // Unload world configs since still in main menu
+                    this.unloadServerConfig();
+                }
+                else if(this.sync)
+                {
+                    //TODO send to server
+                    //ConfigHelper.sendModConfigDataToServer(this.config);
+                }
+            }
+            else
+            {
+                //TODO events for simple configs
+                /*Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
+                this.config.getSpec().afterReload();
+                ConfigHelper.fireEvent(this.config, new ModConfigEvent.Reloading(this.config));*/
+            }
         }
 
         @Override
@@ -264,9 +307,15 @@ public class ConfigManager
         }
 
         @Override
-        public ModConfig.Type getConfigType()
+        public ConfigType getConfigType()
         {
-            return this.storage == StorageType.WORLD ? ModConfig.Type.SERVER : ModConfig.Type.COMMON;
+            return this.storageType == StorageType.WORLD ? ConfigType.SERVER : ConfigType.COMMON;
+        }
+
+        @Override
+        public StorageType getStorage()
+        {
+            return this.storageType;
         }
 
         @Override
@@ -287,10 +336,24 @@ public class ConfigManager
             return this.id;
         }
 
+        //TODO unload
         @Override
-        public void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException
+        public void loadServerConfig(Path configDir, Consumer<IModConfig> result) throws IOException
         {
+            // Same as normal loading just without file watching
+            Config config = ConfigUtil.createTempServerConfig(configDir, this.id, this.name);
+            ConfigUtil.loadFileConfig(config);
+            this.correct(config);
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
+            this.config = config;
+            result.accept(this);
+        }
 
+        private void unloadServerConfig()
+        {
+            this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
+            if(this.config instanceof FileConfig fileConfig) fileConfig.close();
+            this.config = null;
         }
     }
 
@@ -298,19 +361,29 @@ public class ConfigManager
     {
         private final Map<String, IMapEntry> map = new HashMap<>();
 
-        private PropertyMap(String name) {}
+        private final String path;
 
-        private PropertyMap(Map<String, ConfigProperty<?>> properties)
+        private PropertyMap(String path)
         {
-            properties.forEach((rawPath, property) ->
+            this.path = path;
+        }
+
+        private PropertyMap(Set<ConfigProperty<?>> properties)
+        {
+            this.path = null;
+            properties.forEach(p ->
             {
                 PropertyMap current = this;
-                List<String> path = com.electronwill.nightconfig.core.utils.StringUtils.split(rawPath, '.');
+                List<String> path = com.electronwill.nightconfig.core.utils.StringUtils.split(p.getPath(), '.');
                 for(int i = 0; i < path.size() - 1; i++)
                 {
-                    current = (PropertyMap) current.map.computeIfAbsent(path.get(i), PropertyMap::new);
+                    int finalI = i;
+                    current = (PropertyMap) current.map.computeIfAbsent(path.get(i), s -> {
+                        String subPath = StringUtils.join(path.subList(0, finalI), '.');
+                        return new PropertyMap(subPath);
+                    });
                 }
-                current.map.put(path.get(path.size() - 1), property);
+                current.map.put(path.get(path.size() - 1), p);
             });
         }
 
@@ -333,6 +406,12 @@ public class ConfigManager
                 }
             });
             return properties;
+        }
+
+        @Override
+        public String getPath()
+        {
+            return this.path;
         }
     }
 
@@ -383,7 +462,24 @@ public class ConfigManager
         }
     }
 
+    public static class ValuePath
+    {
+        //TODO use list version
+        private final String path;
+
+        private ValuePath(String path)
+        {
+            this.path = path;
+        }
+
+        public String getPath()
+        {
+            return this.path;
+        }
+    }
+
     public interface IMapEntry
     {
+        String getPath();
     }
 }

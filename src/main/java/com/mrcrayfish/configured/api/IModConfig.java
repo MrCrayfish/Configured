@@ -1,7 +1,6 @@
 package com.mrcrayfish.configured.api;
 
 import com.mrcrayfish.configured.impl.ForgeConfig;
-import net.minecraftforge.fml.config.ModConfig;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -23,7 +22,7 @@ public interface IModConfig
      * @param entry the entry that is used or should be checked for updates.
      *              Also make sure to check children if children of said entry have been changed too.
      */
-    void saveConfig(IConfigEntry entry);
+    void update(IConfigEntry entry);
 
     /**
      * This function returns provides the Entry point of the Configuration File.
@@ -38,7 +37,14 @@ public interface IModConfig
      *
      * @return if the configuration is serversided
      */
-    ModConfig.Type getConfigType();
+    ConfigType getConfigType();
+
+    /**
+     * The storage type of this config. This determines where the configuration is loaded from and saved to.
+     *
+     * @return the storage type of the config
+     */
+    StorageType getStorage();
 
     /**
      * @return the filename of the config
@@ -68,4 +74,5 @@ public interface IModConfig
      * @throws IOException since its IO work the function will be expected to maybe throw IOExceptions
      */
     void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException;
+
 }

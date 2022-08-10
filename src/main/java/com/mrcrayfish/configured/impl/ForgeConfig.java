@@ -3,19 +3,21 @@ package com.mrcrayfish.configured.impl;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.api.StorageType;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.config.ModConfig.Type;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Consumer;
@@ -23,6 +25,12 @@ import java.util.function.Function;
 
 public class ForgeConfig implements IModConfig
 {
+    private static final EnumMap<ModConfig.Type, ConfigType> TYPE_RESOLVER = Util.make(new EnumMap<>(ModConfig.Type.class), (map) -> {
+        map.put(ModConfig.Type.CLIENT, ConfigType.CLIENT);
+        map.put(ModConfig.Type.COMMON, ConfigType.COMMON);
+        map.put(ModConfig.Type.SERVER, ConfigType.SERVER);
+    });
+
     ModConfig config;
 
     public ForgeConfig(ModConfig config)
@@ -31,7 +39,7 @@ public class ForgeConfig implements IModConfig
     }
 
     @Override
-    public void saveConfig(IConfigEntry entry)
+    public void update(IConfigEntry entry)
     {
         CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
         Queue<IConfigEntry> found = new ArrayDeque<>();
@@ -61,7 +69,7 @@ public class ForgeConfig implements IModConfig
             }
         }
         this.config.getConfigData().putAll(newConfig);
-        if(this.getConfigType() == Type.SERVER)
+        if(this.getConfigType() == ConfigType.SERVER)
         {
             if(!ListMenuScreen.isPlayingGame())
             {
@@ -79,7 +87,6 @@ public class ForgeConfig implements IModConfig
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
             this.config.getSpec().afterReload();
             ConfigHelper.fireEvent(this.config, new ModConfigEvent.Reloading(this.config));
-
         }
     }
 
@@ -90,9 +97,15 @@ public class ForgeConfig implements IModConfig
     }
 
     @Override
-    public Type getConfigType()
+    public ConfigType getConfigType()
     {
-        return this.config.getType();
+        return TYPE_RESOLVER.get(this.config.getType());
+    }
+
+    @Override
+    public StorageType getStorage()
+    {
+        return this.config.getType() == ModConfig.Type.SERVER ? StorageType.WORLD : StorageType.GLOBAL;
     }
 
     @Override
