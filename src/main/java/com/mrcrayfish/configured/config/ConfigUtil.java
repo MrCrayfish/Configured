@@ -99,4 +99,16 @@ public class ConfigUtil
             fileConfig.save();
         }
     }
+
+    public static byte[] readBytes(Path path)
+    {
+        try
+        {
+            return Files.readAllBytes(path);
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 }

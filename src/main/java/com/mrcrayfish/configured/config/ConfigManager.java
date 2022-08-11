@@ -4,8 +4,10 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.api.IConfigEntry;
@@ -19,8 +21,12 @@ import com.mrcrayfish.configured.client.screen.IEditing;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
+import com.mrcrayfish.configured.network.HandshakeMessages;
+import net.minecraft.network.Connection;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
@@ -31,25 +37,20 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
 import net.minecraftforge.forgespi.language.ModFileScanData;
+import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -72,17 +73,19 @@ public class ConfigManager
         return instance;
     }
 
-    private final List<SimpleConfigEntry> configs;
+    private final Map<ResourceLocation, SimpleConfigEntry> configs;
     private IModConfig editingConfig;
 
     private ConfigManager()
     {
-        this.configs = this.getAllSimpleConfigs();
+        Map<ResourceLocation, SimpleConfigEntry> configs = new HashMap<>();
+        this.getAllSimpleConfigs().forEach(entry -> configs.put(entry.getName(), entry));
+        this.configs = ImmutableMap.copyOf(configs);
     }
 
     public List<SimpleConfigEntry> getConfigs()
     {
-        return ImmutableList.copyOf(this.configs);
+        return ImmutableList.copyOf(this.configs.values());
     }
 
     private List<SimpleConfigEntry> getAllSimpleConfigs()
@@ -150,22 +153,68 @@ public class ConfigManager
         }));
     }
 
+    public List<Pair<String, HandshakeMessages.S2CConfigData>> getMessagesForLogin(boolean local)
+    {
+        if(local) return Collections.emptyList();
+        return this.configs.values().stream()
+            .filter(entry -> entry.getType().isSync() && entry.getFilePath() != null)
+            .map(entry -> {
+                ResourceLocation key = entry.getName();
+                byte[] data = ConfigUtil.readBytes(entry.getFilePath());
+                return Pair.of("SimpleConfig " + key, new HandshakeMessages.S2CConfigData(key, data));
+            }).collect(Collectors.toList());
+    }
+
+    public void processConfigData(HandshakeMessages.S2CConfigData message)
+    {
+        Configured.LOGGER.info("Loading synced config from server: " + message.getKey());
+        this.configs.get(message.getKey()).loadFromData(message.getData());
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    {
+        Configured.LOGGER.info("Unloading synced configs from server");
+        Connection connection = event.getConnection();
+        if(connection != null && !connection.isMemoryConnection()) // Run only if disconnected from remote server
+        {
+            // Unloads all synced configs since they should no longer be accessible
+            this.configs.values().stream().filter(entry -> entry.getType().isSync()).forEach(SimpleConfigEntry::unload);
+        }
+    }
+
     @SubscribeEvent
     public void onServerStarting(ServerAboutToStartEvent event)
     {
-        Configured.LOGGER.info("Loading world configs...");
+        Configured.LOGGER.info("Loading server configs...");
+
+        // Create the server config directory
         Path serverConfig = event.getServer().getWorldPath(WORLD_CONFIG);
         FileUtils.getOrCreateDirectory(serverConfig, "serverconfig");
-        this.configs.stream().filter(entry -> entry.configType == ConfigType.WORLD).forEach(entry -> {
-            entry.load(serverConfig);
+
+        // Handle loading server configs based on type
+        this.configs.values().forEach(entry ->
+        {
+            switch(entry.configType)
+            {
+                case WORLD, WORLD_SYNC -> entry.load(serverConfig);
+                case SERVER, SERVER_SYNC -> entry.load(FMLPaths.CONFIGDIR.get());
+                case DEDICATED_SERVER ->
+                {
+                    if(FMLEnvironment.dist.isDedicatedServer())
+                    {
+                        entry.load(FMLPaths.CONFIGDIR.get());
+                    }
+                }
+            }
         });
     }
 
     @SubscribeEvent
     public void onServerStopped(ServerStoppedEvent event)
     {
-        Configured.LOGGER.info("Unloading world configs...");
-        this.configs.stream().filter(entry -> entry.configType == ConfigType.WORLD).forEach(SimpleConfigEntry::unload);
+        Configured.LOGGER.info("Unloading server configs...");
+        this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(SimpleConfigEntry::unload);
     }
 
     @SubscribeEvent
@@ -259,6 +308,15 @@ public class ConfigManager
             ConfigUtil.watchFileConfig(config, this::changeCallback);
         }
 
+        private void loadFromData(byte[] data)
+        {
+            Preconditions.checkState(this.configType.isSync(), "Tried to load from data for a non-sync config");
+            CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
+            this.correct(config);
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
+            this.config = config;
+        }
+
         private void unload()
         {
             if(this.config != null)
@@ -332,6 +390,17 @@ public class ConfigManager
                 this.config.getSpec().afterReload();
                 ConfigHelper.fireEvent(this.config, new ModConfigEvent.Reloading(this.config));*/
             }
+        }
+
+        public ResourceLocation getName()
+        {
+            return new ResourceLocation(this.id, this.name);
+        }
+
+        @Nullable
+        public Path getFilePath()
+        {
+            return this.config instanceof FileConfig ? ((FileConfig) this.config).getNioPath() : null;
         }
 
         @Override

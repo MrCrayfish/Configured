@@ -36,7 +36,7 @@ public class Configured
 
     private void onCommonSetup(FMLCommonSetupEvent event)
     {
-        PacketHandler.registerPlayMessages();
+        event.enqueueWork(PacketHandler::registerMessages);
     }
 
     private void onLoadComplete(FMLLoadCompleteEvent event)
