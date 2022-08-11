@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.IConfigEvent;
@@ -227,5 +228,10 @@ public class ConfigHelper
     public static void resetCache(ModConfig config)
     {
         gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
+    }
+
+    public static boolean isEditableServerConfig(IModConfig config)
+    {
+        return config.getType().isServer() && config.getType().getDist().orElse(null) != Dist.DEDICATED_SERVER;
     }
 }

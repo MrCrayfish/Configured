@@ -3,11 +3,10 @@ package com.mrcrayfish.configured.impl;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mrcrayfish.configured.Configured;
-import com.mrcrayfish.configured.api.StorageType;
-import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.Util;
@@ -27,8 +26,8 @@ public class ForgeConfig implements IModConfig
 {
     private static final EnumMap<ModConfig.Type, ConfigType> TYPE_RESOLVER = Util.make(new EnumMap<>(ModConfig.Type.class), (map) -> {
         map.put(ModConfig.Type.CLIENT, ConfigType.CLIENT);
-        map.put(ModConfig.Type.COMMON, ConfigType.COMMON);
-        map.put(ModConfig.Type.SERVER, ConfigType.SERVER);
+        map.put(ModConfig.Type.COMMON, ConfigType.UNIVERSAL);
+        map.put(ModConfig.Type.SERVER, ConfigType.WORLD_SYNC);
     });
 
     ModConfig config;
@@ -69,7 +68,7 @@ public class ForgeConfig implements IModConfig
             }
         }
         this.config.getConfigData().putAll(newConfig);
-        if(this.getConfigType() == ConfigType.SERVER)
+        if(this.getType() == ConfigType.WORLD_SYNC)
         {
             if(!ListMenuScreen.isPlayingGame())
             {
@@ -97,15 +96,9 @@ public class ForgeConfig implements IModConfig
     }
 
     @Override
-    public ConfigType getConfigType()
+    public ConfigType getType()
     {
         return TYPE_RESOLVER.get(this.config.getType());
-    }
-
-    @Override
-    public StorageType getStorage()
-    {
-        return this.config.getType() == ModConfig.Type.SERVER ? StorageType.WORLD : StorageType.GLOBAL;
     }
 
     @Override
@@ -132,7 +125,7 @@ public class ForgeConfig implements IModConfig
     public void stopEditing()
     {
         // Attempts to unload the server config if player simply just went back
-        if(this.config != null && this.getStorage() == StorageType.WORLD)
+        if(this.config != null && this.getType() == ConfigType.WORLD)
         {
             if(!ListMenuScreen.isPlayingGame())
             {

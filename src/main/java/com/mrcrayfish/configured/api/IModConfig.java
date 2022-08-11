@@ -33,18 +33,11 @@ public interface IModConfig
     IConfigEntry getRoot();
 
     /**
-     * If the configuration file is a server (local world or multiplayer) this function should return true
-     *
-     * @return if the configuration is serversided
-     */
-    ConfigType getConfigType();
-
-    /**
      * The storage type of this config. This determines where the configuration is loaded from and saved to.
      *
      * @return the storage type of the config
      */
-    StorageType getStorage();
+    ConfigType getType();
 
     /**
      * @return the filename of the config

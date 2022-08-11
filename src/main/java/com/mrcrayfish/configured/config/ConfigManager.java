@@ -8,11 +8,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mrcrayfish.configured.Configured;
-import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.api.StorageType;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
@@ -21,11 +20,13 @@ import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
@@ -57,7 +58,7 @@ import java.util.stream.Stream;
 public class ConfigManager
 {
     private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z_]+$").asMatchPredicate();
-    private static final LevelResource SERVER_CONFIG = new LevelResource("serverconfig");
+    private static final LevelResource WORLD_CONFIG = new LevelResource("serverconfig");
     private static final org.objectweb.asm.Type SIMPLE_CONFIG = org.objectweb.asm.Type.getType(SimpleConfig.class);
 
     private static ConfigManager instance;
@@ -153,9 +154,9 @@ public class ConfigManager
     public void onServerStarting(ServerAboutToStartEvent event)
     {
         Configured.LOGGER.info("Loading world configs...");
-        Path serverConfig = event.getServer().getWorldPath(SERVER_CONFIG);
+        Path serverConfig = event.getServer().getWorldPath(WORLD_CONFIG);
         FileUtils.getOrCreateDirectory(serverConfig, "serverconfig");
-        this.configs.stream().filter(entry -> entry.storageType == StorageType.WORLD).forEach(entry -> {
+        this.configs.stream().filter(entry -> entry.configType == ConfigType.WORLD).forEach(entry -> {
             entry.load(serverConfig);
         });
     }
@@ -164,7 +165,7 @@ public class ConfigManager
     public void onServerStopped(ServerStoppedEvent event)
     {
         Configured.LOGGER.info("Unloading world configs...");
-        this.configs.stream().filter(entry -> entry.storageType == StorageType.WORLD).forEach(SimpleConfigEntry::unload);
+        this.configs.stream().filter(entry -> entry.configType == ConfigType.WORLD).forEach(SimpleConfigEntry::unload);
     }
 
     @SubscribeEvent
@@ -196,8 +197,7 @@ public class ConfigManager
     {
         private final String id;
         private final String name;
-        private final boolean sync;
-        private final StorageType storageType;
+        private final ConfigType configType;
         private final Object instance;
         private final Set<ConfigProperty<?>> allProperties;
         private final PropertyMap propertyMap;
@@ -218,21 +218,24 @@ public class ConfigManager
 
             this.id = (String) data.get("id");
             this.name = (String) data.get("name");
-            this.sync = (Boolean) data.getOrDefault("sync", false);
-            this.storageType = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> StorageType.valueOf(holder.getValue())).orElse(StorageType.GLOBAL);
+            this.configType = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> ConfigType.valueOf(holder.getValue())).orElse(ConfigType.UNIVERSAL);
             this.instance = instance;
             this.allProperties = gatherConfigProperties(instance);
             this.propertyMap = new PropertyMap(this.allProperties);
             this.spec = createSpec(this.allProperties);
             this.classLoader = Thread.currentThread().getContextClassLoader();
 
-            if(this.storageType == StorageType.GLOBAL) // Load global configs immediately
+            // Load non-server configs immediately
+            if(!this.configType.isServer())
             {
-                this.load(FMLPaths.CONFIGDIR.get());
-            }
-            else if(this.storageType == StorageType.MEMORY)
-            {
-                this.load(null);
+                if(this.configType == ConfigType.MEMORY)
+                {
+                    this.load(null);
+                }
+                else
+                {
+                    this.load(FMLPaths.CONFIGDIR.get());
+                }
             }
         }
 
@@ -244,6 +247,9 @@ public class ConfigManager
          */
         private void load(@Nullable Path configDir)
         {
+            Optional<Dist> dist = this.getType().getDist();
+            if(dist.isPresent() && !FMLEnvironment.dist.equals(dist.get()))
+                return;
             Preconditions.checkState(this.config == null, "Config is already loaded. Unload before loading again.");
             Config config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
             ConfigUtil.loadFileConfig(config);
@@ -306,14 +312,14 @@ public class ConfigManager
             }
 
             // Post handling
-            if(this.getStorage() == StorageType.WORLD)
+            if(this.getType() == ConfigType.WORLD)
             {
                 if(!ListMenuScreen.isPlayingGame())
                 {
                     // Unload world configs since still in main menu
                     this.unloadServerConfig();
                 }
-                else if(this.sync)
+                else if(this.configType.isSync())
                 {
                     //TODO send to server
                     //ConfigHelper.sendModConfigDataToServer(this.config);
@@ -335,15 +341,9 @@ public class ConfigManager
         }
 
         @Override
-        public ConfigType getConfigType()
+        public ConfigType getType()
         {
-            return this.storageType == StorageType.WORLD ? ConfigType.SERVER : ConfigType.COMMON;
-        }
-
-        @Override
-        public StorageType getStorage()
-        {
-            return this.storageType;
+            return this.configType;
         }
 
         @Override
@@ -381,7 +381,7 @@ public class ConfigManager
         public void stopEditing()
         {
             // Attempts to unload the server config if player simply just went back
-            if(this.config != null && this.getStorage() == StorageType.WORLD)
+            if(this.config != null && this.getType() == ConfigType.WORLD)
             {
                 if(!ListMenuScreen.isPlayingGame())
                 {

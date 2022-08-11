@@ -4,9 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
-import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
 import com.mrcrayfish.configured.config.ConfigManager;
@@ -89,12 +89,12 @@ public class ClientHandler
 
         // Add Forge configurations
         addForgeConfigSetToMap(container, ModConfig.Type.CLIENT, ConfigType.CLIENT, modConfigMap);
-        addForgeConfigSetToMap(container, ModConfig.Type.COMMON, ConfigType.COMMON, modConfigMap);
-        addForgeConfigSetToMap(container, ModConfig.Type.SERVER, ConfigType.SERVER, modConfigMap);
+        addForgeConfigSetToMap(container, ModConfig.Type.COMMON, ConfigType.UNIVERSAL, modConfigMap);
+        addForgeConfigSetToMap(container, ModConfig.Type.SERVER, ConfigType.WORLD_SYNC, modConfigMap);
 
         // Add SimpleConfig configurations
         ConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId())).forEach(entry -> {
-            modConfigMap.computeIfAbsent(entry.getConfigType(), type -> new LinkedHashSet<>()).add(entry);
+            modConfigMap.computeIfAbsent(entry.getType(), type -> new LinkedHashSet<>()).add(entry);
         });
 
         return modConfigMap;

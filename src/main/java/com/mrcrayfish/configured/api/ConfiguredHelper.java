@@ -8,7 +8,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.Map;
 import java.util.Set;

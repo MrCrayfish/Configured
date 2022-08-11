@@ -3,7 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.Configured;
-import com.mrcrayfish.configured.api.StorageType;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
@@ -573,7 +573,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     @Override
     public boolean shouldCloseOnEsc()
     {
-        return this.config == null || this.config.getStorage() != StorageType.WORLD;
+        return this.config == null || this.config.getType() != ConfigType.WORLD;
     }
 
     /**

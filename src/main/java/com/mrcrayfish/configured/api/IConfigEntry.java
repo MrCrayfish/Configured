@@ -49,6 +49,7 @@ public interface IConfigEntry
      */
     String getEntryName();
 
+    //TODO move to util class
     default Set<IConfigValue<?>> getChangedValues()
     {
         Set<IConfigValue<?>> changed = new HashSet<>();
