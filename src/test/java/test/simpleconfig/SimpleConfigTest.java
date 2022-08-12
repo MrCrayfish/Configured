@@ -16,28 +16,28 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 @Mod(value = Constants.ID)
 public class SimpleConfigTest
 {
-    @SimpleConfig(id = Constants.ID, name = "client", storage = ConfigType.CLIENT)
+    @SimpleConfig(id = Constants.ID, name = "client", type = ConfigType.CLIENT)
     private static final MyConfig CLIENT = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "universal", storage = ConfigType.UNIVERSAL)
+    @SimpleConfig(id = Constants.ID, name = "universal", type = ConfigType.UNIVERSAL)
     private static final MyConfig UNIVERSAL = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "server", storage = ConfigType.SERVER)
+    @SimpleConfig(id = Constants.ID, name = "server", type = ConfigType.SERVER)
     private static final MyConfig SERVER = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "server_sync", storage = ConfigType.SERVER_SYNC)
+    @SimpleConfig(id = Constants.ID, name = "server_sync", type = ConfigType.SERVER_SYNC)
     private static final MyConfig SERVER_SYNC = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "dedicated_server", storage = ConfigType.DEDICATED_SERVER)
+    @SimpleConfig(id = Constants.ID, name = "dedicated_server", type = ConfigType.DEDICATED_SERVER)
     private static final MyConfig DEDICATED_SERVER = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "world", storage = ConfigType.WORLD)
+    @SimpleConfig(id = Constants.ID, name = "world", type = ConfigType.WORLD)
     private static final MyConfig WORLD = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "world_sync", storage = ConfigType.WORLD_SYNC)
+    @SimpleConfig(id = Constants.ID, name = "world_sync", type = ConfigType.WORLD_SYNC)
     private static final MyConfig WORLD_SYNC = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "world_sync", storage = ConfigType.MEMORY)
+    @SimpleConfig(id = Constants.ID, name = "memory", type = ConfigType.MEMORY)
     private static final MyConfig MEMORY = new MyConfig();
 
     public SimpleConfigTest()
@@ -57,15 +57,15 @@ public class SimpleConfigTest
 
     public static class MyConfig
     {
-        @SimpleProperty("more_properties")
+        @SimpleProperty(name = "more_properties", comment = "A sub config")
         public final NestedConfig moreProperties = new NestedConfig();
 
-        @SimpleProperty("test_double")
+        @SimpleProperty(name = "test_double", comment = "A test double property")
         public final DoubleProperty testDouble = DoubleProperty.create(1.0, 0.0, 1.0);
 
         public static class NestedConfig
         {
-            @SimpleProperty("test_int")
+            @SimpleProperty(name = "test_int", comment = "A test int property")
             public final IntProperty testInt = IntProperty.create(1);
         }
     }

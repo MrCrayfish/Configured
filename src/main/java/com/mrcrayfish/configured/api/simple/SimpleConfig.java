@@ -20,5 +20,5 @@ public @interface SimpleConfig
 
     boolean editable() default true;
 
-    ConfigType storage() default ConfigType.UNIVERSAL;
+    ConfigType type() default ConfigType.UNIVERSAL;
 }

@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
@@ -35,9 +36,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
-import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
-import net.minecraftforge.forgespi.language.ModFileScanData;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -60,7 +58,6 @@ public class ConfigManager
 {
     private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z_]+$").asMatchPredicate();
     private static final LevelResource WORLD_CONFIG = new LevelResource("serverconfig");
-    private static final org.objectweb.asm.Type SIMPLE_CONFIG = org.objectweb.asm.Type.getType(SimpleConfig.class);
 
     private static ConfigManager instance;
 
@@ -79,78 +76,18 @@ public class ConfigManager
     private ConfigManager()
     {
         Map<ResourceLocation, SimpleConfigEntry> configs = new HashMap<>();
-        this.getAllSimpleConfigs().forEach(entry -> configs.put(entry.getName(), entry));
+        ConfigUtil.getAllSimpleConfigs().forEach(pair ->
+        {
+            ConfigScanData data = ConfigScanData.scan(pair.getLeft(), pair.getRight());
+            SimpleConfigEntry entry = new SimpleConfigEntry(data);
+            configs.put(entry.getName(), entry);
+        });
         this.configs = ImmutableMap.copyOf(configs);
     }
 
     public List<SimpleConfigEntry> getConfigs()
     {
         return ImmutableList.copyOf(this.configs.values());
-    }
-
-    private List<SimpleConfigEntry> getAllSimpleConfigs()
-    {
-        List<ModFileScanData.AnnotationData> annotations = ModList.get().getAllScanData().stream().map(ModFileScanData::getAnnotations).flatMap(Collection::stream).filter(a -> SIMPLE_CONFIG.equals(a.annotationType())).toList();
-        List<SimpleConfigEntry> configs = new ArrayList<>();
-        annotations.forEach(data -> {
-            try
-            {
-                Class<?> configClass = Class.forName(data.clazz().getClassName());
-                Field field = configClass.getDeclaredField(data.memberName());
-                field.setAccessible(true);
-                Object object = field.get(null);
-                if(!object.getClass().isPrimitive())
-                {
-                    configs.add(new SimpleConfigEntry(data.annotationData(), object));
-                }
-            }
-            catch(NoSuchFieldException | ClassNotFoundException | IllegalAccessException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
-        return ImmutableList.copyOf(configs);
-    }
-
-    private static ConfigSpec createSpec(Set<ConfigProperty<?>> properties)
-    {
-        ConfigSpec spec = new ConfigSpec();
-        properties.forEach(p -> p.defineSpec(spec));
-        return spec;
-    }
-
-    private static Set<ConfigProperty<?>> gatherConfigProperties(Object object)
-    {
-        Set<ConfigProperty<?>> properties = new HashSet<>();
-        readFields(properties, new Stack<>(), object);
-        return ImmutableSet.copyOf(properties);
-    }
-
-    private static void readFields(Set<ConfigProperty<?>> properties, Stack<String> path, Object instance)
-    {
-        Field[] fields = instance.getClass().getDeclaredFields();
-        Stream.of(fields).forEach(field -> Optional.ofNullable(field.getDeclaredAnnotation(SimpleProperty.class)).ifPresent(sp -> {
-            path.push(sp.value());
-            try
-            {
-                field.setAccessible(true);
-                Object obj = field.get(instance);
-                if(obj instanceof ConfigProperty<?> property)
-                {
-                    property.initPath(new ValuePath(StringUtils.join(path, ".")));
-                    properties.add(property);
-                }
-                else
-                {
-                    readFields(properties, path, obj);
-                }
-            }
-            catch(IllegalAccessException e)
-            {
-                throw new RuntimeException(e);
-            }
-            path.pop();
-        }));
     }
 
     public List<Pair<String, HandshakeMessages.S2CConfigData>> getMessagesForLogin(boolean local)
@@ -247,31 +184,29 @@ public class ConfigManager
         private final String id;
         private final String name;
         private final ConfigType configType;
-        private final Object instance;
         private final Set<ConfigProperty<?>> allProperties;
         private final PropertyMap propertyMap;
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
+        private final CommentedConfig comments; //TODO use comment node?
         @Nullable
         private Config config;
 
-        private SimpleConfigEntry(Map<String, Object> data, Object instance)
+        private SimpleConfigEntry(ConfigScanData data)
         {
-            Preconditions.checkArgument(data.get("id") instanceof String, "The 'id' of the config is not a String");
-            Preconditions.checkArgument(!((String) data.get("id")).trim().isEmpty(), "The 'id' of the config cannot be empty");
-            Preconditions.checkArgument(ModList.get().isLoaded(((String) data.get("id"))), "The 'id' of the config must match a mod id");
-            Preconditions.checkArgument(data.get("name") instanceof String, "The 'name' of the config is not a String");
-            Preconditions.checkArgument(!((String) data.get("name")).trim().isEmpty(), "The 'name' of the config cannot be empty");
-            Preconditions.checkArgument(((String) data.get("name")).length() <= 64, "The 'name' of the config must be 64 characters or less");
-            Preconditions.checkArgument(NAME_PATTERN.test((String) data.get("name")), "The 'name' of the config is invalid. It can only contain 'a-z' and '_'");
+            Preconditions.checkArgument(!data.getConfig().id().trim().isEmpty(), "The 'id' of the config cannot be empty");
+            Preconditions.checkArgument(ModList.get().isLoaded(data.getConfig().id()), "The 'id' of the config must match a mod id");
+            Preconditions.checkArgument(!data.getConfig().name().trim().isEmpty(), "The 'name' of the config cannot be empty");
+            Preconditions.checkArgument(data.getConfig().name().length() <= 64, "The 'name' of the config must be 64 characters or less");
+            Preconditions.checkArgument(NAME_PATTERN.test(data.getConfig().name()), "The 'name' of the config is invalid. It can only contain 'a-z' and '_'");
 
-            this.id = (String) data.get("id");
-            this.name = (String) data.get("name");
-            this.configType = Optional.ofNullable((ModAnnotation.EnumHolder) data.get("storage")).map(holder -> ConfigType.valueOf(holder.getValue())).orElse(ConfigType.UNIVERSAL);
-            this.instance = instance;
-            this.allProperties = gatherConfigProperties(instance);
+            this.id = data.getConfig().id();
+            this.name = data.getConfig().name();
+            this.configType = data.getConfig().type();
+            this.allProperties = ImmutableSet.copyOf(data.getProperties());
             this.propertyMap = new PropertyMap(this.allProperties);
-            this.spec = createSpec(this.allProperties);
+            this.spec = ConfigUtil.createSpec(this.allProperties);
+            this.comments = ConfigUtil.createComments(this.spec, data.getComments());
             this.classLoader = Thread.currentThread().getContextClassLoader();
 
             // Load non-server configs immediately
@@ -300,7 +235,7 @@ public class ConfigManager
             if(dist.isPresent() && !FMLEnvironment.dist.equals(dist.get()))
                 return;
             Preconditions.checkState(this.config == null, "Config is already loaded. Unload before loading again.");
-            Config config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
+            CommentedConfig config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
@@ -343,6 +278,8 @@ public class ConfigManager
             if(!this.spec.isCorrect(config))
             {
                 this.spec.correct(config);
+                if(config instanceof CommentedConfig c)
+                    c.putAllComments(this.comments);
                 ConfigUtil.saveFileConfig(config);
             }
         }
@@ -438,9 +375,10 @@ public class ConfigManager
         public void loadServerConfig(Path configDir, Consumer<IModConfig> result) throws IOException
         {
             // Same as normal loading just without file watching
-            Config config = ConfigUtil.createTempServerConfig(configDir, this.id, this.name);
+            CommentedConfig config = ConfigUtil.createTempServerConfig(configDir, this.id, this.name);
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
+            config.putAllComments(this.comments);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
             this.config = config;
             result.accept(this);
@@ -594,5 +532,77 @@ public class ConfigManager
     public interface IMapEntry
     {
         String getPath();
+    }
+
+    private static class ConfigScanData
+    {
+        private final SimpleConfig config;
+        private final Set<ConfigProperty<?>> properties = new HashSet<>();
+        private final Map<String, String> comments = new HashMap<>();
+
+        private ConfigScanData(SimpleConfig config)
+        {
+            this.config = config;
+        }
+
+        public SimpleConfig getConfig()
+        {
+            return this.config;
+        }
+
+        public Set<ConfigProperty<?>> getProperties()
+        {
+            return this.properties;
+        }
+
+        public Map<String, String> getComments()
+        {
+            return this.comments;
+        }
+
+        private static ConfigScanData scan(SimpleConfig config, Object object)
+        {
+            Preconditions.checkArgument(!object.getClass().isPrimitive(), "SimpleConfig annotation can only be attached");
+            ConfigScanData data = new ConfigScanData(config);
+            data.scan(new Stack<>(), object);
+            return data;
+        }
+
+        private void scan(Stack<String> stack, Object instance)
+        {
+            Field[] fields = instance.getClass().getDeclaredFields();
+            Stream.of(fields).forEach(field -> Optional.ofNullable(field.getDeclaredAnnotation(SimpleProperty.class)).ifPresent(sp ->
+            {
+                stack.push(sp.name());
+                try
+                {
+                    field.setAccessible(true);
+
+                    // Read comment
+                    String path = StringUtils.join(stack, ".");
+                    if(!sp.comment().isEmpty())
+                    {
+                        this.comments.put(path, sp.comment());
+                    }
+
+                    // Read config property or object
+                    Object obj = field.get(instance);
+                    if(obj instanceof ConfigProperty<?> property)
+                    {
+                        property.initProperty(new ValuePath(path));
+                        this.properties.add(property);
+                    }
+                    else
+                    {
+                        this.scan(stack, obj);
+                    }
+                }
+                catch(IllegalAccessException e)
+                {
+                    throw new RuntimeException(e);
+                }
+                stack.pop();
+            }));
+        }
     }
 }

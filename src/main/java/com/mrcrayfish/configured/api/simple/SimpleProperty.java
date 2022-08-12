@@ -12,5 +12,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface SimpleProperty
 {
-    String value();
+    String name();
+
+    String comment() default "";
 }

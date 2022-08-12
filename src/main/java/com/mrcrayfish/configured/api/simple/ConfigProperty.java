@@ -69,10 +69,12 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         this.invalidateCache();
     }
 
-    public final void initPath(ConfigManager.ValuePath valuePath)
+    public final void initProperty(ConfigManager.ValuePath valuePath)
     {
         Preconditions.checkNotNull(valuePath, "Tried to update path with a null path object");
-        Preconditions.checkState(this.valuePath == null, "A path can only be set once");
-        this.valuePath = valuePath;
+        if(this.valuePath == null)
+        {
+            this.valuePath = valuePath;
+        }
     }
 }

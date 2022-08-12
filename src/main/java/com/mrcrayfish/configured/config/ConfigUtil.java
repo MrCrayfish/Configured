@@ -1,18 +1,35 @@
 package com.mrcrayfish.configured.config;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigFormat;
+import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
+import com.mrcrayfish.configured.api.simple.ConfigProperty;
+import com.mrcrayfish.configured.api.simple.SimpleConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.forgespi.language.ModFileScanData;
+import org.apache.commons.lang3.tuple.Pair;
+import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -20,7 +37,9 @@ import java.util.function.Supplier;
  */
 public class ConfigUtil
 {
-    public static Config createSimpleConfig(@Nullable Path folder, String id, String name, Supplier<Config> fallback)
+    private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
+
+    public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name, Supplier<CommentedConfig> fallback)
     {
         if(folder != null)
         {
@@ -31,7 +50,7 @@ public class ConfigUtil
         return fallback.get();
     }
 
-    public static Config createTempServerConfig(Path folder, String id, String name)
+    public static CommentedConfig createTempServerConfig(Path folder, String id, String name)
     {
         String fileName = String.format("%s.%s.toml", id, name);
         File file = new File(folder.toFile(), fileName);
@@ -110,5 +129,44 @@ public class ConfigUtil
         {
             throw new RuntimeException(e);
         }
+    }
+
+    public static List<Pair<SimpleConfig, Object>> getAllSimpleConfigs()
+    {
+        List<ModFileScanData.AnnotationData> annotations = ModList.get().getAllScanData().stream().map(ModFileScanData::getAnnotations).flatMap(Collection::stream).filter(a -> SIMPLE_CONFIG.equals(a.annotationType())).toList();
+        List<Pair<SimpleConfig, Object>> configs = new ArrayList<>();
+        annotations.forEach(data ->
+        {
+            try
+            {
+                Class<?> configClass = Class.forName(data.clazz().getClassName());
+                Field field = configClass.getDeclaredField(data.memberName());
+                field.setAccessible(true);
+                Object object = field.get(null);
+                Optional.ofNullable(field.getDeclaredAnnotation(SimpleConfig.class)).ifPresent(simpleConfig -> {
+                    configs.add(Pair.of(simpleConfig, object));
+                });
+            }
+            catch(NoSuchFieldException | ClassNotFoundException | IllegalAccessException e)
+            {
+                throw new RuntimeException(e);
+            }
+        });
+        return configs;
+    }
+
+    public static ConfigSpec createSpec(Set<ConfigProperty<?>> properties)
+    {
+        ConfigSpec spec = new ConfigSpec();
+        properties.forEach(p -> p.defineSpec(spec));
+        return spec;
+    }
+
+    public static CommentedConfig createComments(ConfigSpec spec, Map<String, String> comments)
+    {
+        CommentedConfig config = CommentedConfig.inMemory();
+        spec.correct(config);
+        comments.forEach(config::setComment);
+        return config;
     }
 }
