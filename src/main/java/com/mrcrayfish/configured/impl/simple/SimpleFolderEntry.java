@@ -36,10 +36,9 @@ public class SimpleFolderEntry implements IConfigEntry
             {
                 builder.add(new SimpleFolderEntry(pair.getLeft(), pair.getRight(), false));
             });
-            this.map.getConfigProperties().forEach(pair ->
+            this.map.getConfigProperties().forEach(property ->
             {
-                //String translationKey =
-                builder.add(new ValueEntry(new SimpleValue<>(pair.getLeft(), null, pair.getRight())));
+                builder.add(new ValueEntry(new SimpleValue<>(property)));
             });
             this.entries = builder.build();
         }

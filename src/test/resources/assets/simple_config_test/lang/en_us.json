@@ -1,0 +1,4 @@
+{
+    "simpleconfig.simple_config_test.memory.test_double": "Test Double",
+    "simpleconfig.simple_config_test.memory.test_double.tooltip": "This is a translated tooltip!"
+}

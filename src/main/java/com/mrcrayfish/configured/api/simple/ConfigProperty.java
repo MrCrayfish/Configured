@@ -4,6 +4,11 @@ import com.electronwill.nightconfig.core.ConfigSpec;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.config.ConfigManager;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Author: MrCrayfish
  */
@@ -13,7 +18,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     private T value;
     private boolean cached;
     private ConfigManager.ValueProxy proxy;
-    private ConfigManager.ValuePath valuePath;
+    protected ConfigManager.PropertyData data;
 
     public ConfigProperty(T defaultValue)
     {
@@ -54,13 +59,29 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         this.cached = false;
     }
 
-    @Override
-    public String getPath()
+    public String getName()
     {
-        return this.valuePath != null ? this.valuePath.getPath() : "";
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return this.data.getName();
     }
 
-    public abstract void defineSpec(ConfigSpec spec);
+    public List<String> getPath()
+    {
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return this.data.getPath();
+    }
+
+    public String getTranslationKey()
+    {
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return this.data.getTranslationKey();
+    }
+
+    public String getComment()
+    {
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return this.data.getComment();
+    }
 
     public final void updateProxy(ConfigManager.ValueProxy proxy)
     {
@@ -69,12 +90,14 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         this.invalidateCache();
     }
 
-    public final void initProperty(ConfigManager.ValuePath valuePath)
+    public final void initProperty(ConfigManager.PropertyData data)
     {
-        Preconditions.checkNotNull(valuePath, "Tried to update path with a null path object");
-        if(this.valuePath == null)
+        Preconditions.checkNotNull(data, "Tried to update path with a null path object");
+        if(this.data == null)
         {
-            this.valuePath = valuePath;
+            this.data = data;
         }
     }
+
+    public abstract void defineSpec(ConfigSpec spec);
 }

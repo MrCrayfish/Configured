@@ -2,8 +2,10 @@ package com.mrcrayfish.configured.impl.simple;
 
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
+import net.minecraft.client.resources.language.I18n;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -11,16 +13,12 @@ import java.util.Objects;
  */
 public class SimpleValue<T> implements IConfigValue<T>
 {
-    private final String name;
-    private final String translationKey;
     private final ConfigProperty<T> property;
     private final T initialValue;
     protected T value;
 
-    public SimpleValue(String name, String translationKey, ConfigProperty<T> property)
+    public SimpleValue(ConfigProperty<T> property)
     {
-        this.name = name;
-        this.translationKey = translationKey;
         this.property = property;
         this.initialValue = property.get();
         this.set(property.get());
@@ -73,21 +71,25 @@ public class SimpleValue<T> implements IConfigValue<T>
     @Override
     public String getComment()
     {
-        //TODO comments
-        return null;
+        String key = this.getTranslationKey() + ".tooltip";
+        if(I18n.exists(key))
+        {
+            return I18n.get(key);
+        }
+        return this.property.getComment();
     }
 
     @Nullable
     @Override
     public String getTranslationKey()
     {
-        return this.translationKey;
+        return this.property.getTranslationKey();
     }
 
     @Override
     public String getName()
     {
-        return this.name;
+        return this.property.getName();
     }
 
     @Override
@@ -97,7 +99,7 @@ public class SimpleValue<T> implements IConfigValue<T>
     }
 
     @Nullable
-    public String getPath()
+    public List<String> getPath()
     {
         return this.property.getPath();
     }

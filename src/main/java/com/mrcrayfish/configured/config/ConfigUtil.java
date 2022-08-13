@@ -15,6 +15,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.language.ModFileScanData;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.Type;
 
@@ -162,11 +163,16 @@ public class ConfigUtil
         return spec;
     }
 
-    public static CommentedConfig createComments(ConfigSpec spec, Map<String, String> comments)
+    public static CommentedConfig createComments(ConfigSpec spec, Map<List<String>, String> comments)
     {
         CommentedConfig config = CommentedConfig.inMemory();
         spec.correct(config);
         comments.forEach(config::setComment);
         return config;
+    }
+
+    public static String createTranslationKey(SimpleConfig config, List<String> path)
+    {
+        return String.format("simpleconfig.%s.%s.%s", config.id(), config.name(), StringUtils.join(path, '.'));
     }
 }

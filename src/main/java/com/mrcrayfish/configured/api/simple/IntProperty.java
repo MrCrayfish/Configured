@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.google.common.base.Preconditions;
 
 /**
  * Author: MrCrayfish
@@ -20,6 +21,7 @@ public final class IntProperty extends ConfigProperty<Integer>
     @Override
     public void defineSpec(ConfigSpec spec)
     {
-        spec.defineInRange(this.getPath(), this.defaultValue, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        Preconditions.checkState(this.data != null, "");
+        spec.defineInRange(this.data.getPath(), this.defaultValue, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 }

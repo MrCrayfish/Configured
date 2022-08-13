@@ -3,7 +3,6 @@ package com.mrcrayfish.configured.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
-import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
@@ -36,7 +35,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -78,7 +76,7 @@ public class ConfigManager
         Map<ResourceLocation, SimpleConfigEntry> configs = new HashMap<>();
         ConfigUtil.getAllSimpleConfigs().forEach(pair ->
         {
-            ConfigScanData data = ConfigScanData.scan(pair.getLeft(), pair.getRight());
+            ConfigScanData data = ConfigScanData.analyze(pair.getLeft(), pair.getRight());
             SimpleConfigEntry entry = new SimpleConfigEntry(data);
             configs.put(entry.getName(), entry);
         });
@@ -412,9 +410,9 @@ public class ConfigManager
     {
         private final Map<String, IMapEntry> map = new HashMap<>();
 
-        private final String path;
+        private final List<String> path;
 
-        private PropertyMap(String path)
+        private PropertyMap(List<String> path)
         {
             this.path = path;
         }
@@ -425,13 +423,12 @@ public class ConfigManager
             properties.forEach(p ->
             {
                 PropertyMap current = this;
-                List<String> path = com.electronwill.nightconfig.core.utils.StringUtils.split(p.getPath(), '.');
+                List<String> path = p.getPath();
                 for(int i = 0; i < path.size() - 1; i++)
                 {
                     int finalI = i;
                     current = (PropertyMap) current.map.computeIfAbsent(path.get(i), s -> {
-                        String subPath = StringUtils.join(path.subList(0, finalI), '.');
-                        return new PropertyMap(subPath);
+                        return new PropertyMap(path.subList(0, finalI));
                     });
                 }
                 current.map.put(path.get(path.size() - 1), p);
@@ -446,21 +443,20 @@ public class ConfigManager
                     .toList();
         }
 
-        public List<Pair<String, ConfigProperty<?>>> getConfigProperties()
+        public List<ConfigProperty<?>> getConfigProperties()
         {
-            List<Pair<String, ConfigProperty<?>>> properties = new ArrayList<>();
+            List<ConfigProperty<?>> properties = new ArrayList<>();
             this.map.forEach((name, entry) ->
             {
                 if(entry instanceof ConfigProperty<?> property)
                 {
-                    properties.add(Pair.of(name, property));
+                    properties.add(property);
                 }
             });
             return properties;
         }
 
-        @Override
-        public String getPath()
+        public List<String> getPath()
         {
             return this.path;
         }
@@ -475,7 +471,7 @@ public class ConfigManager
         private static final ValueProxy EMPTY = new ValueProxy();
 
         private final Config config;
-        private final String path;
+        private final List<String> path;
 
         private ValueProxy()
         {
@@ -483,7 +479,7 @@ public class ConfigManager
             this.path = null;
         }
 
-        private ValueProxy(Config config, String path)
+        private ValueProxy(Config config, List<String> path)
         {
             this.config = config;
             this.path = path;
@@ -513,32 +509,50 @@ public class ConfigManager
         }
     }
 
-    public static class ValuePath
+    public static class PropertyData
     {
         //TODO use list version
-        private final String path;
+        private final String name;
+        private final List<String> path;
+        private final String translationKey;
+        private final String comment;
 
-        private ValuePath(String path)
+        private PropertyData(String name, List<String> path, String translationKey, String comment)
         {
-            this.path = path;
+            this.name = name;
+            this.path = ImmutableList.copyOf(path);
+            this.translationKey = translationKey;
+            this.comment = comment;
         }
 
-        public String getPath()
+        public String getName()
+        {
+            return this.name;
+        }
+
+        public List<String> getPath()
         {
             return this.path;
         }
+
+        public String getTranslationKey()
+        {
+            return this.translationKey;
+        }
+
+        public String getComment()
+        {
+            return this.comment;
+        }
     }
 
-    public interface IMapEntry
-    {
-        String getPath();
-    }
+    public interface IMapEntry {}
 
     private static class ConfigScanData
     {
         private final SimpleConfig config;
         private final Set<ConfigProperty<?>> properties = new HashSet<>();
-        private final Map<String, String> comments = new HashMap<>();
+        private final Map<List<String>, String> comments = new HashMap<>();
 
         private ConfigScanData(SimpleConfig config)
         {
@@ -555,12 +569,12 @@ public class ConfigManager
             return this.properties;
         }
 
-        public Map<String, String> getComments()
+        public Map<List<String>, String> getComments()
         {
             return this.comments;
         }
 
-        private static ConfigScanData scan(SimpleConfig config, Object object)
+        private static ConfigScanData analyze(SimpleConfig config, Object object)
         {
             Preconditions.checkArgument(!object.getClass().isPrimitive(), "SimpleConfig annotation can only be attached");
             ConfigScanData data = new ConfigScanData(config);
@@ -579,17 +593,18 @@ public class ConfigManager
                     field.setAccessible(true);
 
                     // Read comment
-                    String path = StringUtils.join(stack, ".");
                     if(!sp.comment().isEmpty())
                     {
-                        this.comments.put(path, sp.comment());
+                        this.comments.put(new ArrayList<>(stack), sp.comment());
                     }
 
                     // Read config property or object
                     Object obj = field.get(instance);
                     if(obj instanceof ConfigProperty<?> property)
                     {
-                        property.initProperty(new ValuePath(path));
+                        List<String> path = new ArrayList<>(stack);
+                        String key = ConfigUtil.createTranslationKey(this.config, path);
+                        property.initProperty(new PropertyData(sp.name(), path, key, sp.comment()));
                         this.properties.add(property);
                     }
                     else
