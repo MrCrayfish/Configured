@@ -10,7 +10,7 @@ public final class BoolProperty extends ConfigProperty<Boolean>
 {
     BoolProperty(boolean defaultValue)
     {
-        super(defaultValue);
+        super(() -> defaultValue);
     }
 
     @Override

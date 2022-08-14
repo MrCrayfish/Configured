@@ -10,7 +10,7 @@ public final class StringProperty extends ConfigProperty<String>
 {
     StringProperty(String defaultValue)
     {
-        super(defaultValue);
+        super(() -> defaultValue);
     }
 
     @Override

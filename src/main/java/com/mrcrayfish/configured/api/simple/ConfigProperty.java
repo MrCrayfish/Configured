@@ -9,25 +9,26 @@ import com.mrcrayfish.configured.config.ConfigManager;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
  */
 public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits ListProperty, BoolProperty, DoubleProperty, EnumProperty, IntProperty, StringProperty
 {
-    protected final T defaultValue;
+    protected final Supplier<T> defaultValue;
     protected final BiFunction<Config, List<String>, T> getFunction;
     private T value;
     private boolean cached;
     private ConfigManager.ValueProxy proxy;
     protected ConfigManager.PropertyData data;
 
-    ConfigProperty(T defaultValue)
+    ConfigProperty(Supplier<T> defaultValue)
     {
         this(defaultValue, (config, path) -> config.getOrElse(path, defaultValue));
     }
 
-    ConfigProperty(T defaultValue, BiFunction<Config, List<String>, T> getFunction)
+    ConfigProperty(Supplier<T> defaultValue, BiFunction<Config, List<String>, T> getFunction)
     {
         this.defaultValue = defaultValue;
         this.getFunction = getFunction;
@@ -59,7 +60,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 
     public T getDefaultValue()
     {
-        return this.defaultValue;
+        return this.defaultValue.get();
     }
 
     public void invalidateCache()

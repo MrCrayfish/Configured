@@ -15,12 +15,14 @@ public class SimpleValue<T> implements IConfigValue<T>
 {
     private final ConfigProperty<T> property;
     private final T initialValue;
+    private final T defaultValue;
     protected T value;
 
     public SimpleValue(ConfigProperty<T> property)
     {
         this.property = property;
         this.initialValue = property.get();
+        this.defaultValue = property.getDefaultValue();
         this.set(property.get());
     }
 
@@ -52,7 +54,7 @@ public class SimpleValue<T> implements IConfigValue<T>
     @Override
     public boolean isDefault()
     {
-        return Objects.equals(this.get(), this.property.getDefaultValue());
+        return Objects.equals(this.get(), this.defaultValue);
     }
 
     @Override

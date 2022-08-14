@@ -15,7 +15,7 @@ public final class IntProperty extends ConfigProperty<Integer>
 
     IntProperty(int defaultValue, int minValue, int maxValue)
     {
-        super(defaultValue);
+        super(() -> defaultValue);
         this.minValue = minValue;
         this.maxValue = maxValue;
     }

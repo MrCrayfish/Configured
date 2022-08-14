@@ -18,24 +18,29 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
 
     private final Type<T> type;
 
-    ListProperty(List<T> defaultValue, Type<T> type)
+    ListProperty(Supplier<List<T>> defaultValue, Type<T> type)
     {
         super(defaultValue);
         this.type = type;
+    }
+
+    public Type<T> getType()
+    {
+        return this.type;
     }
 
     @Override
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineList(this.data.getPath(), this.defaultValue, e -> {
+        spec.defineList(this.data.getPath(), this.defaultValue::get, e -> {
             return e != null && this.type.getClassType().isAssignableFrom(e.getClass());
         });
     }
 
     public static <T> ListProperty<T> create(Type<T> type, Supplier<List<T>> defaultList)
     {
-        return new ListProperty<>(defaultList.get(), type);
+        return new ListProperty<>(defaultList, type);
     }
 
     public static class Type<T>
