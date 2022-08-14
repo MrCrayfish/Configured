@@ -2,14 +2,12 @@ package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.config.ConfigManager;
 
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish

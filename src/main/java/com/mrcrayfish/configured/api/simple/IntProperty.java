@@ -3,8 +3,6 @@ package com.mrcrayfish.configured.api.simple;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.google.common.base.Preconditions;
 
-import java.util.function.Predicate;
-
 /**
  * Author: MrCrayfish
  */
