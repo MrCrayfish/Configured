@@ -20,6 +20,7 @@ import java.util.function.Function;
 public class EditStringScreen extends Screen implements IBackgroundTexture, IEditing
 {
     private final Screen parent;
+    private final IModConfig config;
     private final ResourceLocation background;
     private final String originalValue;
     private final Function<String, Boolean> validator;
@@ -27,10 +28,11 @@ public class EditStringScreen extends Screen implements IBackgroundTexture, IEdi
     private Button doneButton;
     private EditBox textField;
 
-    protected EditStringScreen(Screen parent, ResourceLocation background, Component component, String originalValue, Function<String, Boolean> validator, Consumer<String> onSave)
+    protected EditStringScreen(Screen parent, IModConfig config, ResourceLocation background, Component component, String originalValue, Function<String, Boolean> validator, Consumer<String> onSave)
     {
         super(component);
         this.parent = parent;
+        this.config = config;
         this.background = background;
         this.originalValue = originalValue;
         this.validator = validator;
@@ -80,7 +82,7 @@ public class EditStringScreen extends Screen implements IBackgroundTexture, IEdi
     @Override
     public IModConfig getActiveConfig()
     {
-        return null;
+        return this.config;
     }
 
     @Override

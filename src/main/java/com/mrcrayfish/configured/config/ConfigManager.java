@@ -164,6 +164,10 @@ public class ConfigManager
                 this.editingConfig.startEditing();
                 Configured.LOGGER.info("Started editing '" + this.editingConfig.getFileName() + "'");
             }
+            else if(editing.getActiveConfig() == null)
+            {
+                throw new NullPointerException("A null config was returned when getting active config");
+            }
             else if(this.editingConfig != editing.getActiveConfig())
             {
                 throw new IllegalStateException("Trying to edit a config while one is already loaded. This should not happen!");

@@ -468,7 +468,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public StringItem(IConfigValue<String> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
+            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
                 holder.set(s);
                 ConfigScreen.this.updateButtons();
             })));
