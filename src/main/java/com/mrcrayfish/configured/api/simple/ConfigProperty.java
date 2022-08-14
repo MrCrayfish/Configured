@@ -16,19 +16,19 @@ import java.util.function.Supplier;
  */
 public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits ListProperty, BoolProperty, DoubleProperty, EnumProperty, IntProperty, StringProperty
 {
-    protected final Supplier<T> defaultValue;
+    protected final T defaultValue;
     protected final BiFunction<Config, List<String>, T> getFunction;
     private T value;
     private boolean cached;
     private ConfigManager.ValueProxy proxy;
     protected ConfigManager.PropertyData data;
 
-    ConfigProperty(Supplier<T> defaultValue)
+    ConfigProperty(T defaultValue)
     {
         this(defaultValue, (config, path) -> config.getOrElse(path, defaultValue));
     }
 
-    ConfigProperty(Supplier<T> defaultValue, BiFunction<Config, List<String>, T> getFunction)
+    ConfigProperty(T defaultValue, BiFunction<Config, List<String>, T> getFunction)
     {
         this.defaultValue = defaultValue;
         this.getFunction = getFunction;
@@ -60,7 +60,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 
     public T getDefaultValue()
     {
-        return this.defaultValue.get();
+        return this.defaultValue;
     }
 
     public void invalidateCache()

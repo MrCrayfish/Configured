@@ -10,14 +10,14 @@ public final class BoolProperty extends ConfigProperty<Boolean>
 {
     BoolProperty(boolean defaultValue)
     {
-        super(() -> defaultValue);
+        super(defaultValue);
     }
 
     @Override
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.define(this.data.getPath(), this.defaultValue.get());
+        spec.define(this.data.getPath(), this.defaultValue);
     }
 
     public static BoolProperty create(boolean defaultValue)

@@ -13,7 +13,7 @@ public final class DoubleProperty extends ConfigProperty<Double>
 
     DoubleProperty(double defaultValue, double minValue, double maxValue)
     {
-        super(() -> defaultValue);
+        super(defaultValue);
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
@@ -31,7 +31,7 @@ public final class DoubleProperty extends ConfigProperty<Double>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineInRange(this.data.getPath(), this.defaultValue.get(), this.minValue, this.maxValue);
+        spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
     }
 
     public static DoubleProperty create(double defaultValue)

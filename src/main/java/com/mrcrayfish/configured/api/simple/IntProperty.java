@@ -15,7 +15,7 @@ public final class IntProperty extends ConfigProperty<Integer>
 
     IntProperty(int defaultValue, int minValue, int maxValue)
     {
-        super(() -> defaultValue);
+        super(defaultValue);
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
@@ -24,7 +24,7 @@ public final class IntProperty extends ConfigProperty<Integer>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineInRange(this.data.getPath(), this.defaultValue.get(), this.minValue, this.maxValue);
+        spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
     }
 
     public static IntProperty create(int defaultValue)
