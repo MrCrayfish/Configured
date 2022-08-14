@@ -17,7 +17,7 @@ public final class StringProperty extends ConfigProperty<String>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.define(this.data.getPath(), this.defaultValue);
+        spec.define(this.data.getPath(), this.defaultValue.get());
     }
 
     public static StringProperty create(String defaultValue)

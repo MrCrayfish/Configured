@@ -17,7 +17,7 @@ public final class BoolProperty extends ConfigProperty<Boolean>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.define(this.data.getPath(), this.defaultValue);
+        spec.define(this.data.getPath(), this.defaultValue.get());
     }
 
     public static BoolProperty create(boolean defaultValue)
