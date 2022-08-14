@@ -43,8 +43,12 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -495,11 +499,11 @@ public class ConfigManager
         }
 
         @Nullable
-        public <T> T get()
+        public <T> T get(BiFunction<Config, List<String>, T> function)
         {
             if(this.isLinked() && this.config != null)
             {
-                return this.config.get(this.path);
+                return function.apply(this.config, this.path);
             }
             return null;
         }

@@ -1,14 +1,22 @@
 package test.simpleconfig;
 
 import com.mrcrayfish.configured.api.ConfigType;
+import com.mrcrayfish.configured.api.simple.BoolProperty;
 import com.mrcrayfish.configured.api.simple.DoubleProperty;
+import com.mrcrayfish.configured.api.simple.EnumProperty;
 import com.mrcrayfish.configured.api.simple.IntProperty;
+import com.mrcrayfish.configured.api.simple.ListProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
+import com.mrcrayfish.configured.api.simple.StringProperty;
+import net.minecraft.core.Direction;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Author: MrCrayfish
@@ -63,10 +71,22 @@ public class SimpleConfigTest
         @SimpleProperty(name = "test_double", comment = "A test double property")
         public final DoubleProperty testDouble = DoubleProperty.create(1.0, 0.0, 1.0);
 
+        @SimpleProperty(name = "test_bool", comment = "A test boolean property")
+        public final BoolProperty testBoolean = BoolProperty.create(false);
+
+        @SimpleProperty(name = "test_enum", comment = "A test enum property")
+        public final EnumProperty<Direction> testEnum = EnumProperty.create(Direction.NORTH);
+
         public static class NestedConfig
         {
             @SimpleProperty(name = "test_int", comment = "A test int property")
             public final IntProperty testInt = IntProperty.create(1);
+
+            @SimpleProperty(name = "test_string", comment = "A test string property")
+            public final StringProperty testString = StringProperty.create("Hello!");
+
+            @SimpleProperty(name = "test_list", comment = "A test list property")
+            public final ListProperty<Integer> testList = ListProperty.create(ListProperty.INT, () -> Arrays.asList(1, 2, 3, 4));
         }
     }
 }

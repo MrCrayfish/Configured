@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.google.common.base.Preconditions;
 
 /**
  * Author: MrCrayfish
@@ -29,7 +30,13 @@ public final class DoubleProperty extends ConfigProperty<Double>
 
     public void defineSpec(ConfigSpec spec)
     {
-        spec.defineInRange(this.getPath(), this.defaultValue, this.minValue, this.maxValue);
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
+    }
+
+    public static DoubleProperty create(double defaultValue)
+    {
+        return create(defaultValue, Double.MIN_VALUE, Double.MAX_VALUE);
     }
 
     public static DoubleProperty create(double defaultValue, double minValue, double maxValue)

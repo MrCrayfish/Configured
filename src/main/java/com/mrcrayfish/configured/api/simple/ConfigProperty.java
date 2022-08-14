@@ -1,28 +1,36 @@
 package com.mrcrayfish.configured.api.simple;
 
+import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.config.ConfigManager;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 /**
  * Author: MrCrayfish
  */
-public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits DoubleProperty, IntProperty
+public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits ListProperty, BoolProperty, DoubleProperty, EnumProperty, IntProperty, StringProperty
 {
     protected final T defaultValue;
+    protected final BiFunction<Config, List<String>, T> getFunction;
     private T value;
     private boolean cached;
     private ConfigManager.ValueProxy proxy;
     protected ConfigManager.PropertyData data;
 
-    public ConfigProperty(T defaultValue)
+    ConfigProperty(T defaultValue)
+    {
+        this(defaultValue, (config, path) -> config.getOrElse(path, defaultValue));
+    }
+
+    ConfigProperty(T defaultValue, BiFunction<Config, List<String>, T> getFunction)
     {
         this.defaultValue = defaultValue;
+        this.getFunction = getFunction;
     }
 
     private boolean isLinked()
@@ -35,7 +43,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         if(!this.isLinked())
             throw new IllegalStateException("Config property is not linked yet");
         if(!this.cached) {
-            this.value = this.proxy.get();
+            this.value = this.proxy.get(this.getFunction);
             this.cached = true;
         }
         return this.value;
@@ -100,4 +108,9 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     }
 
     public abstract void defineSpec(ConfigSpec spec);
+
+    protected static <V extends Comparable<V>> Predicate<V> ranged(V min, V max)
+    {
+        return v -> v.compareTo(min) >= 0 && v.compareTo(max) <= 0;
+    }
 }
