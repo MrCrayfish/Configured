@@ -8,6 +8,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.impl.simple.SimpleListValue;
+import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -34,7 +36,7 @@ import java.util.stream.Collectors;
  */
 public class EditListScreen extends Screen implements IBackgroundTexture, IEditing
 {
-    private static final Map<IConfigValue<List<?>>, ListType> TYPE_CACHE = new HashMap<>();
+    private static final Map<IConfigValue<?>, ListType> TYPE_CACHE = new HashMap<>();
 
     private final Screen parent;
     private final IModConfig config;
@@ -245,12 +247,17 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         }
     }
 
-    protected static ListType getType(IConfigValue<List<?>> holder)
+    @SuppressWarnings("unchecked")
+    protected static ListType getType(IConfigValue<?> holder)
     {
-        return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder(holder));
+        if(holder instanceof SimpleListValue<?> listValue)
+        {
+            return listValue.getListType();
+        }
+        return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder((IConfigValue<List<?>>) holder));
     }
 
-    protected enum ListType
+    public enum ListType
     {
         BOOLEAN(Object::toString, Boolean::valueOf),
         INTEGER(Object::toString, Ints::tryParse),

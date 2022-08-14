@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
+import com.mrcrayfish.configured.api.simple.ListProperty;
 import com.mrcrayfish.configured.config.ConfigManager;
 
 import javax.annotation.Nullable;
@@ -38,7 +39,14 @@ public class SimpleFolderEntry implements IConfigEntry
             });
             this.map.getConfigProperties().forEach(property ->
             {
-                builder.add(new ValueEntry(new SimpleValue<>(property)));
+                if(property instanceof ListProperty<?> listProperty)
+                {
+                    builder.add(new ValueEntry(new SimpleListValue<>(listProperty)));
+                }
+                else
+                {
+                    builder.add(new ValueEntry(new SimpleValue<>(property)));
+                }
             });
             this.entries = builder.build();
         }
