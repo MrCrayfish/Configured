@@ -29,8 +29,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -189,7 +193,7 @@ public class ConfigHelper
         return PacketHandler.getPlayChannel().isRemotePresent(connection);
     }
 
-    public static void sendModConfigDataToServer(ModConfig config)
+    public static void sendForgeModConfigDataToServer(ModConfig config)
     {
         // Prevents trying to send packet to server if the server doesn't have configured installed
         if(!isConfiguredInstalledOnServer())
@@ -233,5 +237,34 @@ public class ConfigHelper
     public static boolean isEditableServerConfig(IModConfig config)
     {
         return config.getType().isServer() && config.getType().getDist().orElse(null) != Dist.DEDICATED_SERVER;
+    }
+
+    /**
+     * Performs a deep search of a config entry and returns all the config values that have changed.
+     *
+     * @param entry the root entry to perform the search
+     * @return a set of config values that have changed or an empty set if nothing changed
+     */
+    public static Set<IConfigValue<?>> getChangedValues(IConfigEntry entry)
+    {
+        Set<IConfigValue<?>> changed = new HashSet<>();
+        Queue<IConfigEntry> found = new ArrayDeque<>();
+        found.add(entry);
+        while(!found.isEmpty())
+        {
+            IConfigEntry toSave = found.poll();
+            if(!toSave.isLeaf())
+            {
+                found.addAll(toSave.getChildren());
+                continue;
+            }
+
+            IConfigValue<?> value = toSave.getValue();
+            if(value != null && value.isChanged())
+            {
+                changed.add(value);
+            }
+        }
+        return changed;
     }
 }

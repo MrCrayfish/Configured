@@ -22,6 +22,7 @@ import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
@@ -296,7 +297,7 @@ public class ConfigManager
             Preconditions.checkState(this.config != null, "Tried to update a config that is not loaded");
 
             // Find changed values and update config if necessary
-            Set<IConfigValue<?>> changedValues = entry.getChangedValues();
+            Set<IConfigValue<?>> changedValues = ConfigHelper.getChangedValues(entry);
             if(!changedValues.isEmpty())
             {
                 CommentedConfig newConfig = CommentedConfig.copy(this.config);

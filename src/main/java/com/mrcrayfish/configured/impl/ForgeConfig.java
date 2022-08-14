@@ -15,10 +15,9 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Queue;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -40,34 +39,29 @@ public class ForgeConfig implements IModConfig
     @Override
     public void update(IConfigEntry entry)
     {
-        CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
-        Queue<IConfigEntry> found = new ArrayDeque<>();
-        found.add(entry);
-        while(!found.isEmpty())
+        Set<IConfigValue<?>> changedValues = ConfigHelper.getChangedValues(entry);
+        if(!changedValues.isEmpty())
         {
-            IConfigEntry toSave = found.poll();
-            if(!toSave.isLeaf())
+            CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
+            changedValues.forEach(value ->
             {
-                found.addAll(toSave.getChildren());
-                continue;
-            }
-            IConfigValue<?> value = toSave.getValue();
-            if(value == null || !value.isChanged()) continue;
-            if(value instanceof ForgeValue<?> forge)
-            {
-                if(forge instanceof ForgeListValue forgeList)
+                if(value instanceof ForgeValue<?> forge)
                 {
-                    Function<List<?>, List<?>> converter = forgeList.getConverter();
-                    if(converter != null)
+                    if(forge instanceof ForgeListValue forgeList)
                     {
-                        newConfig.set(forge.configValue.getPath(), converter.apply(forgeList.get()));
-                        continue;
+                        Function<List<?>, List<?>> converter = forgeList.getConverter();
+                        if(converter != null)
+                        {
+                            newConfig.set(forge.configValue.getPath(), converter.apply(forgeList.get()));
+                            return;
+                        }
                     }
+                    newConfig.set(forge.configValue.getPath(), value.get());
                 }
-                newConfig.set(forge.configValue.getPath(), value.get());
-            }
+            });
+            this.config.getConfigData().putAll(newConfig);
         }
-        this.config.getConfigData().putAll(newConfig);
+
         if(this.getType() == ConfigType.WORLD_SYNC)
         {
             if(!ListMenuScreen.isPlayingGame())
@@ -76,12 +70,12 @@ public class ForgeConfig implements IModConfig
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
                 ConfigHelper.setModConfigData(this.config, null);
             }
-            else
+            else if(!changedValues.isEmpty())
             {
-                ConfigHelper.sendModConfigDataToServer(this.config);
+                ConfigHelper.sendForgeModConfigDataToServer(this.config);
             }
         }
-        else
+        else if(!changedValues.isEmpty())
         {
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
             this.config.getSpec().afterReload();
