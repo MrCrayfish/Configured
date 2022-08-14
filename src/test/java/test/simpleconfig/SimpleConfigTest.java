@@ -6,6 +6,7 @@ import com.mrcrayfish.configured.api.simple.DoubleProperty;
 import com.mrcrayfish.configured.api.simple.EnumProperty;
 import com.mrcrayfish.configured.api.simple.IntProperty;
 import com.mrcrayfish.configured.api.simple.ListProperty;
+import com.mrcrayfish.configured.api.simple.LongProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.StringProperty;
@@ -65,6 +66,9 @@ public class SimpleConfigTest
 
     public static class MyConfig
     {
+        @SimpleProperty(name = "lists", comment = "Lists of properties")
+        public final Lists lists = new Lists();
+
         @SimpleProperty(name = "more_properties", comment = "A sub config")
         public final NestedConfig moreProperties = new NestedConfig();
 
@@ -82,11 +86,32 @@ public class SimpleConfigTest
             @SimpleProperty(name = "test_int", comment = "A test int property")
             public final IntProperty testInt = IntProperty.create(1);
 
+            @SimpleProperty(name = "test_long", comment = "A test long property")
+            public final LongProperty testLong = LongProperty.create(1L);
+
             @SimpleProperty(name = "test_string", comment = "A test string property")
             public final StringProperty testString = StringProperty.create("Hello!");
 
             @SimpleProperty(name = "test_list", comment = "A test list property")
             public final ListProperty<Integer> testList = ListProperty.create(ListProperty.INT, () -> Arrays.asList(1, 2, 3, 4));
+        }
+
+        public static class Lists
+        {
+            @SimpleProperty(name = "test_integer_list", comment = "A test integer list property")
+            public final ListProperty<Integer> testIntegerList = ListProperty.create(ListProperty.INT, () -> Arrays.asList(1, 2, 3, 4));
+
+            @SimpleProperty(name = "test_long_list", comment = "A test long list property")
+            public final ListProperty<Long> testLongList = ListProperty.create(ListProperty.LONG, () -> Arrays.asList(1L, 2L, 3L, 4L));
+
+            @SimpleProperty(name = "test_boolean_list", comment = "A test boolean list property")
+            public final ListProperty<Boolean> testBooleanList = ListProperty.create(ListProperty.BOOL, () -> Arrays.asList(false, true, false, true));
+
+            @SimpleProperty(name = "test_double_list", comment = "A test double list property")
+            public final ListProperty<Double> testDoubleList = ListProperty.create(ListProperty.DOUBLE, () -> Arrays.asList(1.0, 2.0, 3.0, 4.0));
+
+            @SimpleProperty(name = "test_string_list", comment = "A test string list property")
+            public final ListProperty<String> testStringList = ListProperty.create(ListProperty.STRING, () -> Arrays.asList("1", "2", "3", "4"));
         }
     }
 }
