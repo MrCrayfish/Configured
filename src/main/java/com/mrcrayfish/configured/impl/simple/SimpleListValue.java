@@ -15,6 +15,7 @@ public class SimpleListValue<T> extends SimpleValue<List<T>>
 {
     private static final Map<ListProperty.Type<?>, EditListScreen.ListType> LIST_TYPE_RESOLVER = Util.make(new HashMap<>(), map -> {
         map.put(ListProperty.INT, EditListScreen.ListType.INTEGER);
+        map.put(ListProperty.LONG, EditListScreen.ListType.LONG);
         map.put(ListProperty.DOUBLE, EditListScreen.ListType.DOUBLE);
         map.put(ListProperty.BOOL, EditListScreen.ListType.BOOLEAN);
         map.put(ListProperty.STRING, EditListScreen.ListType.STRING);

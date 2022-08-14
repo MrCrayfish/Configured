@@ -14,6 +14,7 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
     public static final Type<Boolean> BOOL = new Type<>(Boolean.class);
     public static final Type<Double> DOUBLE = new Type<>(Double.class);
     public static final Type<Integer> INT = new Type<>(Integer.class);
+    public static final Type<Long> LONG = new Type<>(Long.class);
     public static final Type<String> STRING = new Type<>(String.class);
 
     private final Supplier<List<T>> defaultList;

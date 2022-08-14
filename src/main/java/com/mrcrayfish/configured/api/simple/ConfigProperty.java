@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 /**
  * Author: MrCrayfish
  */
-public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits ListProperty, BoolProperty, DoubleProperty, EnumProperty, IntProperty, StringProperty
+public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits BoolProperty, DoubleProperty, EnumProperty, IntProperty, ListProperty, LongProperty, StringProperty
 {
     protected final T defaultValue;
     protected final BiFunction<Config, List<String>, T> getFunction;
