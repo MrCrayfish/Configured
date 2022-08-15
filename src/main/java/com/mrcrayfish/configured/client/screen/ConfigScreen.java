@@ -587,11 +587,11 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     	if(entry.isLeaf())
     	{
     		IConfigValue<?> value = entry.getValue();
-    		return value != null && value.isDefault();
+    		return value != null && !value.isDefault();
     	}
     	for(IConfigEntry child : entry.getChildren())
     	{
-    		if(this.isChanged(child)) return true;
+    		if(this.isModified(child)) return true;
     	}
         return false;
     }

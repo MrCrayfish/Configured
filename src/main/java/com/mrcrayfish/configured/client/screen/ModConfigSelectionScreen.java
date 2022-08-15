@@ -23,9 +23,11 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,8 +101,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
             this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
-            this.modifyButton.active = !ConfigHelper.isPlayingGame() || ConfigHelper.isEditableServerConfig(config) || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
-            if(!ConfigHelper.isEditableServerConfig(config) || Minecraft.getInstance().player != null)
+            this.modifyButton.active = !ConfigHelper.isPlayingGame() || ConfigHelper.isWorldConfig(config) || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
+            if(!ConfigHelper.isWorldConfig(config) || Minecraft.getInstance().player != null)
             {
                 this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
                 {
@@ -130,12 +132,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslatableComponent("configured.gui.restore_message"), result -> {
                 if(!result)
                     return true;
-                IConfigEntry root = this.config.getRoot();
-                ConfigHelper.gatherAllConfigValues(root).forEach(IConfigValue::restore);
-                this.config.update(root);
-                // Resets all config values
+                this.config.restoreDefaults();
                 this.updateRestoreDefaultButton();
-                ConfigHelper.resetCache(this.config);
                 return true;
             });
             confirmScreen.setBackground(ModConfigSelectionScreen.this.background);
@@ -146,7 +144,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private boolean hasRequiredPermission()
         {
-            if(ConfigHelper.isEditableServerConfig(this.config) && Minecraft.getInstance().player != null)
+            if(ConfigHelper.isWorldConfig(this.config) && Minecraft.getInstance().player != null)
             {
                 return Minecraft.getInstance().player.hasPermissions(2);
             }
@@ -173,14 +171,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
          */
         private Button createModifyButton(IModConfig config)
         {
-            boolean serverConfig = ConfigHelper.isEditableServerConfig(config) && Minecraft.getInstance().level == null;
-            String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslatableComponent(langKey), onPress ->
+            boolean worldConfig = ConfigHelper.isWorldConfig(config) && Minecraft.getInstance().level == null;
+            String langKey = worldConfig ? "configured.gui.select_world" : "configured.gui.modify";
+            return new IconButton(0, 0, worldConfig ? 44 : 33, 0, worldConfig ? 80 : 60, new TranslatableComponent(langKey), onPress ->
             {
-                if(ConfigHelper.isPlayingGame() && ConfigHelper.isEditableServerConfig(config) && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
+                if(ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config) && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
                     return;
 
-                if(serverConfig)
+                if(worldConfig)
                 {
                     Minecraft.getInstance().setScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
                 }
@@ -257,7 +255,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(this.config != null && this.restoreButton != null && this.hasRequiredPermission())
             {
-                this.restoreButton.active = ConfigHelper.isModified(this.config);
+                this.restoreButton.active = this.config.isChanged();
             }
         }
     }

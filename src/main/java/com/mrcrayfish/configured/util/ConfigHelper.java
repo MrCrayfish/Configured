@@ -6,6 +6,7 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
@@ -15,7 +16,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.IConfigEvent;
@@ -234,9 +234,14 @@ public class ConfigHelper
         gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
     }
 
-    public static boolean isEditableServerConfig(IModConfig config)
+    public static boolean isWorldConfig(IModConfig config)
     {
-        return config.getType().isServer() && config.getType().getDist().orElse(null) != Dist.DEDICATED_SERVER;
+        return config.getType() == ConfigType.WORLD || config.getType() == ConfigType.WORLD_SYNC;
+    }
+
+    public static boolean isServerConfig(IModConfig config)
+    {
+        return config.getType().isServer() && !isWorldConfig(config);
     }
 
     /**

@@ -61,6 +61,11 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         return this.defaultValue;
     }
 
+    public void restoreDefault()
+    {
+        this.set(this.getDefaultValue());
+    }
+
     public void invalidateCache()
     {
         this.cached = false;

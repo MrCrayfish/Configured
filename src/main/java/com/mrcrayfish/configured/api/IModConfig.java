@@ -66,7 +66,22 @@ public interface IModConfig
      * @param result send self if self got updated. if nothing got updated dont push anything into the result
      * @throws IOException since its IO work the function will be expected to maybe throw IOExceptions
      */
-    void loadServerConfig(Path path, Consumer<IModConfig> result) throws IOException;
+    void loadWorldConfig(Path path, Consumer<IModConfig> result) throws IOException;
+
+    /**
+     * A simple utility function to determine if this config has been changed, as in differs from its
+     * default values. This method will always return false if this config is a world config type. It
+     * should be noted that if the config will be temporarily loaded from file and closed immediately
+     * after; this should be considered before calling this method!
+     *
+     * @return true if this config differs from its default values
+     */
+    default boolean isChanged()
+    {
+        return false;
+    }
+
+    default void restoreDefaults() {}
 
     /**
      * An event that is fired when this config is starting to be edited by the player using the

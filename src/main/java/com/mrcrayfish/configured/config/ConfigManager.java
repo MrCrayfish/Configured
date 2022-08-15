@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
@@ -30,6 +31,7 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -42,15 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -161,7 +155,7 @@ public class ConfigManager
         this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(SimpleConfigEntry::unload);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onScreenOpen(ScreenOpenEvent event)
     {
         // Keeps track of the config currently being editing and runs events accordingly
@@ -323,7 +317,7 @@ public class ConfigManager
                 if(!ConfigHelper.isPlayingGame())
                 {
                     // Unload world configs since still in main menu
-                    this.unloadServerConfig();
+                    this.unloadWorldConfig();
                 }
                 else if(this.configType.isSync())
                 {
@@ -381,11 +375,38 @@ public class ConfigManager
             return this.id;
         }
 
-        //TODO unload
         @Override
-        public void loadServerConfig(Path configDir, Consumer<IModConfig> result) throws IOException
+        public void startEditing()
         {
-            // Same as normal loading just without file watching
+            if(!ConfigHelper.isPlayingGame() && ConfigHelper.isServerConfig(this))
+            {
+                this.load(FMLPaths.CONFIGDIR.get());
+            }
+        }
+
+        @Override
+        public void stopEditing()
+        {
+            if(this.config != null && !ConfigHelper.isPlayingGame())
+            {
+                if(ConfigHelper.isServerConfig(this))
+                {
+                    this.unload();
+                }
+                else if(ConfigHelper.isWorldConfig(this)) // Attempts to unload the world config if player simply just went back
+                {
+                    this.unloadWorldConfig();
+                }
+            }
+        }
+
+        //TODO change how this works.
+        @Override
+        public void loadWorldConfig(Path configDir, Consumer<IModConfig> result) throws IOException
+        {
+            if(!ConfigHelper.isServerConfig(this))
+                return;
+            Preconditions.checkState(this.config == null, "Something went wrong and tried to load the server config again!");
             CommentedConfig config = ConfigUtil.createTempServerConfig(configDir, this.id, this.name);
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
@@ -395,20 +416,7 @@ public class ConfigManager
             result.accept(this);
         }
 
-        @Override
-        public void stopEditing()
-        {
-            // Attempts to unload the server config if player simply just went back
-            if(this.config != null && this.getType() == ConfigType.WORLD)
-            {
-                if(!ConfigHelper.isPlayingGame())
-                {
-                    this.unloadServerConfig();
-                }
-            }
-        }
-
-        private void unloadServerConfig()
+        private void unloadWorldConfig()
         {
             if(this.config != null)
             {
@@ -416,6 +424,59 @@ public class ConfigManager
                 if(this.config instanceof FileConfig fileConfig) fileConfig.close();
                 this.config = null;
             }
+        }
+
+        @Override
+        public boolean isChanged()
+        {
+            // Block world configs since the path is dynamic
+            if(ConfigHelper.isWorldConfig(this))
+                return false;
+
+            // An unloaded memory config is never going to be changed
+            if(this.getType() == ConfigType.MEMORY && this.config == null)
+                return false;
+
+            // Test and return immediately if config already loaded
+            if(this.config != null)
+                return this.allProperties.stream().anyMatch(property -> !Objects.equals(property.get(), property.getDefaultValue()));
+
+            // Temporarily load config to test for changes. Unloads immediately after test.
+            CommentedFileConfig tempConfig = ConfigUtil.createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
+            ConfigUtil.loadFileConfig(tempConfig);
+            this.correct(tempConfig);
+            tempConfig.putAllComments(this.comments);
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(tempConfig, p.getPath())));
+            boolean changed = this.allProperties.stream().anyMatch(property -> !Objects.equals(property.get(), property.getDefaultValue()));
+            this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
+            tempConfig.close();
+            return changed;
+        }
+
+        @Override
+        public void restoreDefaults()
+        {
+            // Block world configs since the path is dynamic
+            if(ConfigHelper.isWorldConfig(this))
+                return;
+
+            // Restore properties immediately if config already loaded
+            if(this.config != null) {
+                this.allProperties.forEach(property -> {
+                    property.restoreDefault();
+                    property.invalidateCache();
+                });
+                return;
+            }
+
+            // Temporarily loads the config, restores the defaults then saves and closes.
+            CommentedFileConfig tempConfig = ConfigUtil.createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
+            ConfigUtil.loadFileConfig(tempConfig);
+            this.correct(tempConfig);
+            tempConfig.putAllComments(this.comments);
+            this.allProperties.forEach(property -> tempConfig.set(property.getPath(), property.getDefaultValue()));
+            ConfigUtil.saveFileConfig(tempConfig);
+            tempConfig.close();
         }
     }
 

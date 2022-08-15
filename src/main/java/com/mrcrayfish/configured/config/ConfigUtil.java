@@ -7,6 +7,7 @@ import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
+import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import net.minecraftforge.fml.ModList;
@@ -18,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -54,6 +56,13 @@ public class ConfigUtil
         String fileName = String.format("%s.%s.toml", id, name);
         File file = new File(folder.toFile(), fileName);
         return CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
+    }
+
+    public static CommentedFileConfig createTempConfig(Path folder, String id, String name)
+    {
+        String fileName = String.format("%s.%s.toml", id, name);
+        File file = new File(folder.toFile(), fileName);
+        return CommentedFileConfig.builder(file).sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
     }
 
     private static boolean initConfig(final Path file, final ConfigFormat<?> format, final String fileName) throws IOException

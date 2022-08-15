@@ -107,7 +107,7 @@ public class ForgeConfig implements IModConfig
     }
 
     @Override
-    public void loadServerConfig(Path path, Consumer<IModConfig> result)
+    public void loadWorldConfig(Path path, Consumer<IModConfig> result)
     {
         final CommentedFileConfig data = this.config.getHandler().reader(path).apply(this.config);
         ConfigHelper.setModConfigData(this.config, data);
@@ -127,5 +127,26 @@ public class ForgeConfig implements IModConfig
                 ConfigHelper.setModConfigData(this.config, null);
             }
         }
+    }
+
+    @Override
+    public boolean isChanged()
+    {
+        // Block world configs since the path is dynamic
+        if(ConfigHelper.isWorldConfig(this))
+            return false;
+        return ConfigHelper.isModified(this);
+    }
+
+    @Override
+    public void restoreDefaults()
+    {
+        // Block world configs since the path is dynamic
+        if(ConfigHelper.isWorldConfig(this))
+            return;
+        ConfigHelper.gatherAllConfigValues(this.getRoot()).forEach(value -> {
+            value.restore();
+            value.cleanCache();
+        });
     }
 }
