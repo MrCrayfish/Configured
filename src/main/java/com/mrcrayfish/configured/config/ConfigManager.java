@@ -18,7 +18,6 @@ import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.client.screen.IEditing;
-import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
@@ -321,7 +320,7 @@ public class ConfigManager
             // Post handling
             if(this.getType() == ConfigType.WORLD)
             {
-                if(!ListMenuScreen.isPlayingGame())
+                if(!ConfigHelper.isPlayingGame())
                 {
                     // Unload world configs since still in main menu
                     this.unloadServerConfig();
@@ -402,7 +401,7 @@ public class ConfigManager
             // Attempts to unload the server config if player simply just went back
             if(this.config != null && this.getType() == ConfigType.WORLD)
             {
-                if(!ListMenuScreen.isPlayingGame())
+                if(!ConfigHelper.isPlayingGame())
                 {
                     this.unloadServerConfig();
                 }

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Button;
@@ -56,7 +57,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
     {
         this.constructEntries();
         this.list = new EnumList(this.entries);
-        this.list.setRenderBackground(!ListMenuScreen.isPlayingGame());
+        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.list.setSelected(this.list.children().stream().filter(entry -> entry.getEnumValue() == this.selectedValue).findFirst().orElse(null));
         this.addWidget(this.list);
 

@@ -267,4 +267,9 @@ public class ConfigHelper
         }
         return changed;
     }
+
+    public static boolean isPlayingGame()
+    {
+        return Minecraft.getInstance().player != null;
+    }
 }

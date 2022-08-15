@@ -5,8 +5,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -63,7 +63,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.constructEntries(entries);
         this.entries = ImmutableList.copyOf(entries); //Should this still be immutable?
         this.list = new EntryList(this.entries);
-        this.list.setRenderBackground(!isPlayingGame());
+        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.addWidget(this.list);
 
         // Adds a search text field to the top of the screen
@@ -164,11 +164,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    public static boolean isPlayingGame()
-    {
-        return Minecraft.getInstance().player != null;
     }
 
     protected class EntryList extends ContainerObjectSelectionList<Item> implements IBackgroundTexture

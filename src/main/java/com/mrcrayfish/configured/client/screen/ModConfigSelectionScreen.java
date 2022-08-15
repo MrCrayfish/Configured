@@ -99,7 +99,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
             this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
-            this.modifyButton.active = !ConfigScreen.isPlayingGame() || ConfigHelper.isEditableServerConfig(config) || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
+            this.modifyButton.active = !ConfigHelper.isPlayingGame() || ConfigHelper.isEditableServerConfig(config) || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
             if(!ConfigHelper.isEditableServerConfig(config) || Minecraft.getInstance().player != null)
             {
                 this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
@@ -177,7 +177,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
             return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslatableComponent(langKey), onPress ->
             {
-                if(ConfigScreen.isPlayingGame() && ConfigHelper.isEditableServerConfig(config) && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
+                if(ConfigHelper.isPlayingGame() && ConfigHelper.isEditableServerConfig(config) && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
                     return;
 
                 if(serverConfig)
@@ -193,7 +193,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             }, (button, poseStack, mouseX, mouseY) -> {
                 if(button.isHoveredOrFocused())
                 {
-                    if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
+                    if(ConfigHelper.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
                     {
                         ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                     }

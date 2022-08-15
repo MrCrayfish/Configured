@@ -7,7 +7,6 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -64,7 +63,7 @@ public class ForgeConfig implements IModConfig
 
         if(this.getType() == ConfigType.WORLD_SYNC)
         {
-            if(!ListMenuScreen.isPlayingGame())
+            if(!ConfigHelper.isPlayingGame())
             {
                 // Unload server configs since still in main menu
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
@@ -121,7 +120,7 @@ public class ForgeConfig implements IModConfig
         // Attempts to unload the server config if player simply just went back
         if(this.config != null && this.getType() == ConfigType.WORLD)
         {
-            if(!ListMenuScreen.isPlayingGame())
+            if(!ConfigHelper.isPlayingGame())
             {
                 // Unload server configs since still in main menu
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);

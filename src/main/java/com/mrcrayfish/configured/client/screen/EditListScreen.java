@@ -9,6 +9,7 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.impl.simple.SimpleListValue;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -60,7 +61,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
     protected void init()
     {
         this.list = new ObjectList();
-        this.list.setRenderBackground(!ListMenuScreen.isPlayingGame());
+        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.addWidget(this.list);
         this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
             List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
