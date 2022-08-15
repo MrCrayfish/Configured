@@ -462,10 +462,7 @@ public class ConfigManager
 
             // Restore properties immediately if config already loaded
             if(this.config != null) {
-                this.allProperties.forEach(property -> {
-                    property.restoreDefault();
-                    property.invalidateCache();
-                });
+                this.allProperties.forEach(ConfigProperty::restoreDefault);
                 return;
             }
 
