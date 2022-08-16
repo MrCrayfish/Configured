@@ -27,7 +27,8 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,13 +54,20 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(!localConfigs.isEmpty())
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.client_configuration").getString()));
-            localConfigs.forEach(config -> entries.add(new FileItem(config)));
+            List<Item> localEntries = new ArrayList<>();
+            localConfigs.forEach(config -> localEntries.add(new FileItem(config)));
+            Collections.sort(localEntries);
+            entries.addAll(localEntries);
+
         }
         Set<IModConfig> remoteConfigs = this.getRemoteConfigs();
         if(!remoteConfigs.isEmpty())
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
-            remoteConfigs.forEach(config -> entries.add(new FileItem(config)));
+            List<Item> remoteEntries = new ArrayList<>();
+            remoteConfigs.forEach(config -> remoteEntries.add(new FileItem(config)));
+            Collections.sort(remoteEntries);
+            entries.addAll(remoteEntries);
         }
     }
 

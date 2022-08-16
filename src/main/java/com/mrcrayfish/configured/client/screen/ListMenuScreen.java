@@ -229,7 +229,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
-    protected abstract class Item extends ContainerObjectSelectionList.Entry<Item> implements ILabelProvider
+    protected abstract class Item extends ContainerObjectSelectionList.Entry<Item> implements ILabelProvider, Comparable<Item>
     {
         protected final Component label;
         protected List<FormattedCharSequence> tooltip;
@@ -278,6 +278,12 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
                     output.add(NarratedElementType.TITLE, Item.this.label);
                 }
             });
+        }
+
+        @Override
+        public int compareTo(ListMenuScreen.Item o)
+        {
+            return this.label.getString().compareTo(o.label.getString());
         }
     }
 
