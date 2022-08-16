@@ -317,7 +317,7 @@ public class ConfigManager
                 if(!ConfigHelper.isPlayingGame())
                 {
                     // Unload world configs since still in main menu
-                    this.unloadWorldConfig();
+                    this.unload();
                 }
                 else if(this.configType.isSync())
                 {
@@ -389,13 +389,9 @@ public class ConfigManager
         {
             if(this.config != null && !ConfigHelper.isPlayingGame())
             {
-                if(ConfigHelper.isServerConfig(this))
+                if(this.getType().isServer())
                 {
                     this.unload();
-                }
-                else if(ConfigHelper.isWorldConfig(this)) // Attempts to unload the world config if player simply just went back
-                {
-                    this.unloadWorldConfig();
                 }
             }
         }
@@ -414,16 +410,6 @@ public class ConfigManager
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
             this.config = config;
             result.accept(this);
-        }
-
-        private void unloadWorldConfig()
-        {
-            if(this.config != null)
-            {
-                this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
-                if(this.config instanceof FileConfig fileConfig) fileConfig.close();
-                this.config = null;
-            }
         }
 
         @Override

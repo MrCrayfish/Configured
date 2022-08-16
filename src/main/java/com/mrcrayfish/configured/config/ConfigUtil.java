@@ -7,7 +7,6 @@ import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import net.minecraftforge.fml.ModList;
@@ -19,7 +18,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -27,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +38,7 @@ import java.util.function.Supplier;
 public class ConfigUtil
 {
     private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
+    private static final Set<Path> WATCHED_PATHS = new HashSet<>();
 
     public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name, Supplier<CommentedConfig> fallback)
     {
@@ -86,7 +86,9 @@ public class ConfigUtil
         {
             try
             {
-                FileWatcher.defaultInstance().addWatch(fileConfig.getFile(), callback);
+                Path path = fileConfig.getNioPath();
+                WATCHED_PATHS.add(path);
+                FileWatcher.defaultInstance().addWatch(path, callback);
             }
             catch(IOException e)
             {
@@ -99,7 +101,12 @@ public class ConfigUtil
     {
         if(config instanceof FileConfig fileConfig)
         {
-            FileWatcher.defaultInstance().removeWatch(fileConfig.getFile());
+            Path path = fileConfig.getNioPath();
+            if(WATCHED_PATHS.contains(path))
+            {
+                FileWatcher.defaultInstance().removeWatch(path);
+                WATCHED_PATHS.remove(path);
+            }
             fileConfig.close();
         }
     }
