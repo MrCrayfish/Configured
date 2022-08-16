@@ -3,8 +3,10 @@ package com.mrcrayfish.configured.network.play;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.config.ConfigManager;
 import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
+import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.PacketDistributor;
@@ -33,5 +35,17 @@ public class ServerPlayHandler
             ConfigHelper.resetCache(config);
             PacketHandler.getPlayChannel().send(PacketDistributor.ALL.with(() -> null), new MessageSyncServerConfig(message.getFileName(), message.getData()));
         });
+    }
+
+    public static void handleSyncSimpleConfigMessage(ServerPlayer player, MessageSyncSimpleConfig message)
+    {
+        if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()))
+        {
+            Configured.LOGGER.warn("{} tried to update server config without operator status", player.getName().getString());
+            return;
+        }
+
+        Configured.LOGGER.debug("Received server config sync from player: {}", player.getName().getString());
+        ConfigManager.getInstance().processSyncData(message);
     }
 }

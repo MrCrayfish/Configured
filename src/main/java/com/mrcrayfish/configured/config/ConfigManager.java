@@ -22,9 +22,13 @@ import com.mrcrayfish.configured.client.screen.IEditing;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
+import com.mrcrayfish.configured.network.PacketHandler;
+import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
+import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -33,10 +37,13 @@ import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
+import net.minecraftforge.network.PacketDistributor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -107,6 +114,29 @@ public class ConfigManager
     {
         Configured.LOGGER.info("Loading synced config from server: " + message.getKey());
         this.configs.get(message.getKey()).loadFromData(message.getData());
+    }
+
+    public void processSyncData(MessageSyncSimpleConfig message)
+    {
+        Optional.ofNullable(this.configs.get(message.getId())).ifPresent(entry ->
+        {
+            if(!entry.getType().isServer()) {
+                Configured.LOGGER.error("Tried to perform sync update to non-server config '" + message.getId() + "'.");
+                return;
+            }
+            if(entry.config == null) {
+                Configured.LOGGER.error("Tried to perform sync update on an unloaded config. The config will not be updated!");
+                return;
+            }
+            CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
+            entry.config.putAll(data);
+            entry.allProperties.forEach(ConfigProperty::invalidateCache);
+
+            if(EffectiveSide.get().isServer() && entry.getType().isSync())
+            {
+                PacketHandler.getPlayChannel().send(PacketDistributor.ALL.with(() -> null), new MessageSyncSimpleConfig(message.getId(), message.getData()));
+            }
+        });
     }
 
     @SubscribeEvent
@@ -294,35 +324,39 @@ public class ConfigManager
         {
             Preconditions.checkState(this.config != null, "Tried to update a config that is not loaded");
 
-            // Find changed values and update config if necessary
+            // Find changed values and return if nothing changed
             Set<IConfigValue<?>> changedValues = ConfigHelper.getChangedValues(entry);
-            if(!changedValues.isEmpty())
+            if(changedValues.isEmpty())
+                return;
+
+            // Update the config with new changes
+            CommentedConfig newConfig = CommentedConfig.copy(this.config);
+            changedValues.forEach(value ->
             {
-                CommentedConfig newConfig = CommentedConfig.copy(this.config);
-                changedValues.forEach(value ->
+                if(value instanceof SimpleValue<?> simpleValue)
                 {
-                    if(value instanceof SimpleValue<?> simpleValue)
-                    {
-                        newConfig.set(simpleValue.getPath(), simpleValue.get());
-                    }
-                });
-                this.correct(newConfig);
-                this.config.putAll(newConfig);
-                this.allProperties.forEach(ConfigProperty::invalidateCache);
-            }
+                    newConfig.set(simpleValue.getPath(), simpleValue.get());
+                }
+            });
+            this.correct(newConfig);
+            this.config.putAll(newConfig);
+            this.allProperties.forEach(ConfigProperty::invalidateCache);
 
             // Post handling
-            if(this.getType() == ConfigType.WORLD)
+            if(this.getType().isServer())
             {
                 if(!ConfigHelper.isPlayingGame())
                 {
                     // Unload world configs since still in main menu
                     this.unload();
                 }
-                else if(this.configType.isSync())
+                else
                 {
-                    //TODO send to server
-                    //ConfigHelper.sendModConfigDataToServer(this.config);
+                    ConfigUtil.sendSimpleConfigDataToServer(this, this.config);
+                    if(!this.getType().isSync())
+                    {
+                        this.unload();
+                    }
                 }
             }
             else
