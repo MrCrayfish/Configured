@@ -7,6 +7,7 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.config.ConfigUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -71,7 +72,7 @@ public class ForgeConfig implements IModConfig
             }
             else if(!changedValues.isEmpty())
             {
-                ConfigHelper.sendForgeModConfigDataToServer(this.config);
+                this.syncToServer();
             }
         }
         else if(!changedValues.isEmpty())
@@ -142,11 +143,26 @@ public class ForgeConfig implements IModConfig
     public void restoreDefaults()
     {
         // Block world configs since the path is dynamic
-        if(ConfigHelper.isWorldConfig(this))
+        if(ConfigHelper.isWorldConfig(this) && this.config == null)
             return;
         ConfigHelper.gatherAllConfigValues(this.getRoot()).forEach(value -> {
             value.restore();
             value.cleanCache();
         });
+    }
+
+    @Override
+    public void syncToServer()
+    {
+        if(this.config.getType() != ModConfig.Type.SERVER)
+            return;
+
+        if(!ConfigHelper.isPlayingGame())
+            return;
+
+        if(this.config == null)
+            return;
+
+        ConfigHelper.sendForgeModConfigDataToServer(this.config);
     }
 }

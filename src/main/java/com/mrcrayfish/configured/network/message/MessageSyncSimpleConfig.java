@@ -30,7 +30,7 @@ public class MessageSyncSimpleConfig implements IMessage<MessageSyncSimpleConfig
     public void encode(MessageSyncSimpleConfig message, FriendlyByteBuf buffer)
     {
         buffer.writeResourceLocation(message.id);
-        buffer.writeBytes(message.data);
+        buffer.writeByteArray(message.data);
     }
 
     @Override

@@ -48,6 +48,7 @@ public enum ConfigType
      */
     SERVER_SYNC(null, true, true),
 
+    //TODO should this be editable?
     /**
      * A configuration that is only created and loaded on a dedicated server
      */

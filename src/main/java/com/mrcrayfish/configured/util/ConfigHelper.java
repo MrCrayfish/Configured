@@ -16,12 +16,18 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.IConfigEvent;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -202,7 +208,7 @@ public class ConfigHelper
         try
         {
             Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType() == ModConfig.Type.SERVER && minecraft.player != null && minecraft.player.hasPermissions(2))
+            if(config.getType() == ModConfig.Type.SERVER && minecraft.player != null && minecraft.player.hasPermissions(4))
             {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 TomlFormat.instance().createWriter().write(config.getConfigData(), stream);
@@ -273,8 +279,19 @@ public class ConfigHelper
         return changed;
     }
 
+    // Client only
     public static boolean isPlayingGame()
     {
-        return Minecraft.getInstance().player != null;
+        return FMLEnvironment.dist.isDedicatedServer() || DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().level != null);
+    }
+
+    public static boolean isServerOwnedByPlayer(Player player)
+    {
+        return player.getServer() != null && !player.getServer().isDedicatedServer() && player.getServer().isSingleplayerOwner(player.getGameProfile());
+    }
+
+    public static boolean hasPermissionToEdit(@Nullable Player player, IModConfig config)
+    {
+        return !config.getType().isServer() || player != null && (player.hasPermissions(4) || isServerOwnedByPlayer(player));
     }
 }

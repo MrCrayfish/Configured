@@ -23,12 +23,11 @@ import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
 import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -37,7 +36,6 @@ import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -124,13 +122,16 @@ public class ConfigManager
                 Configured.LOGGER.error("Tried to perform sync update to non-server config '" + message.getId() + "'.");
                 return;
             }
+
             if(entry.config == null) {
                 Configured.LOGGER.error("Tried to perform sync update on an unloaded config. The config will not be updated!");
                 return;
             }
+
             CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
             entry.config.putAll(data);
             entry.allProperties.forEach(ConfigProperty::invalidateCache);
+            Configured.LOGGER.debug("Successfully processed config data for '" + message.getId() + "'");
 
             if(EffectiveSide.get().isServer() && entry.getType().isSync())
             {
@@ -352,7 +353,7 @@ public class ConfigManager
                 }
                 else
                 {
-                    ConfigUtil.sendSimpleConfigDataToServer(this, this.config);
+                    this.syncToServer();
                     if(!this.getType().isSync())
                     {
                         this.unload();
@@ -449,8 +450,8 @@ public class ConfigManager
         @Override
         public boolean isChanged()
         {
-            // Block world configs since the path is dynamic
-            if(ConfigHelper.isWorldConfig(this))
+            // Block unloaded world configs since the path is dynamic
+            if(ConfigHelper.isWorldConfig(this) && this.config == null)
                 return false;
 
             // An unloaded memory config is never going to be changed
@@ -476,8 +477,8 @@ public class ConfigManager
         @Override
         public void restoreDefaults()
         {
-            // Block world configs since the path is dynamic
-            if(ConfigHelper.isWorldConfig(this))
+            // Block unloaded world configs since the path is dynamic
+            if(ConfigHelper.isWorldConfig(this) && this.config == null)
                 return;
 
             // Restore properties immediately if config already loaded
@@ -494,6 +495,24 @@ public class ConfigManager
             this.allProperties.forEach(property -> tempConfig.set(property.getPath(), property.getDefaultValue()));
             ConfigUtil.saveFileConfig(tempConfig);
             tempConfig.close();
+        }
+
+        @Override
+        public void syncToServer()
+        {
+            if(!EffectiveSide.get().isClient())
+                return;
+
+            if(!this.getType().isServer())
+                return;
+
+            if(!ConfigHelper.isPlayingGame())
+                return;
+
+            if(this.config == null)
+                return;
+
+            ConfigUtil.sendSimpleConfigDataToServer(this, this.config);
         }
     }
 

@@ -8,7 +8,10 @@ import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.io.ByteArrayInputStream;
@@ -21,7 +24,7 @@ public class ServerPlayHandler
 {
     public static void handleSyncServerConfigMessage(ServerPlayer player, MessageSyncServerConfig message)
     {
-        if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()))
+        if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()) && !ConfigHelper.isServerOwnedByPlayer(player))
         {
             Configured.LOGGER.warn("{} tried to update server config without operator status", player.getName().getString());
             return;
@@ -39,7 +42,7 @@ public class ServerPlayHandler
 
     public static void handleSyncSimpleConfigMessage(ServerPlayer player, MessageSyncSimpleConfig message)
     {
-        if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()))
+        if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()) && !ConfigHelper.isServerOwnedByPlayer(player))
         {
             Configured.LOGGER.warn("{} tried to update server config without operator status", player.getName().getString());
             return;

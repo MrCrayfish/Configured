@@ -94,4 +94,6 @@ public interface IModConfig
      * in-game menu. This is only fired once after the player has exited the menu.
      */
     default void stopEditing() {}
+
+    default void syncToServer() {}
 }

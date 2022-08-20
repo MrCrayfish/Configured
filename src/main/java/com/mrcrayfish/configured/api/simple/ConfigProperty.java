@@ -18,7 +18,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     protected final BiFunction<Config, List<String>, T> getFunction;
     private T value;
     private boolean cached;
-    private ConfigManager.ValueProxy proxy;
+    protected ConfigManager.ValueProxy proxy;
     protected ConfigManager.PropertyData data;
 
     ConfigProperty(T defaultValue)

@@ -14,6 +14,7 @@ import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.network.PacketHandler;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
+import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.ModList;
@@ -208,11 +209,11 @@ public class ConfigUtil
         try
         {
             Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType().isServer() && minecraft.player != null && minecraft.player.hasPermissions(2))
+            if(config.getType().isServer() && minecraft.player != null && minecraft.player.hasPermissions(4))
             {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 TomlFormat.instance().createWriter().write(data, stream);
-                PacketHandler.getPlayChannel().sendToServer(new MessageSyncServerConfig(config.getFileName(), stream.toByteArray()));
+                PacketHandler.getPlayChannel().sendToServer(new MessageSyncSimpleConfig(config.getName(), stream.toByteArray()));
                 stream.close();
             }
         }
