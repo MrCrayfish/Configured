@@ -96,4 +96,6 @@ public interface IModConfig
     default void stopEditing() {}
 
     default void syncToServer() {}
+
+    default void requestFromServer() {}
 }

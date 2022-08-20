@@ -174,7 +174,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 }
                 else if(config.getType().isServer() && !config.getType().isSync())
                 {
-                    //TODO request from server
+                    ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
+                    {
+                        Minecraft.getInstance().setScreen(new RequestScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), ModConfigSelectionScreen.this.background, config));
+                    });
                 }
                 else
                 {

@@ -22,6 +22,7 @@
     "configured.gui.title.client_configuration": "Client Configurations",
     "configured.gui.title.common_configuration": "Common Configurations",
     "configured.gui.title.server_configuration": "Server Configurations",
+    "configured.gui.requesting config": "Requesting config from server...",
     "configured.config.client.force_configured_menu": "Force Configured Menu",
     "configured.multiplayer.disconnect.no_permission": "Only privileged users can update remote configurations!",
     "configured.chat.config_updated": "%s updated the config '%s'",
