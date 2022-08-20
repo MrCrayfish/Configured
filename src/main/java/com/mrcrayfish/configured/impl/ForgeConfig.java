@@ -139,7 +139,7 @@ public class ForgeConfig implements IModConfig
     public boolean isChanged()
     {
         // Block world configs since the path is dynamic
-        if(ConfigHelper.isWorldConfig(this))
+        if(ConfigHelper.isWorldConfig(this) && this.config.getConfigData() == null)
             return false;
 
         // Check if any config value doesn't equal it's default
@@ -152,7 +152,7 @@ public class ForgeConfig implements IModConfig
     public void restoreDefaults()
     {
         // Block world configs since the path is dynamic
-        if(ConfigHelper.isWorldConfig(this) && this.config == null)
+        if(ConfigHelper.isWorldConfig(this) && this.config.getConfigData() == null)
             return;
 
         // Creates a copy of the config data then pushes all at once to avoid multiple IO ops
