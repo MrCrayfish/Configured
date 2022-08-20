@@ -208,7 +208,7 @@ public class ConfigHelper
         try
         {
             Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType() == ModConfig.Type.SERVER && minecraft.player != null && minecraft.player.hasPermissions(4))
+            if(config.getType() == ModConfig.Type.SERVER && config.getConfigData() != null && minecraft.player != null && minecraft.player.hasPermissions(4))
             {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 TomlFormat.instance().createWriter().write(config.getConfigData(), stream);

@@ -13,6 +13,7 @@ import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
@@ -172,15 +173,9 @@ public class ForgeConfig implements IModConfig
     @Override
     public void syncToServer()
     {
-        if(this.config.getType() != ModConfig.Type.SERVER)
-            return;
-
-        if(!ConfigHelper.isPlayingGame())
-            return;
-
-        if(this.config == null)
-            return;
-
-        ConfigHelper.sendForgeModConfigDataToServer(this.config);
+        if(EffectiveSide.get().isClient())
+        {
+            ConfigHelper.sendForgeModConfigDataToServer(this.config);
+        }
     }
 }
