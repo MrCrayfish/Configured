@@ -9,6 +9,8 @@ import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -27,6 +29,7 @@ public class ServerPlayHandler
         if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()) && !ConfigHelper.isServerOwnedByPlayer(player))
         {
             Configured.LOGGER.warn("{} tried to update server config without operator status", player.getName().getString());
+            player.connection.disconnect(new TranslatableComponent("configured.multiplayer.disconnect.no_permission"));
             return;
         }
 
@@ -45,6 +48,7 @@ public class ServerPlayHandler
         if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()) && !ConfigHelper.isServerOwnedByPlayer(player))
         {
             Configured.LOGGER.warn("{} tried to update server config without operator status", player.getName().getString());
+            player.connection.disconnect(new TranslatableComponent("configured.multiplayer.disconnect.no_permission"));
             return;
         }
 

@@ -209,7 +209,7 @@ public class ConfigUtil
         try
         {
             Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType().isServer() && minecraft.player != null && minecraft.player.hasPermissions(4))
+            if(config.getType().isServer() && ConfigHelper.hasPermissionToEdit(minecraft.player, config))
             {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 TomlFormat.instance().createWriter().write(data, stream);
