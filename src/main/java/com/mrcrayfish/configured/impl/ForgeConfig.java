@@ -13,6 +13,7 @@ import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
 import java.util.EnumMap;
@@ -29,11 +30,13 @@ public class ForgeConfig implements IModConfig
         map.put(ModConfig.Type.SERVER, ConfigType.WORLD_SYNC);
     });
 
-    ModConfig config;
+    private final ModConfig config;
+    private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
     public ForgeConfig(ModConfig config)
     {
         this.config = config;
+        this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
     }
 
     @Override
@@ -145,10 +148,20 @@ public class ForgeConfig implements IModConfig
         // Block world configs since the path is dynamic
         if(ConfigHelper.isWorldConfig(this) && this.config == null)
             return;
-        ConfigHelper.gatherAllConfigValues(this.getRoot()).forEach(value -> {
-            value.restore();
-            value.cleanCache();
+
+        // Creates a copy of the config data then pushes all at once to avoid multiple IO ops
+        CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
+        this.allConfigValues.forEach(pair ->
+        {
+            // Restore default value
+            ForgeConfigSpec.ConfigValue<?> configValue = pair.getLeft();
+            ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
+            newConfig.set(configValue.getPath(), valueSpec.getDefault());
         });
+        this.config.getConfigData().putAll(newConfig);
+
+        // Finally clear cache of all config values
+        this.allConfigValues.forEach(pair -> pair.getLeft().clearCache());
     }
 
     @Override
