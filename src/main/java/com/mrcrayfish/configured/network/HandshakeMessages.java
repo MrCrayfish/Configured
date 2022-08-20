@@ -55,7 +55,7 @@ public class HandshakeMessages
         void encode(FriendlyByteBuf buffer)
         {
             buffer.writeResourceLocation(this.key);
-            buffer.writeBytes(this.data);
+            buffer.writeByteArray(this.data);
         }
 
         static S2CConfigData decode(FriendlyByteBuf buffer)
