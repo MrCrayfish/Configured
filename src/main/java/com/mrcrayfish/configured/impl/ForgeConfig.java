@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -139,7 +140,11 @@ public class ForgeConfig implements IModConfig
         // Block world configs since the path is dynamic
         if(ConfigHelper.isWorldConfig(this))
             return false;
-        return ConfigHelper.isModified(this);
+
+        // Check if any config value doesn't equal it's default
+        return this.allConfigValues.stream().anyMatch(pair -> {
+            return !Objects.equals(pair.getLeft().get(), pair.getRight().getDefault());
+        });
     }
 
     @Override
