@@ -96,6 +96,11 @@ public class ConfigManager
         return ImmutableList.copyOf(this.configs.values());
     }
 
+    public Optional<SimpleConfigEntry> getConfig(ResourceLocation id)
+    {
+        return Optional.ofNullable(this.configs.get(id));
+    }
+
     public List<Pair<String, HandshakeMessages.S2CConfigData>> getMessagesForLogin(boolean local)
     {
         if(local) return Collections.emptyList();
@@ -114,30 +119,35 @@ public class ConfigManager
         this.configs.get(message.getKey()).loadFromData(message.getData());
     }
 
-    public void processSyncData(MessageSyncSimpleConfig message)
+    public void processSyncData(MessageSyncSimpleConfig message, Consumer<Optional<SimpleConfigEntry>> consumer)
     {
-        Optional.ofNullable(this.configs.get(message.getId())).ifPresent(entry ->
+        SimpleConfigEntry entry = this.configs.get(message.getId());
+        if(entry == null)
         {
-            if(!entry.getType().isServer()) {
-                Configured.LOGGER.error("Tried to perform sync update to non-server config '" + message.getId() + "'.");
-                return;
-            }
+            Configured.LOGGER.error("Tried to update a remote config that doesn't exist!");
+            consumer.accept(Optional.empty());
+            return;
+        }
 
-            if(entry.config == null) {
-                Configured.LOGGER.error("Tried to perform sync update on an unloaded config. The config will not be updated!");
-                return;
-            }
+        if(!entry.getType().isServer())
+        {
+            Configured.LOGGER.error("Tried to perform sync update to non-server config '" + message.getId() + "'.");
+            consumer.accept(Optional.empty());
+            return;
+        }
 
-            CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
-            entry.config.putAll(data);
-            entry.allProperties.forEach(ConfigProperty::invalidateCache);
-            Configured.LOGGER.debug("Successfully processed config data for '" + message.getId() + "'");
+        if(entry.config == null)
+        {
+            Configured.LOGGER.error("Tried to perform sync update on an unloaded config. The config will not be updated!");
+            consumer.accept(Optional.empty());
+            return;
+        }
 
-            if(EffectiveSide.get().isServer() && entry.getType().isSync())
-            {
-                PacketHandler.getPlayChannel().send(PacketDistributor.ALL.with(() -> null), new MessageSyncSimpleConfig(message.getId(), message.getData()));
-            }
-        });
+        CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
+        entry.config.putAll(data);
+        entry.allProperties.forEach(ConfigProperty::invalidateCache);
+        Configured.LOGGER.debug("Successfully processed config data for '" + message.getId() + "'");
+        consumer.accept(Optional.of(entry));
     }
 
     @SubscribeEvent

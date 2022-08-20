@@ -24,6 +24,8 @@
     "configured.gui.title.server_configuration": "Server Configurations",
     "configured.config.client.force_configured_menu": "Force Configured Menu",
     "configured.multiplayer.disconnect.no_permission": "Only privileged users can update remote configurations!",
+    "configured.chat.config_updated": "%s updated the config '%s'",
+    "configured.chat.config_update_error": "An error occurred when updating a config. See logs for more details",
     "key.configured.open_mod_list": "Open Mod List",
     "key.categories.configured": "Configured"
 }

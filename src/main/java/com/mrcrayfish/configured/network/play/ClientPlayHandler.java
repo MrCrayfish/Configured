@@ -38,7 +38,7 @@ public class ClientPlayHandler
             return;
 
         Configured.LOGGER.debug("Received simple config sync from server");
-        ConfigManager.getInstance().processSyncData(message);
+        ConfigManager.getInstance().processSyncData(message, entry -> {});
         //TODO events
         //ConfigHelper.fireEvent(config, new ModConfigEvent.Reloading(config));
     }
