@@ -7,14 +7,12 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.config.ConfigUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.util.thread.EffectiveSide;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
 import java.util.EnumMap;
@@ -33,12 +31,12 @@ public class ForgeConfig implements IModConfig
     });
 
     private final ModConfig config;
-    private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
+    private final List<ForgeValueEntry> allConfigValues;
 
     public ForgeConfig(ModConfig config)
     {
         this.config = config;
-        this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
+        this.allConfigValues = getAllConfigValues(config);
     }
 
     @Override
@@ -143,8 +141,8 @@ public class ForgeConfig implements IModConfig
             return false;
 
         // Check if any config value doesn't equal it's default
-        return this.allConfigValues.stream().anyMatch(pair -> {
-            return !Objects.equals(pair.getLeft().get(), pair.getRight().getDefault());
+        return this.allConfigValues.stream().anyMatch(entry -> {
+            return !Objects.equals(entry.value.get(), entry.spec.getDefault());
         });
     }
 
@@ -157,17 +155,11 @@ public class ForgeConfig implements IModConfig
 
         // Creates a copy of the config data then pushes all at once to avoid multiple IO ops
         CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
-        this.allConfigValues.forEach(pair ->
-        {
-            // Restore default value
-            ForgeConfigSpec.ConfigValue<?> configValue = pair.getLeft();
-            ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-            newConfig.set(configValue.getPath(), valueSpec.getDefault());
-        });
+        this.allConfigValues.forEach(entry -> newConfig.set(entry.value.getPath(), entry.spec.getDefault()));
         this.config.getConfigData().putAll(newConfig);
 
         // Finally clear cache of all config values
-        this.allConfigValues.forEach(pair -> pair.getLeft().clearCache());
+        this.allConfigValues.forEach(pair -> pair.value.clearCache());
     }
 
     @Override
@@ -178,4 +170,11 @@ public class ForgeConfig implements IModConfig
             ConfigHelper.sendForgeModConfigDataToServer(this.config);
         }
     }
+
+    private static List<ForgeValueEntry> getAllConfigValues(ModConfig config)
+    {
+        return ConfigHelper.gatherAllConfigValues(config).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
+    }
+
+    private record ForgeValueEntry(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec) {}
 }
