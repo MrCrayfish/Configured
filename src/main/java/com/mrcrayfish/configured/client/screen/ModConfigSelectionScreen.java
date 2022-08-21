@@ -264,7 +264,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             float brightness = true ? 1.0F : 0.5F;
             RenderSystem.setShaderTexture(0, IconButton.ICONS);
             RenderSystem.setShaderColor(brightness, brightness, brightness, 1.0F);
-            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), 11, 9, 11, 64, 64);
+            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), this.getIconV(), 9, 11, 64, 64);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             this.modifyButton.x = left + width - 83;
@@ -281,13 +281,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private int getIconU()
         {
-            return switch(this.config.getType())
-            {
-                //TODO update this for the new types
-                case UNIVERSAL -> 9;
-                case SERVER, SERVER_SYNC, WORLD, WORLD_SYNC -> 18;
-                default -> 0;
-            };
+            return (this.config.getType().ordinal() % 3) * 9 + 37;
+        }
+
+        private int getIconV()
+        {
+            return (this.config.getType().ordinal() / 3) * 11;
         }
 
         @Override
