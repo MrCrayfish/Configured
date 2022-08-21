@@ -1,4 +1,12 @@
 {
+    "simpleconfig.simple_config_test.client": "Example Client",
+    "simpleconfig.simple_config_test.universal": "Example Universal",
+    "simpleconfig.simple_config_test.server": "Example Server",
+    "simpleconfig.simple_config_test.server_sync": "Example Server (Sync)",
+    "simpleconfig.simple_config_test.dedicated_server": "Example Dedicated Server",
+    "simpleconfig.simple_config_test.world": "Example World",
+    "simpleconfig.simple_config_test.world_sync": "Example World (Sync)",
+    "simpleconfig.simple_config_test.memory": "Example Memory",
     "simpleconfig.simple_config_test.memory.test_double": "Test Double",
     "simpleconfig.simple_config_test.memory.test_double.tooltip": "This is a translated tooltip!"
 }
