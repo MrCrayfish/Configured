@@ -1,6 +1,6 @@
 package com.mrcrayfish.configured.api;
 
-import com.mrcrayfish.configured.impl.ForgeConfig;
+import com.mrcrayfish.configured.impl.forge.ForgeConfig;
 
 import javax.annotation.Nullable;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.impl;
+package com.mrcrayfish.configured.impl.forge;
 
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.ImmutableList;

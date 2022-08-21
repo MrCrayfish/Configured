@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.impl;
+package com.mrcrayfish.configured.impl.forge;
 
 import com.mrcrayfish.configured.api.IConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec;

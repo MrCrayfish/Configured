@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.impl;
+package com.mrcrayfish.configured.impl.forge;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
