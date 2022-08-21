@@ -3,6 +3,8 @@ package com.mrcrayfish.configured.network;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.config.ConfigManager;
 import com.mrcrayfish.configured.network.message.IMessage;
+import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageResponseSimpleConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import net.minecraft.resources.ResourceLocation;
@@ -38,6 +40,8 @@ public class PacketHandler
 
         registerPlayMessage(MessageSyncServerConfig.class, new MessageSyncServerConfig());
         registerPlayMessage(MessageSyncSimpleConfig.class, new MessageSyncSimpleConfig());
+        registerPlayMessage(MessageRequestSimpleConfig.class, new MessageRequestSimpleConfig());
+        registerPlayMessage(MessageResponseSimpleConfig.class, new MessageResponseSimpleConfig());
     }
 
     private static <T> void registerPlayMessage(Class<T> clazz, IMessage<T> message)

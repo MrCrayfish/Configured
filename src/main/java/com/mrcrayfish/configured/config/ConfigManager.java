@@ -23,9 +23,9 @@ import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
 import com.mrcrayfish.configured.network.PacketHandler;
+import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
@@ -41,7 +41,6 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.fml.util.thread.EffectiveSide;
-import net.minecraftforge.network.PacketDistributor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -289,9 +288,9 @@ public class ConfigManager
             ConfigUtil.watchFileConfig(config, this::changeCallback);
         }
 
-        private void loadFromData(byte[] data)
+        public void loadFromData(byte[] data)
         {
-            Preconditions.checkState(this.configType.isSync(), "Tried to load from data for a non-sync config");
+            this.unload();
             CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
@@ -364,7 +363,7 @@ public class ConfigManager
                 else
                 {
                     this.syncToServer();
-                    if(!this.getType().isSync())
+                    if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
                     {
                         this.unload();
                     }
@@ -432,9 +431,9 @@ public class ConfigManager
         @Override
         public void stopEditing()
         {
-            if(this.config != null && !ConfigHelper.isPlayingGame())
+            if(this.config != null)
             {
-                if(this.getType().isServer())
+                if(this.getType().isServer() && (!ConfigHelper.isPlayingGame() || (!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())))
                 {
                     this.unload();
                 }
@@ -443,7 +442,7 @@ public class ConfigManager
 
         //TODO change how this works.
         @Override
-        public void loadWorldConfig(Path configDir, Consumer<IModConfig> result) throws IOException
+        public void loadWorldConfig(Path configDir, Consumer<IModConfig> result)
         {
             if(!ConfigHelper.isServerConfig(this))
                 return;
@@ -513,9 +512,6 @@ public class ConfigManager
             if(!EffectiveSide.get().isClient())
                 return;
 
-            if(!this.getType().isServer())
-                return;
-
             if(!ConfigHelper.isPlayingGame())
                 return;
 
@@ -523,6 +519,18 @@ public class ConfigManager
                 return;
 
             ConfigUtil.sendSimpleConfigDataToServer(this, this.config);
+        }
+
+        @Override
+        public void requestFromServer()
+        {
+            if(!this.getType().isServer())
+                return;
+
+            if(!ConfigHelper.isPlayingGame())
+                return;
+
+            PacketHandler.getPlayChannel().sendToServer(new MessageRequestSimpleConfig(this.getName()));
         }
     }
 

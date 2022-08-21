@@ -19,7 +19,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.util.LogicalSidedProvider;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.IConfigEvent;
@@ -27,7 +26,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.util.thread.EffectiveSide;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -293,5 +291,10 @@ public class ConfigHelper
     public static boolean hasPermissionToEdit(@Nullable Player player, IModConfig config)
     {
         return !config.getType().isServer() || player != null && (player.hasPermissions(4) || isServerOwnedByPlayer(player));
+    }
+
+    public static boolean isRunningLocalServer()
+    {
+        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().hasSingleplayerServer());
     }
 }

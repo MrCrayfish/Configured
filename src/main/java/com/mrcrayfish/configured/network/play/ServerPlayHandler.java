@@ -5,7 +5,10 @@ import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.config.ConfigManager;
+import com.mrcrayfish.configured.config.ConfigUtil;
 import com.mrcrayfish.configured.network.PacketHandler;
+import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageResponseSimpleConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
@@ -15,12 +18,14 @@ import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.util.thread.EffectiveSide;
+import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.io.ByteArrayInputStream;
@@ -95,5 +100,22 @@ public class ServerPlayHandler
                 serverPlayer.sendMessage(message, Util.NIL_UUID);
             }
         }
+    }
+
+    public static void handleRequestSimpleConfigMessage(ServerPlayer player, MessageRequestSimpleConfig message, NetworkEvent.Context context)
+    {
+        if(!player.hasPermissions(player.server.getOperatorUserPermissionLevel()) && !ConfigHelper.isServerOwnedByPlayer(player))
+        {
+            Configured.LOGGER.warn("{} tried to request server config without operator status", player.getName().getString());
+            player.connection.disconnect(new TranslatableComponent("configured.multiplayer.disconnect.no_permission"));
+            return;
+        }
+
+        ConfigManager.getInstance().getConfig(message.getId()).ifPresent(entry ->
+        {
+            ResourceLocation key = entry.getName();
+            byte[] data = ConfigUtil.readBytes(entry.getFilePath());
+            PacketHandler.getPlayChannel().reply(new MessageResponseSimpleConfig(key, data), context);
+        });
     }
 }
