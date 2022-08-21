@@ -10,6 +10,7 @@
     "configured.gui.restore": "Restore",
     "configured.gui.select": "Select",
     "configured.gui.change": "Change",
+    "configured.gui.request": "Request",
     "configured.gui.save": "Save",
     "configured.gui.select_world": "Pick World",
     "configured.gui.no_permission": "You do not have permissions to do this",

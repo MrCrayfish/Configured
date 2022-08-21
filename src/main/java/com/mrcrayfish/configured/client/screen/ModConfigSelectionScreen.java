@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
-import com.mrcrayfish.configured.config.ConfigUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -150,10 +149,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
          */
         private Button createModifyButton(IModConfig config)
         {
-            boolean canRestore = canRestoreConfig(Minecraft.getInstance().player, config);
-            boolean worldConfig = !ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config);
-            String langKey = worldConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            return new IconButton(0, 0, worldConfig ? 44 : 33, 0, canRestore ? 60 : 82, new TranslatableComponent(langKey), button ->
+            int width = canRestoreConfig(Minecraft.getInstance().player, config) ? 60 : 82;
+            return new IconButton(0, 0, this.getModifyIconU(config), 22, width, this.getModifyLabel(config), button ->
             {
                 if(!button.isActive() || !button.visible)
                     return;
@@ -190,16 +187,48 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 if(button.isHoveredOrFocused())
                 {
-                    if(ConfigHelper.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
+                    if(ConfigHelper.isPlayingGame())
                     {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                    }
-                    else if(ConfigHelper.isPlayingGame() && !ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config))
-                    {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        if(config.getType().isServer() && !ConfigHelper.isConfiguredInstalledOnServer())
+                        {
+                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        }
+                        else if(!ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config))
+                        {
+                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                        }
                     }
                 }
             });
+        }
+
+        private int getModifyIconU(IModConfig config)
+        {
+            if(ConfigHelper.isPlayingGame())
+            {
+                if(config.getType().isServer() && !config.getType().isSync())
+                {
+                    return 22;
+                }
+            }
+            else if(ConfigHelper.isWorldConfig(config))
+            {
+                return 11;
+            }
+            return 0;
+        }
+
+        private Component getModifyLabel(IModConfig config)
+        {
+            if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
+            {
+                return new TranslatableComponent("configured.gui.select_world");
+            }
+            if(ConfigHelper.isPlayingGame() && config.getType().isServer() && !config.getType().isSync())
+            {
+                return new TranslatableComponent("configured.gui.request");
+            }
+            return new TranslatableComponent("configured.gui.modify");
         }
 
         private Button createRestoreButton(IModConfig config)
