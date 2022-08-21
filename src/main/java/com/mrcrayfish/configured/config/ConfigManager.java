@@ -18,7 +18,6 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
-import com.mrcrayfish.configured.client.screen.IEditing;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
@@ -30,11 +29,8 @@ import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -45,7 +41,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
@@ -76,7 +71,6 @@ public class ConfigManager
     }
 
     private final Map<ResourceLocation, SimpleConfigEntry> configs;
-    private IModConfig editingConfig;
 
     private ConfigManager()
     {
@@ -149,15 +143,14 @@ public class ConfigManager
         consumer.accept(Optional.of(entry));
     }
 
-    @SubscribeEvent
-    public void onClientDisconnect(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    // Unloads all synced configs since they should no longer be accessible
+    public void onClientDisconnect(@Nullable Connection connection)
     {
-        Configured.LOGGER.info("Unloading synced configs from server");
-        Connection connection = event.getConnection();
         if(connection != null && !connection.isMemoryConnection()) // Run only if disconnected from remote server
         {
-            // Unloads all synced configs since they should no longer be accessible
-            this.configs.values().stream().filter(entry -> entry.getType().isSync()).forEach(SimpleConfigEntry::unload);
+            Configured.LOGGER.info("Unloading synced configs from server");
+            //TODO is this actually correct?
+            this.configs.values().stream().filter(entry -> entry.getType().isSync()).forEach(ConfigManager.SimpleConfigEntry::unload);
         }
     }
 
@@ -193,35 +186,6 @@ public class ConfigManager
     {
         Configured.LOGGER.info("Unloading server configs...");
         this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(SimpleConfigEntry::unload);
-    }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onScreenOpen(ScreenOpenEvent event)
-    {
-        // Keeps track of the config currently being editing and runs events accordingly
-        if(event.getScreen() instanceof IEditing editing)
-        {
-            if(this.editingConfig == null)
-            {
-                this.editingConfig = editing.getActiveConfig();
-                this.editingConfig.startEditing();
-                Configured.LOGGER.info("Started editing '" + this.editingConfig.getFileName() + "'");
-            }
-            else if(editing.getActiveConfig() == null)
-            {
-                throw new NullPointerException("A null config was returned when getting active config");
-            }
-            else if(this.editingConfig != editing.getActiveConfig())
-            {
-                throw new IllegalStateException("Trying to edit a config while one is already loaded. This should not happen!");
-            }
-        }
-        else if(this.editingConfig != null)
-        {
-            Configured.LOGGER.info("Stopped editing '" + this.editingConfig.getFileName() + "'");
-            this.editingConfig.stopEditing();
-            this.editingConfig = null;
-        }
     }
 
     public static final class SimpleConfigEntry implements IModConfig
@@ -297,7 +261,7 @@ public class ConfigManager
             this.config = config;
         }
 
-        private void unload()
+        void unload()
         {
             if(this.config != null)
             {

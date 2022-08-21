@@ -15,11 +15,13 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.ConfigGuiHandler;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.gui.ModListScreen;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -174,5 +176,11 @@ public class ClientHandler
             Screen oldScreen = minecraft.screen;
             minecraft.setScreen(new ModListScreen(oldScreen));
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    {
+        ConfigManager.getInstance().onClientDisconnect(event.getConnection());
     }
 }

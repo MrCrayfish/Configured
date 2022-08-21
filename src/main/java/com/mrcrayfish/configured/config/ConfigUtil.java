@@ -9,16 +9,12 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.electronwill.nightconfig.toml.TomlFormat;
-import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.language.ModFileScanData;
@@ -206,7 +202,7 @@ public class ConfigUtil
         if(!ConfigHelper.isConfiguredInstalledOnServer())
             return;
 
-        try
+        /*try
         {
             Minecraft minecraft = Minecraft.getInstance();
             if(config.getType().isServer() && ConfigHelper.hasPermissionToEdit(minecraft.player, config))
@@ -220,6 +216,6 @@ public class ConfigUtil
         catch(IOException e)
         {
             e.printStackTrace();
-        }
+        }*/
     }
 }
