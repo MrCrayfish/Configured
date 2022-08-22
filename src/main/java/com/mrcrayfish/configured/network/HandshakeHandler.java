@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.network;
 
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.config.ConfigManager;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.concurrent.CountDownLatch;
@@ -23,7 +24,9 @@ class HandshakeHandler
         Configured.LOGGER.debug("Received config data from server");
         CountDownLatch block = new CountDownLatch(1);
         supplier.get().enqueueWork(() -> {
-            ConfigManager.getInstance().processConfigData(message);
+            if(!ConfigManager.getInstance().processConfigData(message)) {
+                supplier.get().getNetworkManager().disconnect(new TextComponent("Received invalid config data from server"));
+            }
             block.countDown();
         });
         try

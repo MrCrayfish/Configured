@@ -85,11 +85,6 @@ public class ConfigManager
         return ImmutableList.copyOf(this.configs.values());
     }
 
-    public Optional<SimpleConfigEntry> getConfig(ResourceLocation id)
-    {
-        return Optional.ofNullable(this.configs.get(id));
-    }
-
     public List<Pair<String, HandshakeMessages.S2CConfigData>> getMessagesForLogin(boolean local)
     {
         if(local) return Collections.emptyList();
@@ -102,10 +97,16 @@ public class ConfigManager
             }).collect(Collectors.toList());
     }
 
-    public void processConfigData(HandshakeMessages.S2CConfigData message)
+    public boolean processConfigData(HandshakeMessages.S2CConfigData message)
     {
         Configured.LOGGER.info("Loading synced config from server: " + message.getKey());
-        this.configs.get(message.getKey()).loadFromData(message.getData());
+        SimpleConfigEntry entry = this.configs.get(message.getKey());
+        if(entry != null && entry.getType().isSync())
+        {
+            entry.loadFromData(message.getData());
+            return true;
+        }
+        return false;
     }
 
     // Unloads all synced configs since they should no longer be accessible
