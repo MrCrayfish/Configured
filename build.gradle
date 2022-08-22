@@ -11,7 +11,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.5.0-1.17.1'
+version = '1.5.1-1.17.1'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
