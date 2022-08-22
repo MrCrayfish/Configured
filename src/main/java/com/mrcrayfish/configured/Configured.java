@@ -1,7 +1,6 @@
 package com.mrcrayfish.configured;
 
 import com.mrcrayfish.configured.client.ClientHandler;
-import com.mrcrayfish.configured.network.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -26,14 +25,8 @@ public class Configured
     public Configured()
     {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
-    }
-
-    private void onCommonSetup(FMLCommonSetupEvent event)
-    {
-        PacketHandler.registerPlayMessages();
     }
 
     private void onLoadComplete(FMLLoadCompleteEvent event)

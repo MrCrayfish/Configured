@@ -69,10 +69,6 @@ public class ForgeConfig implements IModConfig
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
                 ConfigHelper.setModConfigData(this.config, null);
             }
-            else
-            {
-                ConfigHelper.sendModConfigDataToServer(this.config);
-            }
         }
         else
         {

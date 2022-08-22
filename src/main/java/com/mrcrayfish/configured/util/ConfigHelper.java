@@ -4,17 +4,11 @@ import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.network.Connection;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.IConfigEvent;
@@ -24,8 +18,6 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -174,38 +166,6 @@ public class ConfigHelper
             MOD_CONFIG_FIRE_EVENT.invoke(config, event);
         }
         catch(InvocationTargetException | IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public static boolean isConfiguredInstalledOnServer()
-    {
-        ClientPacketListener listener = Minecraft.getInstance().getConnection();
-        if(listener == null)
-            return false;
-        Connection connection = listener.getConnection();
-        return PacketHandler.getPlayChannel().isRemotePresent(connection);
-    }
-
-    public static void sendModConfigDataToServer(ModConfig config)
-    {
-        // Prevents trying to send packet to server if the server doesn't have configured installed
-        if(!isConfiguredInstalledOnServer())
-            return;
-
-        try
-        {
-            Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType() == ModConfig.Type.SERVER && minecraft.player != null && minecraft.player.hasPermissions(2))
-            {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                TomlFormat.instance().createWriter().write(config.getConfigData(), stream);
-                PacketHandler.getPlayChannel().sendToServer(new MessageSyncServerConfig(config.getFileName(), stream.toByteArray()));
-                stream.close();
-            }
-        }
-        catch(IOException e)
         {
             e.printStackTrace();
         }
