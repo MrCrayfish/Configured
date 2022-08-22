@@ -284,6 +284,25 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
+    public class SubTitleItem extends Item implements IIgnoreSearch
+    {
+        public SubTitleItem(ITextComponent title)
+        {
+            super(title);
+        }
+
+        public SubTitleItem(String title)
+        {
+            super(new StringTextComponent(title).mergeStyle(TextFormatting.GRAY));
+        }
+
+        @Override
+        public void render(MatrixStack matrixStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
+            AbstractGui.drawCenteredString(matrixStack, ListMenuScreen.this.minecraft.fontRenderer, this.label, left + width / 2, top + 5, 0xFFFFFF);
+        }
+    }
+
     @OnlyIn(Dist.CLIENT)
     protected class FocusedTextFieldWidget extends TextFieldWidget
     {

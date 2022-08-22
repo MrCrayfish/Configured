@@ -4,17 +4,11 @@ import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageSyncServerConfig;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.network.NetworkManager;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ConfigTracker;
@@ -22,8 +16,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -184,37 +176,6 @@ public class ConfigHelper
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static boolean isConfiguredInstalledOnServer()
-    {
-        ClientPlayNetHandler connection = Minecraft.getInstance().getConnection();
-        if(connection == null) return false;
-        NetworkManager manager = connection.getNetworkManager();
-        return PacketHandler.getPlayChannel().isRemotePresent(manager);
-    }
-
-    public static void sendConfigDataToServer(ModConfig config)
-    {
-        // Prevents trying to send packet to server if the server doesn't have configured installed
-        if(!isConfiguredInstalledOnServer())
-            return;
-
-        try
-        {
-            Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType() == ModConfig.Type.SERVER && minecraft.player != null && minecraft.player.hasPermissionLevel(2))
-            {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                TomlFormat.instance().createWriter().write(config.getConfigData(), stream);
-                PacketHandler.getPlayChannel().sendToServer(new MessageSyncServerConfig(config.getFileName(), stream.toByteArray()));
-                stream.close();
-            }
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     /**

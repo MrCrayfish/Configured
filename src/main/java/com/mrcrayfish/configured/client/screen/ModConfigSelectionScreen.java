@@ -66,9 +66,16 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(serverConfigs != null)
         {
             entries.add(new TitleItem(new TranslationTextComponent("configured.gui.title.server_configuration").getString()));
-            serverConfigs.forEach(config -> {
-                entries.add(new FileItem(config));
-            });
+            if(isPlayingGame())
+            {
+                entries.add(new SubTitleItem(new StringTextComponent("Server configs can only be edited from the main menu")));
+            }
+            else
+            {
+                serverConfigs.forEach(config -> {
+                    entries.add(new FileItem(config));
+                });
+            }
         }
     }
 
@@ -96,7 +103,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
             this.fileName = this.createTrimmedFileName(config.getFileName()).mergeStyle(TextFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
-            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getConfigType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
+            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getConfigType() != ModConfig.Type.SERVER;
             if(config.getConfigType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
                 this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, matrixStack, mouseX, mouseY) ->
@@ -174,7 +181,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
             return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslationTextComponent(langKey), onPress ->
             {
-                if(ConfigScreen.isPlayingGame() && this.config.getConfigType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
+                if(ConfigScreen.isPlayingGame() && this.config.getConfigType() == ModConfig.Type.SERVER)
                 {
                     return;
                 }
@@ -188,19 +195,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container -> {
                         Minecraft.getInstance().displayGuiScreen(new ConfigScreen(ModConfigSelectionScreen.this, new StringTextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
                     });
-                }
-            }, (button, matrixStack, mouseX, mouseY) ->
-            {
-                if(button.isHovered())
-                {
-                    if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
-                    {
-                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.not_installed").mergeStyle(TextFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                    }
-                    else if(!this.hasRequiredPermission())
-                    {
-                        ModConfigSelectionScreen.this.renderTooltip(matrixStack, Minecraft.getInstance().fontRenderer.trimStringToWidth(new TranslationTextComponent("configured.gui.no_permission").mergeStyle(TextFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                    }
                 }
             });
         }
