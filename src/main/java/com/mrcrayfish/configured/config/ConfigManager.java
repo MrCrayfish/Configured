@@ -21,9 +21,6 @@ import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
-import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
-import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
@@ -36,7 +33,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
-import net.minecraftforge.fml.util.thread.EffectiveSide;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -110,37 +106,6 @@ public class ConfigManager
     {
         Configured.LOGGER.info("Loading synced config from server: " + message.getKey());
         this.configs.get(message.getKey()).loadFromData(message.getData());
-    }
-
-    public void processSyncData(MessageSyncSimpleConfig message, Consumer<Optional<SimpleConfigEntry>> consumer)
-    {
-        SimpleConfigEntry entry = this.configs.get(message.getId());
-        if(entry == null)
-        {
-            Configured.LOGGER.error("Tried to update a remote config that doesn't exist!");
-            consumer.accept(Optional.empty());
-            return;
-        }
-
-        if(!entry.getType().isServer())
-        {
-            Configured.LOGGER.error("Tried to perform sync update to non-server config '" + message.getId() + "'.");
-            consumer.accept(Optional.empty());
-            return;
-        }
-
-        if(entry.config == null)
-        {
-            Configured.LOGGER.error("Tried to perform sync update on an unloaded config. The config will not be updated!");
-            consumer.accept(Optional.empty());
-            return;
-        }
-
-        CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.getData()));
-        entry.config.putAll(data);
-        entry.allProperties.forEach(ConfigProperty::invalidateCache);
-        Configured.LOGGER.debug("Successfully processed config data for '" + message.getId() + "'");
-        consumer.accept(Optional.of(entry));
     }
 
     // Unloads all synced configs since they should no longer be accessible
@@ -324,13 +289,9 @@ public class ConfigManager
                     // Unload world configs since still in main menu
                     this.unload();
                 }
-                else
+                else if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
                 {
-                    this.syncToServer();
-                    if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
-                    {
-                        this.unload();
-                    }
+                    this.unload();
                 }
             }
             else
@@ -468,33 +429,6 @@ public class ConfigManager
             this.allProperties.forEach(property -> tempConfig.set(property.getPath(), property.getDefaultValue()));
             ConfigUtil.saveFileConfig(tempConfig);
             tempConfig.close();
-        }
-
-        @Override
-        public void syncToServer()
-        {
-            if(!EffectiveSide.get().isClient())
-                return;
-
-            if(!ConfigHelper.isPlayingGame())
-                return;
-
-            if(this.config == null)
-                return;
-
-            ConfigUtil.sendSimpleConfigDataToServer(this, this.config);
-        }
-
-        @Override
-        public void requestFromServer()
-        {
-            if(!this.getType().isServer())
-                return;
-
-            if(!ConfigHelper.isPlayingGame())
-                return;
-
-            PacketHandler.getPlayChannel().sendToServer(new MessageRequestSimpleConfig(this.getName()));
         }
     }
 

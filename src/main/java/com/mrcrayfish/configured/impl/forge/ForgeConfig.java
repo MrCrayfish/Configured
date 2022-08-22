@@ -73,10 +73,6 @@ public class ForgeConfig implements IModConfig
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
                 ConfigHelper.setModConfigData(this.config, null);
             }
-            else if(!changedValues.isEmpty())
-            {
-                this.syncToServer();
-            }
         }
         else if(!changedValues.isEmpty())
         {
@@ -160,15 +156,6 @@ public class ForgeConfig implements IModConfig
 
         // Finally clear cache of all config values
         this.allConfigValues.forEach(pair -> pair.value.clearCache());
-    }
-
-    @Override
-    public void syncToServer()
-    {
-        if(EffectiveSide.get().isClient())
-        {
-            ConfigHelper.sendForgeModConfigDataToServer(this.config);
-        }
     }
 
     private static List<ForgeValueEntry> getAllConfigValues(ModConfig config)

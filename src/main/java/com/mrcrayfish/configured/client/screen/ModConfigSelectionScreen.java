@@ -63,10 +63,17 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(!remoteConfigs.isEmpty())
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
-            List<Item> remoteEntries = new ArrayList<>();
-            remoteConfigs.forEach(config -> remoteEntries.add(new FileItem(config)));
-            Collections.sort(remoteEntries);
-            entries.addAll(remoteEntries);
+            if(ConfigHelper.isPlayingGame())
+            {
+                entries.add(new SubTitleItem(new TranslatableComponent("configured.gui.server_config_main_menu")));
+            }
+            else
+            {
+                List<Item> remoteEntries = new ArrayList<>();
+                remoteConfigs.forEach(config -> remoteEntries.add(new FileItem(config)));
+                Collections.sort(remoteEntries);
+                entries.addAll(remoteEntries);
+            }
         }
     }
 
@@ -119,7 +126,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 if(!result)
                     return true;
                 this.config.restoreDefaults();
-                this.config.syncToServer();
                 this.updateRestoreDefaultButton();
                 return true;
             });
@@ -169,35 +175,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                         });
                     }
                 }
-                else if(config.getType().isServer() && !config.getType().isSync())
-                {
-                    ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
-                    {
-                        Minecraft.getInstance().setScreen(new RequestScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), ModConfigSelectionScreen.this.background, config));
-                    });
-                }
                 else
                 {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
                     {
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
                     });
-                }
-            }, (button, poseStack, mouseX, mouseY) ->
-            {
-                if(button.isHoveredOrFocused())
-                {
-                    if(ConfigHelper.isPlayingGame())
-                    {
-                        if(config.getType().isServer() && !ConfigHelper.isConfiguredInstalledOnServer())
-                        {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                        }
-                        else if(!ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config))
-                        {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                        }
-                    }
                 }
             });
         }
@@ -235,21 +218,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(canRestoreConfig(Minecraft.getInstance().player, config))
             {
-                IconButton restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
-                {
-                    if(button.isHoveredOrFocused())
-                    {
-                        boolean permission = canRestoreConfig(Minecraft.getInstance().player, config);
-                        if(permission && button.isActive())
-                        {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.reset_all"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                        }
-                        else if(!permission)
-                        {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                        }
-                    }
-                });
+                IconButton restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) -> {});
                 restoreButton.active = ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config);
                 return restoreButton;
             }
@@ -339,7 +308,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             case CLIENT -> FMLEnvironment.dist.isClient();
             case UNIVERSAL, MEMORY -> true;
-            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isConfiguredInstalledOnServer() && ConfigHelper.hasPermissionToEdit(player, config);
+            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame();
             case DEDICATED_SERVER -> false;
         };
     }
@@ -349,10 +318,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         return switch(config.getType())
         {
             case CLIENT, UNIVERSAL, MEMORY -> true;
-            case SERVER -> !ConfigHelper.isPlayingGame();
-            case SERVER_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isConfiguredInstalledOnServer() && ConfigHelper.hasPermissionToEdit(player, config);
-            case WORLD -> false;
-            case WORLD_SYNC -> ConfigHelper.isPlayingGame() && ConfigHelper.isConfiguredInstalledOnServer() && ConfigHelper.hasPermissionToEdit(player, config);
+            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame();
+            case WORLD, WORLD_SYNC -> false;
             case DEDICATED_SERVER -> false;
         };
     }

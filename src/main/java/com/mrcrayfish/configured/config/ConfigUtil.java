@@ -4,16 +4,11 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.ConfigSpec;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
-import com.mrcrayfish.configured.network.PacketHandler;
-import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
-import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -23,7 +18,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -194,28 +188,5 @@ public class ConfigUtil
     public static String createTranslationKey(SimpleConfig config, List<String> path)
     {
         return String.format("simpleconfig.%s.%s.%s", config.id(), config.name(), StringUtils.join(path, '.'));
-    }
-
-    public static void sendSimpleConfigDataToServer(ConfigManager.SimpleConfigEntry config, UnmodifiableConfig data)
-    {
-        // Prevents trying to send packet to server if the server doesn't have configured installed
-        if(!ConfigHelper.isConfiguredInstalledOnServer())
-            return;
-
-        /*try
-        {
-            Minecraft minecraft = Minecraft.getInstance();
-            if(config.getType().isServer() && ConfigHelper.hasPermissionToEdit(minecraft.player, config))
-            {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                TomlFormat.instance().createWriter().write(data, stream);
-                PacketHandler.getPlayChannel().sendToServer(new MessageSyncSimpleConfig(config.getName(), stream.toByteArray()));
-                stream.close();
-            }
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
-        }*/
     }
 }
