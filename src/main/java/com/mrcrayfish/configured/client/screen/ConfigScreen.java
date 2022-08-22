@@ -232,10 +232,6 @@ public class ConfigScreen extends ListMenuScreen
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
                 ConfigHelper.setConfigData(this.config, null);
             }
-            else
-            {
-                ConfigHelper.sendConfigDataToServer(this.config);
-            }
         }
         else
         {

@@ -68,10 +68,16 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(serverConfigs != null)
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
-            serverConfigs.forEach(config ->
+            if(isPlayingGame())
             {
-                entries.add(new FileItem(config));
-            });
+                entries.add(new SubTitleItem(new TranslatableComponent("configured.gui.server_config_main_menu")));
+            }
+            else
+            {
+                serverConfigs.forEach(config -> {
+                    entries.add(new FileItem(config));
+                });
+            }
         }
     }
 
@@ -101,7 +107,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
             this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
-            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER || ConfigHelper.isConfiguredInstalledOnServer() && this.hasRequiredPermission();
+            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER;
             if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
             {
                 this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
@@ -146,12 +152,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 this.updateRestoreDefaultButton();
                 this.config.getConfigData().putAll(newConfig);
                 ConfigHelper.resetCache(this.config);
-
-                // Post logic for server configs
-                if(this.config.getType() == ModConfig.Type.SERVER)
-                {
-                    ConfigHelper.sendConfigDataToServer(this.config);
-                }
                 return true;
             });
             confirmScreen.setBackground(background);
@@ -192,7 +192,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
             return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, new TranslatableComponent(langKey), onPress ->
             {
-                if(ConfigScreen.isPlayingGame() && this.config.getType() == ModConfig.Type.SERVER && (!ConfigHelper.isConfiguredInstalledOnServer() || !this.hasRequiredPermission()))
+                if(ConfigScreen.isPlayingGame() && this.config.getType() == ModConfig.Type.SERVER)
                     return;
 
                 if(serverConfig)
@@ -205,19 +205,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                     {
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
                     });
-                }
-            }, (button, poseStack, mouseX, mouseY) ->
-            {
-                if(button.isHovered())
-                {
-                    if(ConfigScreen.isPlayingGame() && !ConfigHelper.isConfiguredInstalledOnServer())
-                    {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.not_installed").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                    }
-                    else if(!this.hasRequiredPermission())
-                    {
-                        ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                    }
                 }
             });
         }

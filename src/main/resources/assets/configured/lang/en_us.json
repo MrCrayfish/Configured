@@ -19,6 +19,7 @@
     "configured.gui.server_config_info": "Server based configurations are unique for every world. This means that any changes made to the config will only be applied to the selected world.",
     "configured.gui.restore_message": "Are you sure you want to reset all values? If you are playing with a modpack, this configuration may have been modified by the author and restoring will break the intended experience of the pack. §6This action is irreversible!",
     "configured.gui.unsaved_changes": "There are unsaved changes. Are you sure you want to stop editing?",
+    "configured.gui.server_config_main_menu": "Server configs can only be edited from the main menu",
     "configured.gui.title.client_configuration": "Client Configurations",
     "configured.gui.title.common_configuration": "Common Configurations",
     "configured.gui.title.server_configuration": "Server Configurations",

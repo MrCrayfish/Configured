@@ -307,6 +307,25 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
+    public class SubTitleItem extends Item implements IIgnoreSearch
+    {
+        public SubTitleItem(Component title)
+        {
+            super(title);
+        }
+
+        public SubTitleItem(String title)
+        {
+            super(new TextComponent(title).withStyle(ChatFormatting.GRAY));
+        }
+
+        @Override
+        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
+            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
+        }
+    }
+
     @OnlyIn(Dist.CLIENT)
     protected class FocusedEditBox extends EditBox
     {
