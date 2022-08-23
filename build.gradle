@@ -4,7 +4,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = '1.5.7-1.19'
+version = '1.5.8-1.19'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
