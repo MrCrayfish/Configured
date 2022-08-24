@@ -20,6 +20,7 @@ import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.ConfigGuiHandler;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.gui.ModListScreen;
+import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
@@ -99,7 +100,10 @@ public class ClientHandler
         }
 
         Set<ModConfig> configSet = getConfigSets().get(type);
-        Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
+        Set<IModConfig> filteredConfigSets = configSet.stream()
+                .filter(config -> config.getModId().equals(container.getModId()) && config.getSpec() instanceof ForgeConfigSpec)
+                .map(ForgeConfig::new)
+                .collect(Collectors.toSet());
         if(!filteredConfigSets.isEmpty())
         {
             configMap.put(type, filteredConfigSets);
