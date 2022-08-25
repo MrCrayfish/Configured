@@ -14,7 +14,7 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
     public static final Type<Boolean> BOOL = new Type<>(Boolean.class);
     public static final Type<Double> DOUBLE = new Type<>(Double.class);
     public static final Type<Integer> INT = new Type<>(Integer.class);
-    public static final Type<Long> LONG = new Type<>(Long.class);
+    public static final Type<Long> LONG = new Type<>(Long.class, Integer.class);
     public static final Type<String> STRING = new Type<>(String.class);
 
     private final Supplier<List<T>> defaultList;
@@ -42,9 +42,7 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineList(this.data.getPath(), this.defaultList::get, e -> {
-            return e != null && this.type.getClassType().isAssignableFrom(e.getClass());
-        });
+        spec.defineList(this.data.getPath(), this.defaultList::get, e -> e != null && this.type.test(e));
     }
 
     public static <T> ListProperty<T> create(Type<T> type, Supplier<List<T>> defaultList)
@@ -55,15 +53,25 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
     public static class Type<T>
     {
         private final Class<T> classType;
+        private final Class<?>[] additionalTypes;
 
-        private Type(Class<T> classType)
+        private Type(Class<T> classType, Class<?> ... additionalTypes)
         {
             this.classType = classType;
+            this.additionalTypes = additionalTypes;
         }
 
-        public Class<T> getClassType()
+        private boolean test(Object o)
         {
-            return this.classType;
+            Preconditions.checkNotNull(o);
+            for(Class<?> validType : this.additionalTypes)
+            {
+                if(validType.isAssignableFrom(o.getClass()))
+                {
+                    return true;
+                }
+            }
+            return this.classType.isAssignableFrom(o.getClass());
         }
     }
 }

@@ -22,7 +22,14 @@ public final class LongProperty extends ConfigProperty<Long>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
+        // Custom handling since nightconfig will parse number as an integer when possible
+        spec.define(this.data.getPath(), this.defaultValue, o -> {
+            if(o instanceof Long || o instanceof Integer) {
+                Long value = ((Number) o).longValue();
+                return value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
+            }
+            return false;
+        });
     }
 
     public static LongProperty create(long defaultValue)
