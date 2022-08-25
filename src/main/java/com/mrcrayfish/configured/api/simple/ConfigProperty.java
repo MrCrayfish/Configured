@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.config.ConfigManager;
 
@@ -15,7 +16,7 @@ import java.util.function.Predicate;
 public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits BoolProperty, DoubleProperty, EnumProperty, IntProperty, ListProperty, LongProperty, StringProperty
 {
     protected final T defaultValue;
-    protected final BiFunction<Config, List<String>, T> getFunction;
+    protected final BiFunction<UnmodifiableConfig, List<String>, T> getFunction;
     private T value;
     private boolean cached;
     protected ConfigManager.ValueProxy proxy;
@@ -26,7 +27,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         this(defaultValue, (config, path) -> config.getOrElse(path, defaultValue));
     }
 
-    ConfigProperty(T defaultValue, BiFunction<Config, List<String>, T> getFunction)
+    ConfigProperty(T defaultValue, BiFunction<UnmodifiableConfig, List<String>, T> getFunction)
     {
         this.defaultValue = defaultValue;
         this.getFunction = getFunction;
@@ -52,8 +53,10 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     {
         if(!this.isLinked())
             throw new IllegalStateException("Config property is not linked yet");
-        this.value = value;
-        this.proxy.set(value);
+        if(this.proxy.isWritable()) {
+            this.value = value;
+            this.proxy.set(value);
+        }
     }
 
     public T getDefaultValue()

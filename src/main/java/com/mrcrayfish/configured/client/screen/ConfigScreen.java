@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.api.ConfigType;
@@ -144,10 +145,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) ->
             {
-                if(this.config != null)
-                {
-                    this.saveConfig();
-                }
+                this.saveConfig();
                 this.minecraft.setScreen(this.parent);
             }));
             this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) ->
@@ -223,24 +221,28 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             if(this.saveButton != null)
             {
-                this.saveButton.active = this.isChanged(this.folderEntry);
+                this.saveButton.active = !this.config.isReadOnly() && this.isChanged(this.folderEntry);
             }
             if(this.restoreButton != null)
             {
-                this.restoreButton.active = this.isModified(this.folderEntry);
+                this.restoreButton.active = !this.config.isReadOnly() && this.isModified(this.folderEntry);
             }
         }
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    protected void renderForeground(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
-        this.activeTooltip = null;
-        this.renderBackground(poseStack);
-        this.list.render(poseStack, mouseX, mouseY, partialTicks);
-        this.searchTextField.render(poseStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(poseStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
-        super.render(poseStack, mouseX, mouseY, partialTicks);
+        if(this.config.isReadOnly())
+        {
+            RenderSystem.setShaderTexture(0, IconButton.ICONS);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            Screen.blit(poseStack, this.width - 30, 14, 20, 20, 0, 11, 10, 10, 64, 64);
+            if(ScreenUtil.isMouseWithin(this.width - 30, 14, 20, 20, mouseX, mouseY))
+            {
+                this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.YELLOW));
+            }
+        }
     }
 
     public class FolderItem extends Item
@@ -292,6 +294,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 this.holder.restore();
                 this.onResetValue();
             }, tooltip);
+            this.resetButton.active = !ConfigScreen.this.config.isReadOnly();
             this.eventListeners.add(this.resetButton);
         }
 
@@ -386,6 +389,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     this.textField.setTextColor(16711680);
                 }
             });
+            this.textField.setEditable(!ConfigScreen.this.config.isReadOnly());
             this.eventListeners.add(this.textField);
         }
 
@@ -436,12 +440,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public BooleanItem(IConfigValue<Boolean> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, CommonComponents.optionStatus(holder.get()), button ->
-            {
+            this.button = new Button(10, 5, 46, 20, CommonComponents.optionStatus(holder.get()), button -> {
                 holder.set(!holder.get());
                 button.setMessage(CommonComponents.optionStatus(holder.get()));
                 ConfigScreen.this.updateButtons();
             });
+            this.button.active = !ConfigScreen.this.config.isReadOnly();
             this.eventListeners.add(this.button);
         }
 
@@ -468,7 +472,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public StringItem(IConfigValue<String> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
                 holder.set(s);
                 ConfigScreen.this.updateButtons();
             })));
@@ -492,7 +497,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
             this.eventListeners.add(this.button);
         }
 
@@ -513,7 +519,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public EnumItem(IConfigValue<Enum<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), e -> {
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.change");
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));

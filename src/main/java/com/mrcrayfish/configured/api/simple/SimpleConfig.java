@@ -18,7 +18,9 @@ public @interface SimpleConfig
 
     String name();
 
-    boolean editable() default true;
+    boolean readOnly() default false;
 
     ConfigType type() default ConfigType.UNIVERSAL;
+
+    //TODO add needs game restart, needs world restart, hidden
 }

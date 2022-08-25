@@ -74,16 +74,21 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
         this.addWidget(this.searchTextField);
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
 
-        this.addRenderableWidget(new Button(this.width / 2 - 155, this.height - 29, 150, 20, CommonComponents.GUI_DONE, button ->
+        if(!this.config.isReadOnly())
         {
-            if(this.list.getSelected() != null)
+            this.addRenderableWidget(new Button(this.width / 2 - 155, this.height - 29, 150, 20, CommonComponents.GUI_DONE, button ->
             {
-                this.onSave.accept(this.list.getSelected().enumValue);
-            }
-            this.minecraft.setScreen(this.parent);
-        }));
+                if(this.list.getSelected() != null)
+                {
+                    this.onSave.accept(this.list.getSelected().enumValue);
+                }
+                this.minecraft.setScreen(this.parent);
+            }));
+        }
 
-        this.addRenderableWidget(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, CommonComponents.GUI_CANCEL, button -> this.minecraft.setScreen(this.parent)));
+        int cancelOffset = this.config.isReadOnly() ? -75 : -155 + 160;
+        Component cancelLabel = this.config.isReadOnly() ? CommonComponents.GUI_BACK : CommonComponents.GUI_CANCEL;
+        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, 150, 20, cancelLabel, button -> this.minecraft.setScreen(this.parent)));
     }
 
     private void constructEntries()
@@ -159,6 +164,14 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
             {
                 output.add(NarratedElementType.TITLE, this.getSelected().label);
             }
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY)
+        {
+            if(ChangeEnumScreen.this.config.isReadOnly())
+                return false;
+            return super.isMouseOver(mouseX, mouseY);
         }
     }
 

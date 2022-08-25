@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -156,7 +157,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         private Button createModifyButton(IModConfig config)
         {
             int width = canRestoreConfig(Minecraft.getInstance().player, config) ? 60 : 82;
-            return new IconButton(0, 0, this.getModifyIconU(config), 22, width, this.getModifyLabel(config), button ->
+            return new IconButton(0, 0, this.getModifyIconU(config), this.getModifyIconV(config), width, this.getModifyLabel(config), button ->
             {
                 if(!button.isActive() || !button.visible)
                     return;
@@ -187,7 +188,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private int getModifyIconU(IModConfig config)
         {
-            if(ConfigHelper.isPlayingGame())
+            if(config.isReadOnly())
+            {
+                return 0;
+            }
+            else if(ConfigHelper.isPlayingGame())
             {
                 if(config.getType().isServer() && !config.getType().isSync())
                 {
@@ -201,8 +206,21 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             return 0;
         }
 
+        private int getModifyIconV(IModConfig config)
+        {
+            if(config.isReadOnly())
+            {
+                return 33;
+            }
+            return 22;
+        }
+
         private Component getModifyLabel(IModConfig config)
         {
+            if(config.isReadOnly())
+            {
+                return new TranslatableComponent("configured.gui.view");
+            }
             if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
             {
                 return new TranslatableComponent("configured.gui.select_world");
@@ -219,7 +237,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             if(canRestoreConfig(Minecraft.getInstance().player, config))
             {
                 IconButton restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) -> {});
-                restoreButton.active = ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config);
+                restoreButton.active = !config.isReadOnly() && ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config);
                 return restoreButton;
             }
             return null;
@@ -230,11 +248,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             Screen.drawString(poseStack, Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFF);
             Screen.drawString(poseStack, Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFF);
-            float brightness = true ? 1.0F : 0.5F;
             RenderSystem.setShaderTexture(0, IconButton.ICONS);
-            RenderSystem.setShaderColor(brightness, brightness, brightness, 1.0F);
-            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), this.getIconV(), 9, 11, 64, 64);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), this.getIconV(), 9, 11, 64, 64);
+
+            if(this.config.isReadOnly())
+            {
+                blit(poseStack, left - 1, top + 14, 10, 10, 0, 11, 10, 10, 64, 64);
+            }
 
             this.modifyButton.x = left + width - 83;
             this.modifyButton.y = top;
@@ -245,6 +266,11 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 this.restoreButton.x = left + width - 21;
                 this.restoreButton.y = top;
                 this.restoreButton.render(poseStack, mouseX, mouseY, partialTicks);
+            }
+
+            if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 14, 10, 10, mouseX, mouseY))
+            {
+                ModConfigSelectionScreen.this.setActiveTooltip(ModConfigSelectionScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.YELLOW), 200));
             }
         }
 

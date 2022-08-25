@@ -102,6 +102,11 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.activeTooltip = tooltip;
     }
 
+    public void setActiveTooltip(Component tooltip)
+    {
+        this.activeTooltip = this.minecraft.font.split(tooltip, 200);
+    }
+
     protected void updateTooltip(int mouseX, int mouseY)
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
@@ -128,6 +133,9 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         super.render(poseStack, mouseX, mouseY, partialTicks);
 
+        // Draws the foreground. Allows subclasses to draw onto the screen at the appropriate time.
+        this.renderForeground(poseStack, mouseX, mouseY, partialTicks);
+
         // Draws the Configured logo in the top left of the screen
         RenderSystem.setShaderTexture(0, CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -153,6 +161,8 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
             }
         }
     }
+
+    protected void renderForeground(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {}
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button)
@@ -211,7 +221,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
             if(this.isMouseOver(mouseX, mouseY) && mouseX < ListMenuScreen.this.list.getRowLeft() + ListMenuScreen.this.list.getRowWidth() - 67)
             {
                 Item item = this.getEntryAtPosition(mouseX, mouseY);
-                if(item != null)
+                if(item != null && item.tooltip != null)
                 {
                     ListMenuScreen.this.setActiveTooltip(item.tooltip);
                 }

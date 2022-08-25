@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
@@ -158,6 +159,7 @@ public class ConfigManager
     {
         private final String id;
         private final String name;
+        private final boolean readOnly;
         private final ConfigType configType;
         private final Set<ConfigProperty<?>> allProperties;
         private final PropertyMap propertyMap;
@@ -177,6 +179,7 @@ public class ConfigManager
 
             this.id = data.getConfig().id();
             this.name = data.getConfig().name();
+            this.readOnly = data.getConfig().readOnly();
             this.configType = data.getConfig().type();
             this.allProperties = ImmutableSet.copyOf(data.getProperties());
             this.propertyMap = new PropertyMap(this.allProperties);
@@ -213,17 +216,17 @@ public class ConfigManager
             CommentedConfig config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
-            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
             ConfigUtil.watchFileConfig(config, this::changeCallback);
         }
 
-        public void loadFromData(byte[] data)
+        private void loadFromData(byte[] data)
         {
             this.unload();
             CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
             this.correct(config);
-            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
         }
 
@@ -240,7 +243,7 @@ public class ConfigManager
         private void changeCallback()
         {
             Thread.currentThread().setContextClassLoader(this.classLoader);
-            if(this.config != null)
+            if(this.config != null && !this.isReadOnly())
             {
                 ConfigUtil.loadFileConfig(this.config);
                 this.correct(this.config);
@@ -263,6 +266,10 @@ public class ConfigManager
         public void update(IConfigEntry entry)
         {
             Preconditions.checkState(this.config != null, "Tried to update a config that is not loaded");
+
+            // Prevent updating if read only
+            if(this.readOnly)
+                return;
 
             // Find changed values and return if nothing changed
             Set<IConfigValue<?>> changedValues = ConfigHelper.getChangedValues(entry);
@@ -346,6 +353,12 @@ public class ConfigManager
         }
 
         @Override
+        public boolean isReadOnly()
+        {
+            return this.readOnly;
+        }
+
+        @Override
         public void startEditing()
         {
             if(!ConfigHelper.isPlayingGame() && ConfigHelper.isServerConfig(this))
@@ -377,7 +390,7 @@ public class ConfigManager
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
             config.putAllComments(this.comments);
-            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath())));
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
             result.accept(this);
         }
@@ -402,7 +415,7 @@ public class ConfigManager
             ConfigUtil.loadFileConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
-            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(tempConfig, p.getPath())));
+            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(tempConfig, p.getPath(), this.readOnly)));
             boolean changed = this.allProperties.stream().anyMatch(property -> !Objects.equals(property.get(), property.getDefaultValue()));
             this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
             tempConfig.close();
@@ -412,6 +425,10 @@ public class ConfigManager
         @Override
         public void restoreDefaults()
         {
+            // Don't restore default if read only
+            if(this.readOnly)
+                return;
+
             // Block unloaded world configs since the path is dynamic
             if(ConfigHelper.isWorldConfig(this) && this.config == null)
                 return;
@@ -499,17 +516,20 @@ public class ConfigManager
 
         private final Config config;
         private final List<String> path;
+        private final boolean readOnly;
 
         private ValueProxy()
         {
             this.config = null;
             this.path = null;
+            this.readOnly = true;
         }
 
-        private ValueProxy(Config config, List<String> path)
+        private ValueProxy(Config config, List<String> path, boolean readOnly)
         {
             this.config = config;
             this.path = path;
+            this.readOnly = readOnly;
         }
 
         public boolean isLinked()
@@ -517,8 +537,13 @@ public class ConfigManager
             return this != EMPTY;
         }
 
+        public boolean isWritable()
+        {
+            return !this.readOnly;
+        }
+
         @Nullable
-        public <T> T get(BiFunction<Config, List<String>, T> function)
+        public <T> T get(BiFunction<UnmodifiableConfig, List<String>, T> function)
         {
             if(this.isLinked() && this.config != null)
             {
@@ -529,7 +554,7 @@ public class ConfigManager
 
         public <T> void set(T value)
         {
-            if(this.isLinked() && this.config != null)
+            if(this.isLinked() && this.isWritable() && this.config != null)
             {
                 this.config.set(this.path, value);
             }
@@ -538,7 +563,6 @@ public class ConfigManager
 
     public static class PropertyData
     {
-        //TODO use list version
         private final String name;
         private final List<String> path;
         private final String translationKey;

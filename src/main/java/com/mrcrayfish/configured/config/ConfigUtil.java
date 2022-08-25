@@ -88,7 +88,7 @@ public class ConfigUtil
             {
                 Path path = fileConfig.getNioPath();
                 WATCHED_PATHS.add(path);
-                FileWatcher.defaultInstance().addWatch(path, callback);
+                FileWatcher.defaultInstance().setWatch(path, callback);
             }
             catch(IOException e)
             {

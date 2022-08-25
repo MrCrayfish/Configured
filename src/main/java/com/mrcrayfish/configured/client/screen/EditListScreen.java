@@ -63,22 +63,29 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         this.list = new ObjectList();
         this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.addWidget(this.list);
-        this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
-            List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
-            this.holder.set(newValues);
-            this.minecraft.setScreen(this.parent);
-        }));
-        this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
-                Object value = this.listType.getValueParser().apply(s);
-                return value != null && this.holder.isValid(Collections.singletonList(value));
-            }, s -> {
-                StringHolder holder = new StringHolder(s);
-                this.values.add(holder);
-                this.list.addEntry(new StringEntry(this.list, holder));
+        if(!this.config.isReadOnly())
+        {
+            this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
+                List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
+                this.holder.set(newValues);
+                this.minecraft.setScreen(this.parent);
             }));
-        }));
-        this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) -> {
+            this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
+                this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
+                    Object value = this.listType.getValueParser().apply(s);
+                    return value != null && this.holder.isValid(Collections.singletonList(value));
+                }, s -> {
+                    StringHolder holder = new StringHolder(s);
+                    this.values.add(holder);
+                    this.list.addEntry(new StringEntry(this.list, holder));
+                }));
+            }));
+        }
+        boolean readOnly = this.config.isReadOnly();
+        int cancelWidth = readOnly ? 150 : 90;
+        int cancelOffset = readOnly ? -75 : 50;
+        Component cancelLabel = readOnly ? new TranslatableComponent("configured.gui.close") : CommonComponents.GUI_CANCEL;
+        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, cancelWidth, 20, cancelLabel, (button) -> {
             this.minecraft.setScreen(this.parent);
         }));
     }
@@ -178,6 +185,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                     return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
                 }, this.holder::setValue));
             });
+            this.editButton.active = !EditListScreen.this.config.isReadOnly();
             Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHoveredOrFocused()) {
                     EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
@@ -187,6 +195,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                 EditListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
             }, tooltip);
+            this.deleteButton.active = !EditListScreen.this.config.isReadOnly();
         }
 
         @Override

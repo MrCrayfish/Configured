@@ -25,7 +25,7 @@ import java.util.List;
 @Mod(value = Constants.ID)
 public class SimpleConfigTest
 {
-    @SimpleConfig(id = Constants.ID, name = "client", type = ConfigType.CLIENT)
+    @SimpleConfig(id = Constants.ID, name = "client", type = ConfigType.CLIENT, readOnly = true)
     private static final MyConfig CLIENT = new MyConfig();
 
     @SimpleConfig(id = Constants.ID, name = "universal", type = ConfigType.UNIVERSAL)
@@ -46,7 +46,7 @@ public class SimpleConfigTest
     @SimpleConfig(id = Constants.ID, name = "world_sync", type = ConfigType.WORLD_SYNC)
     private static final MyConfig WORLD_SYNC = new MyConfig();
 
-    @SimpleConfig(id = Constants.ID, name = "memory", type = ConfigType.MEMORY)
+    @SimpleConfig(id = Constants.ID, name = "memory", type = ConfigType.MEMORY, readOnly = true)
     private static final MyConfig MEMORY = new MyConfig();
 
     public SimpleConfigTest()

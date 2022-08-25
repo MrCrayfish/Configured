@@ -46,6 +46,7 @@ public class EditStringScreen extends Screen implements IBackgroundTexture, IEdi
         this.textField.setMaxLength(32500);
         this.textField.setValue(this.originalValue);
         this.textField.setResponder(s -> this.updateValidation());
+        this.textField.setEditable(!this.config.isReadOnly());
         this.addRenderableWidget(this.textField);
 
         this.doneButton = this.addRenderableWidget(new Button(this.width / 2 - 1 - 150, this.height / 2 + 3, 148, 20, CommonComponents.GUI_DONE, (button) -> {
@@ -66,7 +67,7 @@ public class EditStringScreen extends Screen implements IBackgroundTexture, IEdi
     protected void updateValidation()
     {
         boolean valid = this.validator.apply(this.textField.getValue());
-        this.doneButton.active = valid;
+        this.doneButton.active = !this.config.isReadOnly() && valid;
         this.textField.setTextColor(valid || this.textField.getValue().isEmpty() ? ChatFormatting.WHITE.getColor() : ChatFormatting.RED.getColor());
     }
 

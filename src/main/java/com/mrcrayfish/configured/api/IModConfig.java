@@ -50,6 +50,14 @@ public interface IModConfig
     String getModId();
 
     /**
+     * @return If this config is considered read only.
+     */
+    default boolean isReadOnly()
+    {
+        return false;
+    }
+
+    /**
      * @return the name to display on the file list
      */
     @Nullable
