@@ -4,6 +4,7 @@ import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.base.Preconditions;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
 import com.mrcrayfish.configured.config.ConfigManager;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 {
     protected final T defaultValue;
     protected final BiFunction<UnmodifiableConfig, List<String>, T> getFunction;
+    protected final Validator<T> validator;
     private T value;
     private boolean cached;
     protected ConfigManager.ValueProxy proxy;
@@ -24,13 +26,24 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 
     ConfigProperty(T defaultValue)
     {
-        this(defaultValue, (config, path) -> config.getOrElse(path, defaultValue));
+        this(defaultValue, (Validator<T>) null);
+    }
+
+    ConfigProperty(T defaultValue, Validator<T> validator)
+    {
+        this(defaultValue, (config, path) -> config.getOrElse(path, defaultValue), validator);
     }
 
     ConfigProperty(T defaultValue, BiFunction<UnmodifiableConfig, List<String>, T> getFunction)
     {
+        this(defaultValue, getFunction, null);
+    }
+
+    ConfigProperty(T defaultValue, BiFunction<UnmodifiableConfig, List<String>, T> getFunction, Validator<T> validator)
+    {
         this.defaultValue = defaultValue;
         this.getFunction = getFunction;
+        this.validator = validator;
     }
 
     private boolean isLinked()
@@ -118,8 +131,8 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 
     public abstract boolean isValid(T value);
 
-    protected static <V extends Comparable<V>> Predicate<V> ranged(V min, V max)
+    public Validator<T> getValidator()
     {
-        return v -> v.compareTo(min) >= 0 && v.compareTo(max) <= 0;
+        return this.validator;
     }
 }

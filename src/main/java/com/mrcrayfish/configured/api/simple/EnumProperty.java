@@ -3,10 +3,12 @@ package com.mrcrayfish.configured.api.simple;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.EnumGetMethod;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author: MrCrayfish
@@ -14,13 +16,13 @@ import java.util.List;
 public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
 {
     private final EnumGetMethod method;
-    private final List<T> allowedValues;
+    private final Set<T> allowedValues;
 
-    EnumProperty(T defaultValue, EnumGetMethod method)
+    EnumProperty(T defaultValue, Set<T> allowedValues, EnumGetMethod method)
     {
         super(defaultValue, (config, path) -> config.getEnumOrElse(path, defaultValue));
         this.method = method;
-        this.allowedValues = Arrays.asList(this.defaultValue.getDeclaringClass().getEnumConstants());
+        this.allowedValues = ImmutableSet.copyOf(allowedValues);
     }
 
     @Override
@@ -38,11 +40,21 @@ public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
 
     public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue)
     {
-        return new EnumProperty<>(defaultValue, EnumGetMethod.NAME_IGNORECASE);
+        return create(defaultValue, EnumGetMethod.NAME_IGNORECASE);
     }
 
     public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue, EnumGetMethod method)
     {
-        return new EnumProperty<>(defaultValue, method);
+        return create(defaultValue, Set.of(defaultValue.getDeclaringClass().getEnumConstants()), method);
+    }
+
+    public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue, Set<T> allowedValues)
+    {
+        return create(defaultValue, allowedValues, EnumGetMethod.NAME_IGNORECASE);
+    }
+
+    public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue, Set<T> allowedValues, EnumGetMethod method)
+    {
+        return new EnumProperty<>(defaultValue, allowedValues, method);
     }
 }

@@ -2,20 +2,17 @@ package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.google.common.base.Preconditions;
+import com.mrcrayfish.configured.api.simple.validate.NumberRange;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
 
 /**
  * Author: MrCrayfish
  */
 public final class LongProperty extends ConfigProperty<Long>
 {
-    private final long minValue;
-    private final long maxValue;
-
-    LongProperty(long defaultValue, long minValue, long maxValue)
+    LongProperty(long defaultValue, Validator<Long> validator)
     {
-        super(defaultValue, (config, path) -> config.getLongOrElse(path, defaultValue));
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+        super(defaultValue, (config, path) -> config.getLongOrElse(path, defaultValue), validator);
     }
 
     @Override
@@ -26,7 +23,7 @@ public final class LongProperty extends ConfigProperty<Long>
         spec.define(this.data.getPath(), this.defaultValue, o -> {
             if(o instanceof Long || o instanceof Integer) {
                 Long value = ((Number) o).longValue();
-                return value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
+                return this.isValid(value);
             }
             return false;
         });
@@ -35,16 +32,21 @@ public final class LongProperty extends ConfigProperty<Long>
     @Override
     public boolean isValid(Long value)
     {
-        return value != null && value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
+        return value != null && (this.validator == null || this.validator.test(value));
     }
 
     public static LongProperty create(long defaultValue)
     {
-        return new LongProperty(defaultValue, Long.MIN_VALUE, Long.MAX_VALUE);
+        return create(defaultValue, null);
     }
 
     public static LongProperty create(long defaultValue, long minValue, long maxValue)
     {
-        return new LongProperty(defaultValue, minValue, maxValue);
+        return create(defaultValue, new NumberRange<>(minValue, maxValue));
+    }
+
+    public static LongProperty create(long defaultValue, Validator<Long> validator)
+    {
+        return new LongProperty(defaultValue, validator);
     }
 }

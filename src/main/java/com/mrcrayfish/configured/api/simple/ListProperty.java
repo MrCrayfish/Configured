@@ -2,7 +2,9 @@ package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.google.common.base.Preconditions;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -19,12 +21,14 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
 
     private final Supplier<List<T>> defaultList;
     private final Type<T> type;
+    private final Validator<T> elementValidator;
 
-    ListProperty(Supplier<List<T>> defaultList, Type<T> type)
+    ListProperty(Supplier<List<T>> defaultList, Type<T> type, Validator<T> elementValidator)
     {
         super(null, (config, path) -> config.getOrElse(path, defaultList.get()));
         this.defaultList = defaultList;
         this.type = type;
+        this.elementValidator = elementValidator;
     }
 
     public Type<T> getType()
@@ -42,18 +46,37 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineList(this.data.getPath(), this.defaultList::get, e -> e != null && this.type.test(e));
+        spec.defineList(this.data.getPath(), this.defaultList::get, e -> {
+            if(this.type == LONG && this.type.test(e)) // Special case for longs
+                e = ((Number) e).longValue();
+            return e != null && this.type.test(e) && (this.elementValidator == null || this.elementValidator.test((T) e));
+        });
     }
 
     @Override
     public boolean isValid(List<T> value)
     {
-        return value != null && value.stream().allMatch(e -> e != null && this.type.test(e));
+        return value != null && value.stream().allMatch(e -> e != null && this.type.test(e) && (this.elementValidator == null || this.elementValidator.test(e)));
+    }
+
+    public static <T> ListProperty<T> create(Type<T> type)
+    {
+        return create(type, ArrayList::new);
     }
 
     public static <T> ListProperty<T> create(Type<T> type, Supplier<List<T>> defaultList)
     {
-        return new ListProperty<>(defaultList, type);
+        return create(type, null, defaultList);
+    }
+
+    public static <T> ListProperty<T> create(Type<T> type, Validator<T> elementValidator)
+    {
+        return create(type, elementValidator, ArrayList::new);
+    }
+
+    public static <T> ListProperty<T> create(Type<T> type, Validator<T> elementValidator, Supplier<List<T>> defaultList)
+    {
+        return new ListProperty<>(defaultList, type, elementValidator);
     }
 
     public static class Type<T>

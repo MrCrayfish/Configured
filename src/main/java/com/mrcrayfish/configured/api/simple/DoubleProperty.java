@@ -2,43 +2,30 @@ package com.mrcrayfish.configured.api.simple;
 
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.google.common.base.Preconditions;
+import com.mrcrayfish.configured.api.simple.validate.NumberRange;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
 
 /**
  * Author: MrCrayfish
  */
 public final class DoubleProperty extends ConfigProperty<Double>
 {
-    private final double minValue;
-    private final double maxValue;
-
-    DoubleProperty(double defaultValue, double minValue, double maxValue)
+    DoubleProperty(double defaultValue, Validator<Double> validator)
     {
-        super(defaultValue);
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-    }
-
-    public double getMinValue()
-    {
-        return this.minValue;
-    }
-
-    public double getMaxValue()
-    {
-        return this.maxValue;
+        super(defaultValue, validator);
     }
 
     @Override
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
+        spec.define(this.data.getPath(), this.defaultValue, e -> e instanceof Double && this.isValid((Double) e));
     }
 
     @Override
     public boolean isValid(Double value)
     {
-        return value != null && value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
+        return value != null && (this.validator == null || this.validator.test(value));
     }
 
     public static DoubleProperty create(double defaultValue)
@@ -48,6 +35,11 @@ public final class DoubleProperty extends ConfigProperty<Double>
 
     public static DoubleProperty create(double defaultValue, double minValue, double maxValue)
     {
-        return new DoubleProperty(defaultValue, minValue, maxValue);
+        return create(defaultValue, new NumberRange<>(minValue, maxValue));
+    }
+
+    public static DoubleProperty create(double defaultValue, Validator<Double> validator)
+    {
+        return new DoubleProperty(defaultValue, validator);
     }
 }
