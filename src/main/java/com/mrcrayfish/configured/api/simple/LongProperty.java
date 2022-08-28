@@ -32,6 +32,12 @@ public final class LongProperty extends ConfigProperty<Long>
         });
     }
 
+    @Override
+    public boolean isValid(Long value)
+    {
+        return value != null && value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
+    }
+
     public static LongProperty create(long defaultValue)
     {
         return new LongProperty(defaultValue, Long.MIN_VALUE, Long.MAX_VALUE);

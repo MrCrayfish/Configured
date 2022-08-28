@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
  */
 public final class StringProperty extends ConfigProperty<String>
 {
+    //TODO add support to provide a custom predicate for validation
     StringProperty(String defaultValue)
     {
         super(defaultValue);
@@ -18,6 +19,12 @@ public final class StringProperty extends ConfigProperty<String>
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
         spec.define(this.data.getPath(), this.defaultValue);
+    }
+
+    @Override
+    public boolean isValid(String value)
+    {
+        return value != null;
     }
 
     public static StringProperty create(String defaultValue)

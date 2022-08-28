@@ -25,6 +25,12 @@ public final class IntProperty extends ConfigProperty<Integer>
         spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
     }
 
+    @Override
+    public boolean isValid(Integer value)
+    {
+        return value != null && value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
+    }
+
     public static IntProperty create(int defaultValue)
     {
         return create(defaultValue, Integer.MIN_VALUE, Integer.MAX_VALUE);

@@ -28,10 +28,17 @@ public final class DoubleProperty extends ConfigProperty<Double>
         return this.maxValue;
     }
 
+    @Override
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
         spec.defineInRange(this.data.getPath(), this.defaultValue, this.minValue, this.maxValue);
+    }
+
+    @Override
+    public boolean isValid(Double value)
+    {
+        return value != null && value.compareTo(this.minValue) >= 0 && value.compareTo(this.maxValue) <= 0;
     }
 
     public static DoubleProperty create(double defaultValue)

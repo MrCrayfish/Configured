@@ -45,6 +45,12 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
         spec.defineList(this.data.getPath(), this.defaultList::get, e -> e != null && this.type.test(e));
     }
 
+    @Override
+    public boolean isValid(List<T> value)
+    {
+        return value != null && value.stream().allMatch(e -> e != null && this.type.test(e));
+    }
+
     public static <T> ListProperty<T> create(Type<T> type, Supplier<List<T>> defaultList)
     {
         return new ListProperty<>(defaultList, type);

@@ -253,6 +253,7 @@ public class ConfigManager
 
         private void correct(Config config)
         {
+            //TODO correct comments even if config is correct
             if(!this.spec.isCorrect(config))
             {
                 this.spec.correct(config);

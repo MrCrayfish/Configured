@@ -47,8 +47,7 @@ public class SimpleValue<T> implements IConfigValue<T>
     @Override
     public boolean isValid(T value)
     {
-        //TODO validation
-        return true;
+        return this.property.isValid(value);
     }
 
     @Override

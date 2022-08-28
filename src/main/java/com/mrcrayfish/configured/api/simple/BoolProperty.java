@@ -20,6 +20,12 @@ public final class BoolProperty extends ConfigProperty<Boolean>
         spec.define(this.data.getPath(), this.defaultValue);
     }
 
+    @Override
+    public boolean isValid(Boolean value)
+    {
+        return value != null;
+    }
+
     public static BoolProperty create(boolean defaultValue)
     {
         return new BoolProperty(defaultValue);

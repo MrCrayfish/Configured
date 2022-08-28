@@ -116,6 +116,8 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 
     public abstract void defineSpec(ConfigSpec spec);
 
+    public abstract boolean isValid(T value);
+
     protected static <V extends Comparable<V>> Predicate<V> ranged(V min, V max)
     {
         return v -> v.compareTo(min) >= 0 && v.compareTo(max) <= 0;
