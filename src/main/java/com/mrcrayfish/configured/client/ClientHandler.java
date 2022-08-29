@@ -8,6 +8,7 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
+import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
 import com.mrcrayfish.configured.config.ConfigManager;
 import com.mrcrayfish.configured.impl.forge.ForgeConfig;
@@ -51,9 +52,10 @@ public class ClientHandler
 {
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
 
-    public static void registerKeyBindings()
+    public static void init()
     {
         ClientRegistry.registerKeyBinding(KEY_OPEN_MOD_LIST);
+        ListMenuScreen.registerTooltipFactory();
     }
 
     // This is where the magic happens

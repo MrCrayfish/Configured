@@ -1,8 +1,10 @@
 package com.mrcrayfish.configured.impl.forge;
 
 import com.mrcrayfish.configured.api.IConfigValue;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.ForgeConfigSpec;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
@@ -74,6 +76,13 @@ public class ForgeValue<T> implements IConfigValue<T>
     public String getTranslationKey()
     {
         return this.valueSpec.getTranslationKey();
+    }
+
+    @Nullable
+    @Override
+    public Component getValidationHint()
+    {
+        return null;
     }
 
     @Override

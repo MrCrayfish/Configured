@@ -3,10 +3,12 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.datafixers.util.Either;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -16,6 +18,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -23,7 +26,14 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.client.event.RenderTooltipEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,16 +44,18 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
+@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
 public abstract class ListMenuScreen extends Screen implements IBackgroundTexture
 {
     public static final ResourceLocation CONFIGURED_LOGO = new ResourceLocation(Reference.MOD_ID, "textures/gui/logo.png");
+    public static final List<Component> DUMMY_TOOLTIP = ImmutableList.of(TextComponent.EMPTY);
 
     protected final Screen parent;
     protected final ResourceLocation background;
     protected final int itemHeight;
     protected EntryList list;
     protected List<Item> entries;
-    protected List<FormattedCharSequence> activeTooltip;
+    protected TooltipHolder tooltip = new TooltipHolder();
     protected FocusedEditBox activeTextField;
     protected FocusedEditBox searchTextField;
 
@@ -99,12 +111,31 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
      */
     public void setActiveTooltip(List<FormattedCharSequence> tooltip)
     {
-        this.activeTooltip = tooltip;
+        this.tooltip.set(tooltip);
     }
 
-    public void setActiveTooltip(Component tooltip)
+    /**
+     * Sets the tool tip from the given component. Must be actively called in the
+     * render method as the tooltip is reset every draw call. This method automatically
+     * splits the text.
+     *
+     * @param text the text to show on the tooltip
+     */
+    public void setActiveTooltip(Component text)
     {
-        this.activeTooltip = this.minecraft.font.split(tooltip, 200);
+        this.tooltip.set(this.minecraft.font.split(text, 200));
+    }
+
+    /**
+     * Set the tool tip from the given component and colours. Must be actively called
+     * in the render method as the tooltip is reset every draw call. This method
+     * automatically splits the text.
+     *
+     * @param text the text to show on the tooltip
+     */
+    public void setActiveTooltip(Component text, int outlineColour, int backgroundColour)
+    {
+        this.tooltip.set(this.minecraft.font.split(text, 200), outlineColour, backgroundColour);
     }
 
     protected void updateTooltip(int mouseX, int mouseY)
@@ -119,7 +150,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
         // Resets the active tooltip each draw call
-        this.activeTooltip = null;
+        this.tooltip.set(null);
 
         // Draws the background texture (dirt or custom texture)
         this.renderBackground(poseStack);
@@ -145,9 +176,10 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.updateTooltip(mouseX, mouseY);
 
         // Draws the active tooltip otherwise tries to draw button tooltips
-        if(this.activeTooltip != null)
+        if(this.tooltip != null && this.tooltip.text != null)
         {
-            this.renderTooltip(poseStack, this.activeTooltip, mouseX, mouseY);
+            // Yep, this is probably strange to you. See the forge events below!
+            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, mouseX, mouseY);
         }
         else
         {
@@ -172,6 +204,10 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
             Style style = Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/mc-mods/configured"));
             this.handleComponentClicked(style);
             return true;
+        }
+        if(this.activeTextField != null && !this.activeTextField.isMouseOver(mouseX, mouseY))
+        {
+            this.activeTextField.setFocused(false);
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -218,14 +254,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         private void renderToolTips(PoseStack poseStack, int mouseX, int mouseY)
         {
-            if(this.isMouseOver(mouseX, mouseY) && mouseX < ListMenuScreen.this.list.getRowLeft() + ListMenuScreen.this.list.getRowWidth() - 67)
-            {
-                Item item = this.getEntryAtPosition(mouseX, mouseY);
-                if(item != null && item.tooltip != null)
-                {
-                    ListMenuScreen.this.setActiveTooltip(item.tooltip);
-                }
-            }
             this.children().forEach(item ->
             {
                 item.children().forEach(o ->
@@ -242,6 +270,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected abstract class Item extends ContainerObjectSelectionList.Entry<Item> implements ILabelProvider, Comparable<Item>
     {
         protected final Component label;
+        @Nullable
         protected List<FormattedCharSequence> tooltip;
 
         public Item(Component label)
@@ -260,7 +289,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
             return this.label.getString(); //TODO test
         }
 
-        public void setTooltip(Component text, int maxWidth)
+        public void setMouseTooltip(Component text, int maxWidth)
         {
             this.tooltip = ListMenuScreen.this.minecraft.font.split(text, maxWidth);
         }
@@ -343,9 +372,9 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
 
         @Override
-        protected void onFocusedChanged(boolean focused)
+        protected void setFocused(boolean focused)
         {
-            super.onFocusedChanged(focused);
+            super.setFocused(focused);
             if(focused)
             {
                 if(ListMenuScreen.this.activeTextField != null && ListMenuScreen.this.activeTextField != this)
@@ -358,4 +387,84 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     }
 
     protected interface IIgnoreSearch {}
+
+    public static void registerTooltipFactory()
+    {
+        MinecraftForgeClient.registerTooltipComponentFactory(ListMenuTooltipComponent.class, ListMenuTooltipComponent::asClientTextTooltip);
+    }
+
+    private static class TooltipHolder
+    {
+        private List<FormattedCharSequence> text;
+        private Integer borderColour;
+        private Integer backgroundColour;
+
+        public void set(@Nullable List<FormattedCharSequence> text)
+        {
+            this.text = text;
+            this.borderColour = null;
+            this.backgroundColour = null;
+        }
+
+        public void set(List<FormattedCharSequence> text, int outlineColour, int backgroundColour)
+        {
+            this.text = text;
+            this.borderColour = outlineColour;
+            this.backgroundColour = backgroundColour;
+        }
+
+        public boolean isActive()
+        {
+            return this.text != null;
+        }
+
+        public boolean isColoured()
+        {
+            return this.borderColour != null && this.backgroundColour != null;
+        }
+    }
+
+    private static class ListMenuTooltipComponent implements TooltipComponent
+    {
+        private FormattedCharSequence text;
+
+        public ListMenuTooltipComponent(FormattedCharSequence text)
+        {
+            this.text = text;
+        }
+
+        public ClientTextTooltip asClientTextTooltip()
+        {
+            return new ClientTextTooltip(this.text);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event)
+    {
+        Minecraft minecraft = Minecraft.getInstance();
+        if(minecraft.screen instanceof ListMenuScreen listMenu && listMenu.tooltip.isActive())
+        {
+            event.getTooltipElements().clear();
+            for(FormattedCharSequence text : listMenu.tooltip.text)
+            {
+                event.getTooltipElements().add(Either.right(new ListMenuTooltipComponent(text)));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGetTooltipColor(RenderTooltipEvent.Color event)
+    {
+        Minecraft minecraft = Minecraft.getInstance();
+        if(minecraft.screen instanceof ListMenuScreen listMenu && listMenu.tooltip.isActive())
+        {
+            if(listMenu.tooltip.isColoured())
+            {
+                event.setBorderStart(listMenu.tooltip.borderColour);
+                event.setBorderEnd(listMenu.tooltip.borderColour);
+                event.setBackground(listMenu.tooltip.backgroundColour);
+            }
+        }
+    }
 }

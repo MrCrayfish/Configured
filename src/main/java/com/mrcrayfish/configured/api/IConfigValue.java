@@ -1,5 +1,7 @@
 package com.mrcrayfish.configured.api;
 
+import net.minecraft.network.chat.Component;
+
 import javax.annotation.Nullable;
 
 /**
@@ -62,6 +64,9 @@ public interface IConfigValue<T>
      */
     @Nullable
     String getTranslationKey();
+
+    @Nullable
+    Component getValidationHint();
 
     /**
      * @return current directory name of the config entry this value is in.

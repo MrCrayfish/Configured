@@ -29,6 +29,7 @@
     "configured.gui.title.server_configuration": "Server Configurations",
     "configured.config.client.force_configured_menu": "Force Configured Menu",
     "configured.validator.range_hint": "Value must be between %s and %s (inclusive)",
+    "configured.validator.not_a_number": "The entered value is not a valid number",
     "key.configured.open_mod_list": "Open Mod List",
     "key.categories.configured": "Configured"
 }

@@ -14,6 +14,7 @@ import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -279,6 +280,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         protected final IConfigValue<T> holder;
         protected final List<GuiEventListener> eventListeners = new ArrayList<>();
         protected final Button resetButton;
+        protected Component validationHint;
 
         public ConfigItem(IConfigValue<T> holder)
         {
@@ -310,11 +312,27 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - 75), left, top + 6, 0xFFFFFF);
+            boolean showValidationHint = this.validationHint != null;
+            int trimLength = showValidationHint ? 100 : 80;
+            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength), left, top + 6, 0xFFFFFF);
 
-            if(this.isMouseOver(mouseX, mouseY) && mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 67)
+            if(showValidationHint)
             {
-                ConfigScreen.this.setActiveTooltip(this.tooltip);
+                RenderSystem.setShaderTexture(0, IconButton.ICONS);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                Screen.blit(poseStack, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
+            }
+
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                if(showValidationHint && ScreenUtil.isMouseWithin(left + width - 92, top, 23, 20, mouseX, mouseY))
+                {
+                    ConfigScreen.this.setActiveTooltip(this.validationHint, 0xFFDD0000, 0xFFFF0000);
+                }
+                else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
+                {
+                    ConfigScreen.this.setActiveTooltip(this.tooltip);
+                }
             }
 
             this.resetButton.active = !this.holder.isDefault();
@@ -357,6 +375,11 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             }
             return Language.getInstance().getVisualOrder(lines);
         }
+
+        public void setValidationHint(Component text)
+        {
+            this.validationHint = text;
+        }
     }
 
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
@@ -379,15 +402,18 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                         this.textField.setTextColor(14737632);
                         holder.set((T) n);
                         ConfigScreen.this.updateButtons();
+                        this.setValidationHint(null);
                     }
                     else
                     {
                         this.textField.setTextColor(16711680);
+                        this.setValidationHint(holder.getValidationHint());
                     }
                 }
                 catch(Exception ignored)
                 {
                     this.textField.setTextColor(16711680);
+                    this.setValidationHint(new TranslatableComponent("configured.validator.not_a_number")); //TODO common components
                 }
             });
             this.textField.setEditable(!ConfigScreen.this.config.isReadOnly());

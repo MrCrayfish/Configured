@@ -6,7 +6,9 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.api.simple.validate.Validator;
 import com.mrcrayfish.configured.config.ConfigManager;
+import net.minecraft.network.chat.Component;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -131,6 +133,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
 
     public abstract boolean isValid(T value);
 
+    @Nullable
     public Validator<T> getValidator()
     {
         return this.validator;

@@ -2,11 +2,14 @@ package com.mrcrayfish.configured.impl.simple;
 
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Author: MrCrayfish
@@ -85,6 +88,14 @@ public class SimpleValue<T> implements IConfigValue<T>
     public String getTranslationKey()
     {
         return this.property.getTranslationKey();
+    }
+
+    @Nullable
+    @Override
+    public Component getValidationHint()
+    {
+        Validator<T> validator = this.property.getValidator();
+        return validator != null ? validator.getHint() : null;
     }
 
     @Override
