@@ -270,7 +270,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
             if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 14, 10, 10, mouseX, mouseY))
             {
-                ModConfigSelectionScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.YELLOW));
+                ModConfigSelectionScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
             }
         }
 
