@@ -12,7 +12,6 @@ import net.minecraft.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.util.thread.EffectiveSide;
 
 import java.nio.file.Path;
 import java.util.EnumMap;

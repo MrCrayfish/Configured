@@ -1,8 +1,8 @@
 package com.mrcrayfish.configured;
 
 import com.mrcrayfish.configured.client.ClientHandler;
-import com.mrcrayfish.configured.config.EditingTracker;
 import com.mrcrayfish.configured.config.ConfigManager;
+import com.mrcrayfish.configured.config.EditingTracker;
 import com.mrcrayfish.configured.network.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;

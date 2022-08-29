@@ -5,9 +5,6 @@ import com.electronwill.nightconfig.core.EnumGetMethod;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 /**
