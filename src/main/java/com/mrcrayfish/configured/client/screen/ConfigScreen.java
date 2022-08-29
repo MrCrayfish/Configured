@@ -25,6 +25,7 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -357,7 +358,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             boolean showValidationHint = this.validationHint != null;
             int trimLength = showValidationHint ? 100 : 80;
-            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength), left, top + 6, 0xFFFFFF);
+            ChatFormatting labelStyle = this.holder.isChanged() ? ChatFormatting.ITALIC : ChatFormatting.RESET;
+            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFF);
 
             if(showValidationHint)
             {
@@ -384,13 +386,13 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.resetButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
-        private Component getTrimmedLabel(int maxWidth)
+        private MutableComponent getTrimmedLabel(int maxWidth)
         {
             if(ConfigScreen.this.minecraft.font.width(this.label) > maxWidth)
             {
                 return new TextComponent(ConfigScreen.this.minecraft.font.substrByWidth(this.label, maxWidth).getString() + "...");
             }
-            return this.label;
+            return this.label.copy();
         }
 
         private List<FormattedCharSequence> createToolTip(IConfigValue<T> holder)
