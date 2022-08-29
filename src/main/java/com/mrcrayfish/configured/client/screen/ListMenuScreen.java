@@ -76,6 +76,12 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected abstract void constructEntries(List<Item> entries);
 
     @Override
+    public ResourceLocation getBackgroundTexture()
+    {
+        return this.background;
+    }
+
+    @Override
     protected void init()
     {
         // Constructs a list of entries and adds them to an option list
@@ -88,25 +94,27 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         // Adds a search text field to the top of the screen
         this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TextComponent("Search"));
-        this.searchTextField.setResponder(s ->
-        {
-            ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
-            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(item -> {
-                return !(item instanceof IIgnoreSearch) && item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
-            }).collect(Collectors.toList()));
-            if(!s.isEmpty())
-            {
-                this.list.setScrollAmount(0);
-            }
-        });
+        this.searchTextField.setResponder(s -> this.updateSearchResults());
         this.addWidget(this.searchTextField);
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
     }
 
-    @Override
-    public ResourceLocation getBackgroundTexture()
+    protected void updateSearchResults()
     {
-        return this.background;
+        String query = this.searchTextField.getValue();
+        ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, query, this.entries);
+        this.list.replaceEntries(query.isEmpty() ? this.entries : this.getSearchResults(query));
+        if(!query.isEmpty())
+        {
+            this.list.setScrollAmount(0);
+        }
+    }
+
+    protected Collection<Item> getSearchResults(String s)
+    {
+        return this.entries.stream().filter(item -> {
+            return !(item instanceof IIgnoreSearch) && item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+        }).collect(Collectors.toList());
     }
 
     private void resetTooltip()

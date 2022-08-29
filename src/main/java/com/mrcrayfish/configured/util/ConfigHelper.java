@@ -54,6 +54,25 @@ public class ConfigHelper
     }
 
     /**
+     * Gathers all the config entries with a deep search. Used for deep searches
+     */
+    public static List<IConfigEntry> gatherAllConfigEntries(IConfigEntry entry)
+    {
+        List<IConfigEntry> entries = new ObjectArrayList<>();
+        Queue<IConfigEntry> queue = new ArrayDeque<>(entry.getChildren());
+        while(!queue.isEmpty())
+        {
+            IConfigEntry e = queue.poll();
+            entries.add(e);
+            if(!e.isLeaf())
+            {
+                queue.addAll(e.getChildren());
+            }
+        }
+        return entries;
+    }
+
+    /**
      * Gathers all the config values with a deep search. Used for resetting defaults
      */
     public static List<IConfigValue<?>> gatherAllConfigValues(IModConfig config)

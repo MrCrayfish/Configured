@@ -15,6 +15,7 @@
     "configured.gui.view": "View",
     "configured.gui.close": "Close",
     "configured.gui.select_world": "Pick World",
+    "configured.gui.deep_search": "Deep Search",
     "configured.gui.no_permission": "You do not have permissions to do this",
     "configured.gui.not_installed": "Configured is not installed on the server",
     "configured.gui.edit_world_config": "Select World To Edit %s Config",

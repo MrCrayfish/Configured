@@ -3,13 +3,16 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.screen.widget.CheckBoxButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -29,18 +32,21 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
  */
 public class ConfigScreen extends ListMenuScreen implements IEditing
 {
-    public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->
-    {
+    public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) -> {
         if(o1 instanceof FolderItem && o2 instanceof FolderItem)
         {
             return o1.getLabel().compareTo(o2.getLabel());
@@ -60,6 +66,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     protected final IModConfig config;
     protected Button saveButton;
     protected Button restoreButton;
+    protected CheckBoxButton deepSearchCheckBox;
 
     private ConfigScreen(Screen parent, Component title, IModConfig config, ResourceLocation background, IConfigEntry folderEntry)
     {
@@ -82,58 +89,64 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+
     protected void constructEntries(List<Item> entries)
     {
         List<Item> configEntries = new ArrayList<>();
-        this.folderEntry.getChildren().forEach(c ->
-        {
-            if(c.isLeaf())
-            {
-            	IConfigValue<?> entry = c.getValue();
-            	if(entry == null) return;
-
-                Object value = entry.get();
-                if(value instanceof Boolean)
-                {
-                    configEntries.add(new BooleanItem((IConfigValue<Boolean>)entry));
-                }
-                else if(value instanceof Integer)
-                {
-                    configEntries.add(new IntegerItem((IConfigValue<Integer>)entry));
-                }
-                else if(value instanceof Double)
-                {
-                    configEntries.add(new DoubleItem((IConfigValue<Double>)entry));
-                }
-                else if(value instanceof Long)
-                {
-                    configEntries.add(new LongItem((IConfigValue<Long>)entry));
-                }
-                else if(value instanceof Enum)
-                {
-                    configEntries.add(new EnumItem((IConfigValue<Enum<?>>)entry));
-                }
-                else if(value instanceof String)
-                {
-                    configEntries.add(new StringItem((IConfigValue<String>)entry));
-                }
-                else if(value instanceof List<?>)
-                {
-                    configEntries.add(new ListItem((IConfigValue<List<?>>)entry));
-                }
-                else
-                {
-                    Configured.LOGGER.info("Unsupported config value: " + entry.getName());
-                }
-            }
-            else
-            {
-                configEntries.add(new FolderItem(c));
-            }
+        this.folderEntry.getChildren().forEach(entry -> {
+            Item item = this.createItemFromEntry(entry);
+            if(item != null) configEntries.add(item);
         });
         configEntries.sort(SORT_ALPHABETICALLY);
         entries.addAll(configEntries);
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private Item createItemFromEntry(IConfigEntry entry)
+    {
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            if(value != null)
+            {
+                Object object = value.get();
+                if(object instanceof Boolean)
+                {
+                    return new BooleanItem((IConfigValue<Boolean>) value);
+                }
+                else if(object instanceof Integer)
+                {
+                    return new IntegerItem((IConfigValue<Integer>) value);
+                }
+                else if(object instanceof Double)
+                {
+                    return new DoubleItem((IConfigValue<Double>) value);
+                }
+                else if(object instanceof Long)
+                {
+                    return new LongItem((IConfigValue<Long>) value);
+                }
+                else if(object instanceof Enum)
+                {
+                    return new EnumItem((IConfigValue<Enum<?>>) value);
+                }
+                else if(object instanceof String)
+                {
+                    return new StringItem((IConfigValue<String>) value);
+                }
+                else if(object instanceof List<?>)
+                {
+                    return new ListItem((IConfigValue<List<?>>) value);
+                }
+                else
+                {
+                    Configured.LOGGER.info("Unsupported config value: " + value.getName());
+                }
+            }
+            return null;
+        }
+        return new FolderItem(entry);
     }
 
     @Override
@@ -143,20 +156,17 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
         if(this.folderEntry.isRoot())
         {
-            this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) ->
-            {
+            this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) -> {
                 this.saveConfig();
                 this.minecraft.setScreen(this.parent);
             }));
-            this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) ->
-            {
+            this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) -> {
                 if(this.folderEntry.isRoot())
                 {
                     this.showRestoreScreen();
                 }
             }));
-            this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) ->
-            {
+            this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) -> {
                 if(this.isChanged(this.folderEntry))
                 {
                     this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.unsaved_changes"), result -> {
@@ -176,6 +186,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
         }
+
+        this.deepSearchCheckBox = new CheckBoxButton(this.width / 2 + 115, 25, button -> this.updateSearchResults());
+        this.addRenderableWidget(this.deepSearchCheckBox);
     }
 
     private void saveConfig()
@@ -188,8 +201,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
     private void showRestoreScreen()
     {
-        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), result ->
-        {
+        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), result -> {
             if(!result) return true;
             this.restoreDefaults(this.folderEntry);
             this.updateButtons();
@@ -203,16 +215,16 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
     private void restoreDefaults(IConfigEntry entry)
     {
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-        	if(child.isLeaf())
-        	{
-        		IConfigValue<?> value = child.getValue();
-        		if(value != null) value.restore();
-        		continue;
-        	}
-    		this.restoreDefaults(child);
-    	}
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(child.isLeaf())
+            {
+                IConfigValue<?> value = child.getValue();
+                if(value != null) value.restore();
+                continue;
+            }
+            this.restoreDefaults(child);
+        }
     }
 
     private void updateButtons()
@@ -243,6 +255,36 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.YELLOW));
             }
         }
+
+        if(this.deepSearchCheckBox.isMouseOver(mouseX, mouseY))
+        {
+            this.setActiveTooltip(new TranslatableComponent("configured.gui.deep_search"));
+        }
+    }
+
+    @Override
+    protected Collection<Item> getSearchResults(String s)
+    {
+        List<Item> entries = this.entries;
+        if(this.deepSearchCheckBox.selected())
+        {
+            List<Item> allEntries = new ArrayList<>();
+            ConfigHelper.gatherAllConfigEntries(this.folderEntry).forEach(entry -> {
+                Item item = this.createItemFromEntry(entry);
+                if(item instanceof ConfigItem<?>) {
+                    allEntries.add(item);
+                }
+            });
+            allEntries.sort(SORT_ALPHABETICALLY);
+            entries = allEntries;
+        }
+        return entries.stream().filter(item -> {
+            if(item instanceof IIgnoreSearch)
+                return false;
+            if(item instanceof FolderItem && !Config.CLIENT.includeFoldersInSearch.get())
+                return false;
+            return item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+        }).collect(Collectors.toList());
     }
 
     public class FolderItem extends Item
@@ -300,7 +342,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.eventListeners.add(this.resetButton);
         }
 
-        protected void onResetValue() {}
+        protected void onResetValue()
+        {
+        }
 
         @Override
         public List<? extends GuiEventListener> children()
@@ -391,8 +435,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             super(holder);
             this.textField = new FocusedEditBox(ConfigScreen.this.font, 0, 0, 44, 18, this.label);
             this.textField.setValue(holder.get().toString());
-            this.textField.setResponder((s) ->
-            {
+            this.textField.setResponder((s) -> {
                 try
                 {
                     Number n = parser.apply(s);
@@ -617,15 +660,15 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
      */
     public boolean isModified(IConfigEntry entry)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		return value != null && !value.isDefault();
-    	}
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-    		if(this.isModified(child)) return true;
-    	}
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            return value != null && !value.isDefault();
+        }
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(this.isModified(child)) return true;
+        }
         return false;
     }
 
@@ -637,15 +680,15 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
      */
     public boolean isChanged(IConfigEntry entry)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		return value != null && value.isChanged();
-    	}
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-    		if(this.isChanged(child)) return true;
-    	}
-    	return false;
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            return value != null && value.isChanged();
+        }
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(this.isChanged(child)) return true;
+        }
+        return false;
     }
 }
