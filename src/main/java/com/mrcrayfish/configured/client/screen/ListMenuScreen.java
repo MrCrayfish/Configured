@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Either;
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
@@ -201,6 +202,11 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         RenderSystem.setShaderTexture(0, CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         Screen.blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+
+        // Draws the search icon next to the search text field
+        RenderSystem.setShaderTexture(0, IconButton.ICONS);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        Screen.blit(poseStack, this.width / 2 - 128, 26, 14, 14, 22, 11, 10, 10, 64, 64);
 
         // Gives a chance for child classes to set the active tooltip
         this.updateTooltip(mouseX, mouseY);
