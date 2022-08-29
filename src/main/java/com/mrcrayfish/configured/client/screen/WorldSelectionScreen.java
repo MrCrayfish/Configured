@@ -90,7 +90,7 @@ public class WorldSelectionScreen extends ListMenuScreen
         super.updateTooltip(mouseX, mouseY);
         if(ScreenUtil.isMouseWithin(this.width - 30, 15, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.server_config_info"), 200));
+            this.setActiveTooltip(new TranslatableComponent("configured.gui.server_config_info"));
         }
     }
 

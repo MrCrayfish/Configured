@@ -14,7 +14,6 @@ import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -331,7 +330,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 }
                 else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
                 {
-                    ConfigScreen.this.setActiveTooltip(this.tooltip);
+                    ConfigScreen.this.setTooltip(this.tooltip);
                 }
             }
 
@@ -413,7 +412,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 catch(Exception ignored)
                 {
                     this.textField.setTextColor(16711680);
-                    this.setValidationHint(new TranslatableComponent("configured.validator.not_a_number")); //TODO common components
+                    this.setValidationHint(new TranslatableComponent("configured.validator.not_a_number"));
                 }
             });
             this.textField.setEditable(!ConfigScreen.this.config.isReadOnly());

@@ -55,9 +55,15 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected final int itemHeight;
     protected EntryList list;
     protected List<Item> entries;
-    protected TooltipHolder tooltip = new TooltipHolder();
     protected FocusedEditBox activeTextField;
-    protected FocusedEditBox searchTextField;
+    protected FocusedEditBox searchTextField; //TODO deep search
+
+    // Tooltip properties
+    private List<FormattedCharSequence> tooltipText;
+    private Integer tooltipX;
+    private Integer tooltipY;
+    private Integer tooltipOutlineColour;
+    private Integer tooltipBackgroundColour;
 
     protected ListMenuScreen(Screen parent, Component title, ResourceLocation background, int itemHeight)
     {
@@ -66,6 +72,8 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.background = background;
         this.itemHeight = itemHeight;
     }
+
+    protected abstract void constructEntries(List<Item> entries);
 
     @Override
     protected void init()
@@ -95,12 +103,19 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
     }
 
-    protected abstract void constructEntries(List<Item> entries);
-
     @Override
     public ResourceLocation getBackgroundTexture()
     {
         return this.background;
+    }
+
+    private void resetTooltip()
+    {
+        this.tooltipText = null;
+        this.tooltipX = null;
+        this.tooltipY = null;
+        this.tooltipBackgroundColour = null;
+        this.tooltipOutlineColour = null;
     }
 
     /**
@@ -109,9 +124,10 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
      *
      * @param tooltip a tooltip list to show
      */
-    public void setActiveTooltip(List<FormattedCharSequence> tooltip)
+    public void setTooltip(List<FormattedCharSequence> tooltip)
     {
-        this.tooltip.set(tooltip);
+        this.resetTooltip();
+        this.tooltipText = tooltip;
     }
 
     /**
@@ -123,7 +139,8 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
      */
     public void setActiveTooltip(Component text)
     {
-        this.tooltip.set(this.minecraft.font.split(text, 200));
+        this.resetTooltip();
+        this.tooltipText = this.minecraft.font.split(text, 200);
     }
 
     /**
@@ -135,14 +152,19 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
      */
     public void setActiveTooltip(Component text, int x, int y, int outlineColour, int backgroundColour)
     {
-        this.tooltip.set(this.minecraft.font.split(text, 200), x, y, outlineColour, backgroundColour);
+        this.resetTooltip();
+        this.tooltipText = this.minecraft.font.split(text, 200);
+        this.tooltipX = x;
+        this.tooltipY = y;
+        this.tooltipBackgroundColour = backgroundColour;
+        this.tooltipOutlineColour = outlineColour;
     }
 
     protected void updateTooltip(int mouseX, int mouseY)
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(this.minecraft.font.split(new TranslatableComponent("configured.gui.info"), 200));
+            this.setActiveTooltip(new TranslatableComponent("configured.gui.info"));
         }
     }
 
@@ -150,7 +172,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
         // Resets the active tooltip each draw call
-        this.tooltip.set(null);
+        this.resetTooltip();
 
         // Draws the background texture (dirt or custom texture)
         this.renderBackground(poseStack);
@@ -176,11 +198,11 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.updateTooltip(mouseX, mouseY);
 
         // Draws the active tooltip otherwise tries to draw button tooltips
-        if(this.tooltip != null && this.tooltip.text != null)
+        if(this.tooltipText != null)
         {
-            boolean positioned = this.tooltip.isPositioned();
-            int x = positioned ? this.tooltip.tooltipX + 12 : mouseX;
-            int y = positioned ? this.tooltip.tooltipY - 12 : mouseY;
+            boolean positioned = this.tooltipX != null && this.tooltipY != null;
+            int x = positioned ? this.tooltipX + 12 : mouseX;
+            int y = positioned ? this.tooltipY - 12 : mouseY;
             this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
         }
         else
@@ -288,7 +310,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         @Override
         public String getLabel()
         {
-            return this.label.getString(); //TODO test
+            return this.label.getString();
         }
 
         public void setMouseTooltip(Component text, int maxWidth)
@@ -395,66 +417,8 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         MinecraftForgeClient.registerTooltipComponentFactory(ListMenuTooltipComponent.class, ListMenuTooltipComponent::asClientTextTooltip);
     }
 
-    private static class TooltipHolder
+    private record ListMenuTooltipComponent(FormattedCharSequence text) implements TooltipComponent
     {
-        private List<FormattedCharSequence> text;
-        private Integer borderColour;
-        private Integer backgroundColour;
-        private Integer tooltipX;
-        private Integer tooltipY;
-
-        public void set(@Nullable List<FormattedCharSequence> text)
-        {
-            this.text = text;
-            this.tooltipX = null;
-            this.tooltipY = null;
-            this.borderColour = null;
-            this.backgroundColour = null;
-        }
-
-        public void set(List<FormattedCharSequence> text, int x, int y)
-        {
-            this.text = text;
-            this.tooltipX = x;
-            this.tooltipY = y;
-            this.borderColour = null;
-            this.backgroundColour = null;
-        }
-
-        public void set(List<FormattedCharSequence> text, int x, int y, int outlineColour, int backgroundColour)
-        {
-            this.text = text;
-            this.tooltipX = x;
-            this.tooltipY = y;
-            this.borderColour = outlineColour;
-            this.backgroundColour = backgroundColour;
-        }
-
-        public boolean isActive()
-        {
-            return this.text != null;
-        }
-
-        public boolean isColoured()
-        {
-            return this.borderColour != null && this.backgroundColour != null;
-        }
-
-        public boolean isPositioned()
-        {
-            return this.tooltipX != null && this.tooltipY != null;
-        }
-    }
-
-    private static class ListMenuTooltipComponent implements TooltipComponent
-    {
-        private FormattedCharSequence text;
-
-        public ListMenuTooltipComponent(FormattedCharSequence text)
-        {
-            this.text = text;
-        }
-
         public ClientTextTooltip asClientTextTooltip()
         {
             return new ClientTextTooltip(this.text);
@@ -465,13 +429,17 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event)
     {
         Minecraft minecraft = Minecraft.getInstance();
-        if(minecraft.screen instanceof ListMenuScreen listMenu && listMenu.tooltip.isActive())
+        if(!(minecraft.screen instanceof ListMenuScreen listMenu))
+            return;
+
+        if(listMenu.tooltipText == null)
+            return;
+
+        event.getTooltipElements().clear();
+
+        for(FormattedCharSequence text : listMenu.tooltipText)
         {
-            event.getTooltipElements().clear();
-            for(FormattedCharSequence text : listMenu.tooltip.text)
-            {
-                event.getTooltipElements().add(Either.right(new ListMenuTooltipComponent(text)));
-            }
+            event.getTooltipElements().add(Either.right(new ListMenuTooltipComponent(text)));
         }
     }
 
@@ -479,14 +447,17 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     public static void onGetTooltipColor(RenderTooltipEvent.Color event)
     {
         Minecraft minecraft = Minecraft.getInstance();
-        if(minecraft.screen instanceof ListMenuScreen listMenu && listMenu.tooltip.isActive())
-        {
-            if(listMenu.tooltip.isColoured())
-            {
-                event.setBorderStart(listMenu.tooltip.borderColour);
-                event.setBorderEnd(listMenu.tooltip.borderColour);
-                event.setBackground(listMenu.tooltip.backgroundColour);
-            }
-        }
+        if(!(minecraft.screen instanceof ListMenuScreen listMenu))
+            return;
+
+        if(listMenu.tooltipText == null)
+            return;
+
+        if(listMenu.tooltipBackgroundColour == null || listMenu.tooltipOutlineColour == null)
+            return;
+
+        event.setBorderStart(listMenu.tooltipOutlineColour);
+        event.setBorderEnd(listMenu.tooltipOutlineColour);
+        event.setBackground(listMenu.tooltipBackgroundColour);
     }
 }
