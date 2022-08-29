@@ -302,7 +302,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(this.config != null && this.restoreButton != null && canRestoreConfig(Minecraft.getInstance().player, this.config))
             {
-                this.restoreButton.active = this.config.isChanged();
+                this.restoreButton.active = !this.config.isReadOnly() && this.config.isChanged();
             }
         }
     }
