@@ -289,12 +289,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
     public class FolderItem extends Item
     {
-        private final Button button;
+        private final IconButton button;
 
         public FolderItem(IConfigEntry folderEntry)
         {
             super(new TextComponent(createLabel(folderEntry.getEntryName())));
-            this.button = new Button(10, 5, 44, 20, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
+            this.button = new IconButton(10, 5, 11, 33, 0, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, folderEntry));
             });
