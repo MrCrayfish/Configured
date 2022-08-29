@@ -6,6 +6,7 @@ import com.mrcrayfish.configured.api.simple.validate.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -40,6 +41,12 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
     public List<T> getDefaultValue()
     {
         return this.defaultList.get();
+    }
+
+    @Override
+    public boolean isDefault()
+    {
+        return compareLists(this.get(), this.getDefaultValue(), this.getType());
     }
 
     @Override
@@ -102,5 +109,43 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
             }
             return this.classType.isAssignableFrom(o.getClass());
         }
+    }
+
+    /**
+     * Compares two lists to test for equality, with a special case to handle when comparing
+     * long lists. Nightconfig will parse longs as integers, however Long#equals will return
+     * false even if the numbers are theoretically the same (e.g. 1L == 1). The method will
+     * simply compare the size and the value at an index of a list against the same index of
+     * another list; the List implementation does not affect the results.
+     *
+     * @param a    the first list
+     * @param b    the second list
+     * @param type the type matching the lists
+     * @param <T>  the type of the list
+     * @return true if the lists are equal
+     */
+    public static <T> boolean compareLists(List<T> a, List<T> b, ListProperty.Type<T> type)
+    {
+        if(a.size() != b.size())
+            return false;
+
+        for(int i = 0; i < a.size(); i++)
+        {
+            // Special handling of long lists since Long#equals fails against integers
+            if(type == LONG)
+            {
+                long v1 = ((Number) a.get(i)).longValue();
+                long v2 = ((Number) b.get(i)).longValue();
+                if(!Objects.equals(v1, v2))
+                {
+                    return false;
+                }
+            }
+            else if(!Objects.equals(a.get(i), b.get(i)))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

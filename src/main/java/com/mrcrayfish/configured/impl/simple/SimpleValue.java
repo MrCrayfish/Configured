@@ -16,8 +16,8 @@ import java.util.Objects;
 public class SimpleValue<T> implements IConfigValue<T>
 {
     private final ConfigProperty<T> property;
-    private final T initialValue;
-    private final T defaultValue;
+    protected final T initialValue;
+    protected final T defaultValue;
     protected T value;
 
     public SimpleValue(ConfigProperty<T> property)

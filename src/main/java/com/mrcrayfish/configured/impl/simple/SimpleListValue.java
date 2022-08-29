@@ -7,6 +7,7 @@ import net.minecraft.Util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Author: MrCrayfish
@@ -32,5 +33,11 @@ public class SimpleListValue<T> extends SimpleValue<List<T>>
     public EditListScreen.ListType getListType()
     {
         return LIST_TYPE_RESOLVER.getOrDefault(this.property.getType(), EditListScreen.ListType.UNKNOWN);
+    }
+
+    @Override
+    public boolean isDefault()
+    {
+        return ListProperty.compareLists(this.get(), this.defaultValue, this.property.getType());
     }
 }

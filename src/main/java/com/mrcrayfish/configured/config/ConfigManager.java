@@ -409,7 +409,7 @@ public class ConfigManager
 
             // Test and return immediately if config already loaded
             if(this.config != null)
-                return this.allProperties.stream().anyMatch(property -> !Objects.equals(property.get(), property.getDefaultValue()));
+                return this.allProperties.stream().anyMatch(property -> !property.isDefault());
 
             // Temporarily load config to test for changes. Unloads immediately after test.
             CommentedFileConfig tempConfig = ConfigUtil.createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
@@ -417,7 +417,7 @@ public class ConfigManager
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(tempConfig, p.getPath(), this.readOnly)));
-            boolean changed = this.allProperties.stream().anyMatch(property -> !Objects.equals(property.get(), property.getDefaultValue()));
+            boolean changed = this.allProperties.stream().anyMatch(property -> !property.isDefault());
             this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
             tempConfig.close();
             return changed;

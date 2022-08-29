@@ -8,6 +8,7 @@ import com.mrcrayfish.configured.config.ConfigManager;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -79,6 +80,12 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     public void restoreDefault()
     {
         this.set(this.getDefaultValue());
+    }
+
+    public boolean isDefault()
+    {
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return Objects.equals(this.get(), this.getDefaultValue());
     }
 
     public void invalidateCache()
