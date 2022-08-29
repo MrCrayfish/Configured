@@ -327,7 +327,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             {
                 if(showValidationHint && ScreenUtil.isMouseWithin(left + width - 92, top, 23, 20, mouseX, mouseY))
                 {
-                    ConfigScreen.this.setActiveTooltip(this.validationHint, 0xFFDD0000, 0xFFFF0000);
+                    ConfigScreen.this.setActiveTooltip(this.validationHint, left + width - 92, top + 16, 0xFFDD0000, 0xFFFF0000);
                 }
                 else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
                 {

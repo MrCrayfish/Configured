@@ -133,9 +133,9 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(Component text, int outlineColour, int backgroundColour)
+    public void setActiveTooltip(Component text, int x, int y, int outlineColour, int backgroundColour)
     {
-        this.tooltip.set(this.minecraft.font.split(text, 200), outlineColour, backgroundColour);
+        this.tooltip.set(this.minecraft.font.split(text, 200), x, y, outlineColour, backgroundColour);
     }
 
     protected void updateTooltip(int mouseX, int mouseY)
@@ -178,8 +178,10 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         // Draws the active tooltip otherwise tries to draw button tooltips
         if(this.tooltip != null && this.tooltip.text != null)
         {
-            // Yep, this is probably strange to you. See the forge events below!
-            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, mouseX, mouseY);
+            boolean positioned = this.tooltip.isPositioned();
+            int x = positioned ? this.tooltip.tooltipX + 12 : mouseX;
+            int y = positioned ? this.tooltip.tooltipY - 12 : mouseY;
+            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
         }
         else
         {
@@ -398,17 +400,32 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         private List<FormattedCharSequence> text;
         private Integer borderColour;
         private Integer backgroundColour;
+        private Integer tooltipX;
+        private Integer tooltipY;
 
         public void set(@Nullable List<FormattedCharSequence> text)
         {
             this.text = text;
+            this.tooltipX = null;
+            this.tooltipY = null;
             this.borderColour = null;
             this.backgroundColour = null;
         }
 
-        public void set(List<FormattedCharSequence> text, int outlineColour, int backgroundColour)
+        public void set(List<FormattedCharSequence> text, int x, int y)
         {
             this.text = text;
+            this.tooltipX = x;
+            this.tooltipY = y;
+            this.borderColour = null;
+            this.backgroundColour = null;
+        }
+
+        public void set(List<FormattedCharSequence> text, int x, int y, int outlineColour, int backgroundColour)
+        {
+            this.text = text;
+            this.tooltipX = x;
+            this.tooltipY = y;
             this.borderColour = outlineColour;
             this.backgroundColour = backgroundColour;
         }
@@ -421,6 +438,11 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         public boolean isColoured()
         {
             return this.borderColour != null && this.backgroundColour != null;
+        }
+
+        public boolean isPositioned()
+        {
+            return this.tooltipX != null && this.tooltipY != null;
         }
     }
 
