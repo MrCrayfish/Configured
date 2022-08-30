@@ -57,7 +57,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected EntryList list;
     protected List<Item> entries;
     protected FocusedEditBox activeTextField;
-    protected FocusedEditBox searchTextField; //TODO deep search
+    protected FocusedEditBox searchTextField;
 
     // Tooltip properties
     private List<FormattedCharSequence> tooltipText;
@@ -175,6 +175,12 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         {
             this.setActiveTooltip(new TranslatableComponent("configured.gui.info"));
         }
+    }
+
+    @Override
+    public void tick()
+    {
+        this.searchTextField.tick();
     }
 
     @Override

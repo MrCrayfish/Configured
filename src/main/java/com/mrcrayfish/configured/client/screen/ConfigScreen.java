@@ -15,6 +15,7 @@ import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
@@ -430,6 +431,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
     {
         private final FocusedEditBox textField;
+        private long lastTick;
 
         @SuppressWarnings("unchecked")
         public NumberItem(IConfigValue<T> holder, Function<String, Number> parser)
@@ -468,6 +470,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            long time = Util.getMillis();
+            if(time - this.lastTick >= 50)
+            {
+                this.textField.tick();
+                this.lastTick = time;
+            }
             this.textField.x = left + width - 68;
             this.textField.y = top + 1;
             this.textField.render(poseStack, mouseX, mouseY, partialTicks);
