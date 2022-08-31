@@ -65,12 +65,12 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         this.addWidget(this.list);
         if(!this.config.isReadOnly())
         {
-            this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
+            this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 0, 44, 90, new TranslatableComponent("configured.gui.apply"), (button) -> {
                 List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
                 this.holder.set(newValues);
                 this.minecraft.setScreen(this.parent);
             }));
-            this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
+            this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 22, 33, 90, new TranslatableComponent("configured.gui.add_value"), (button) -> {
                 this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
                     Object value = this.listType.getValueParser().apply(s);
                     return value != null && this.holder.isValid(Collections.singletonList(value));
@@ -179,36 +179,40 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         {
             this.list = list;
             this.holder = holder;
-            this.editButton = new Button(0, 0, 42, 20, new TextComponent("Edit"), onPress -> {
+            this.editButton = new IconButton(0, 0, 1, 22, 20, TextComponent.EMPTY, onPress -> {
                 EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, EditListScreen.this.background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
                     return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
                 }, this.holder::setValue));
+            }, (button, matrixStack, mouseX, mouseY) -> {
+                if(button.active && button.isHoveredOrFocused()) {
+                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.edit"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                }
             });
             this.editButton.active = !EditListScreen.this.config.isReadOnly();
-            Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
-                if(button.active && button.isHoveredOrFocused()) {
-                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                }
-            };
             this.deleteButton = new IconButton(0, 0, 11, 0, onPress -> {
                 EditListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
-            }, tooltip);
+            }, (button, matrixStack, mouseX, mouseY) -> {
+                if(button.active && button.isHoveredOrFocused()) {
+                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                }
+            });
             this.deleteButton.active = !EditListScreen.this.config.isReadOnly();
         }
 
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            EditListScreen.this.minecraft.font.draw(poseStack, new TextComponent(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
+            if(x % 2 != 0) Screen.fill(poseStack, left, top, left + width, top + 24, 0x55000000);
+            EditListScreen.this.minecraft.font.draw(poseStack, new TextComponent(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
             this.editButton.visible = true;
-            this.editButton.x = left + width - 65;
-            this.editButton.y = top;
+            this.editButton.x = left + width - 44;
+            this.editButton.y = top + 2;
             this.editButton.render(poseStack, mouseX, mouseY, partialTicks);
             this.deleteButton.visible = true;
-            this.deleteButton.x = left + width - 21;
-            this.deleteButton.y = top;
+            this.deleteButton.x = left + width - 22;
+            this.deleteButton.y = top + 2;
             this.deleteButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
