@@ -1,8 +1,17 @@
 package com.mrcrayfish.configured.client.screen;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -18,18 +27,25 @@ import java.util.function.Function;
  */
 public class ConfirmationScreen extends Screen implements IBackgroundTexture
 {
+    private static final int FADE_LENGTH = 4;
+    private static final int BRIGHTNESS = 32;
+    private static final int MESSAGE_PADDING = 10;
+
     private final Screen parent;
     private final Component message;
+    private final Icon icon;
     private final Function<Boolean, Boolean> handler;
     private Component positiveText = CommonComponents.GUI_YES;
     private Component negativeText = CommonComponents.GUI_NO;
     private ResourceLocation background = Screen.BACKGROUND_LOCATION;
+    private int startY, endY;
 
-    public ConfirmationScreen(Screen parent, Component message, Function<Boolean, Boolean> handler)
+    public ConfirmationScreen(Screen parent, Component message, Icon icon, Function<Boolean, Boolean> handler)
     {
         super(message);
         this.parent = parent;
         this.message = message;
+        this.icon = icon;
         this.handler = handler;
     }
 
@@ -37,15 +53,17 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     protected void init()
     {
         List<FormattedCharSequence> lines = this.font.split(this.message, 300);
-        int messageOffset = (lines.size() * (this.font.lineHeight + 2)) / 2;
-        this.addRenderableWidget(new Button(this.width / 2 - 105, this.height / 2 + messageOffset, 100, 20, this.positiveText, button ->
+        this.startY = this.height / 2 - 10 - (lines.size() * (this.font.lineHeight + 2)) / 2 - MESSAGE_PADDING - 1;
+        this.endY = this.startY + lines.size() * (this.font.lineHeight + 2) + MESSAGE_PADDING * 2;
+
+        this.addRenderableWidget(new Button(this.width / 2 - 105, this.endY + 10, 100, 20, this.positiveText, button ->
         {
             if(this.handler.apply(true))
             {
                 this.minecraft.setScreen(this.parent);
             }
         }));
-        this.addRenderableWidget(new Button(this.width / 2 + 5, this.height / 2 + messageOffset, 100, 20, this.negativeText, button ->
+        this.addRenderableWidget(new Button(this.width / 2 + 5, this.endY + 10, 100, 20, this.negativeText, button ->
         {
             if(this.handler.apply(false))
             {
@@ -59,11 +77,48 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     {
         this.renderBackground(poseStack);
         super.render(poseStack, mouseX, mouseY, partialTicks);
+
         List<FormattedCharSequence> lines = this.font.split(this.message, 300);
+
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.getBuilder();
+
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, IconButton.ICONS);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        Screen.blit(poseStack, this.width / 2 - 10, this.startY - 30, 20, 20, this.icon.u(), this.icon.v(), 10, 10, 64, 64);
+
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.vertex(0.0, this.endY, 0.0).uv(0.0F, this.endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        buffer.vertex(this.width, this.endY, 0.0).uv(this.width / 32.0F, this.endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        buffer.vertex(this.width, this.startY, 0.0).uv(this.width / 32.0F, this.startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        buffer.vertex(0.0, this.startY, 0.0).uv(0.0F, this.startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        tesselator.end();
+
+        RenderSystem.depthFunc(515);
+        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
+        RenderSystem.disableTexture();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(0.0, this.startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        buffer.vertex(this.width, this.startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        buffer.vertex(this.width, this.startY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(0.0, this.startY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(0.0, this.endY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(this.width, this.endY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(this.width, this.endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        buffer.vertex(0.0, this.endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        tesselator.end();
+
         for(int i = 0; i < lines.size(); i++)
         {
             int lineWidth = this.font.width(lines.get(i));
-            this.font.draw(poseStack, lines.get(i), this.width / 2 - lineWidth / 2, this.height / 2 - 20 - (lines.size() * (this.font.lineHeight + 2)) / 2 + i * (this.font.lineHeight + 2), 0xFFFFFF);
+            this.font.draw(poseStack, lines.get(i), this.width / 2 - lineWidth / 2, this.startY + MESSAGE_PADDING + i * (this.font.lineHeight + 2) + 1, 0xFFFFFF);
         }
     }
 
@@ -102,5 +157,30 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     {
         this.background = background;
         return this;
+    }
+
+    public enum Icon
+    {
+        INFO(11, 44),
+        WARNING(0, 11),
+        ERROR(11, 11);
+
+        private final int u, v;
+
+        Icon(int u, int v)
+        {
+            this.u = u;
+            this.v = v;
+        }
+
+        public int u()
+        {
+            return this.u;
+        }
+
+        public int v()
+        {
+            return this.v;
+        }
     }
 }

@@ -13,9 +13,9 @@ public class ActiveConfirmationScreen extends ConfirmationScreen implements IEdi
 {
     private final IModConfig config;
 
-    public ActiveConfirmationScreen(Screen parent, IModConfig config, Component message, Function<Boolean, Boolean> handler)
+    public ActiveConfirmationScreen(Screen parent, IModConfig config, Component message, Icon icon, Function<Boolean, Boolean> handler)
     {
-        super(parent, message, handler);
+        super(parent, message, icon, handler);
         this.config = config;
     }
 

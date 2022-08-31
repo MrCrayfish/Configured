@@ -171,7 +171,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) -> {
                 if(this.isChanged(this.folderEntry))
                 {
-                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.unsaved_changes"), result -> {
+                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {
                         if(!result) return true;
                         this.minecraft.setScreen(this.parent);
                         return false;
@@ -203,7 +203,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
     private void showRestoreScreen()
     {
-        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), result -> {
+        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
             if(!result) return true;
             this.restoreDefaults(this.folderEntry);
             this.updateButtons();

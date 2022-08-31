@@ -123,7 +123,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private void showRestoreScreen()
         {
-            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslatableComponent("configured.gui.restore_message"), result -> {
+            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslatableComponent("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
                 if(!result)
                     return true;
                 this.config.restoreDefaults();
