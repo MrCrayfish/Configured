@@ -186,7 +186,20 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
         else
         {
-            this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new IconButton(this.width / 2 - 130, this.height - 29, 22, 44, 128, new TranslatableComponent("configured.gui.home"), button -> {
+                ConfigScreen target = this;
+                while(true)
+                {
+                    if(target.parent instanceof ConfigScreen)
+                    {
+                        target = (ConfigScreen) target.parent;
+                        continue;
+                    }
+                    break;
+                }
+                this.minecraft.setScreen(target);
+            }));
+            this.addRenderableWidget(new Button(this.width / 2 + 2, this.height - 29, 128, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
         }
 
         this.deepSearchCheckBox = new CheckBoxButton(this.width / 2 + 115, 25, button -> this.updateSearchResults());

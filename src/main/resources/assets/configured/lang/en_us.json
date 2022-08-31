@@ -15,6 +15,7 @@
     "configured.gui.view": "View",
     "configured.gui.close": "Close",
     "configured.gui.apply": "Apply",
+    "configured.gui.home": "Home",
     "configured.gui.select_world": "Pick World",
     "configured.gui.deep_search": "Deep Search",
     "configured.gui.no_permission": "You do not have permissions to do this",

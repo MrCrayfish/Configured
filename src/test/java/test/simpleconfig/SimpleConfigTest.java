@@ -49,6 +49,9 @@ public class SimpleConfigTest
     @SimpleConfig(id = Constants.ID, name = "memory", type = ConfigType.MEMORY)
     private static final MyConfig MEMORY = new MyConfig();
 
+    @SimpleConfig(id = Constants.ID, name = "deep_config", type = ConfigType.UNIVERSAL)
+    private static final DeepConfig DEEP_CONFIG = new DeepConfig();
+
     public SimpleConfigTest()
     {
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -112,6 +115,36 @@ public class SimpleConfigTest
 
             @SimpleProperty(name = "test_string_list", comment = "A test string list property")
             public final ListProperty<String> testStringList = ListProperty.create(ListProperty.STRING, () -> Arrays.asList("1", "2", "3", "4"));
+        }
+    }
+
+    public static class DeepConfig
+    {
+        @SimpleProperty(name = "once")
+        public final Once once = new Once();
+
+        public static class Once
+        {
+            @SimpleProperty(name = "upon")
+            public final Upon upon = new Upon();
+
+            public static class Upon
+            {
+                @SimpleProperty(name = "a")
+                public final A a = new A();
+
+                public static class A
+                {
+                    @SimpleProperty(name = "time")
+                    public final Time time = new Time();
+
+                    public static class Time
+                    {
+                        @SimpleProperty(name = "yo", comment = "What's up?")
+                        public final DoubleProperty yo = DoubleProperty.create(1.0, 0.0, 1.0);
+                    }
+                }
+            }
         }
     }
 }
