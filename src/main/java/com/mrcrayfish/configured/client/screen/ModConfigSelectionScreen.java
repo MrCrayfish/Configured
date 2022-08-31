@@ -170,17 +170,16 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                     }
                     else if(config.getType() != ConfigType.DEDICATED_SERVER)
                     {
-                        ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
-                        {
-                            Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
-                        });
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     }
                 }
                 else
                 {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
                     {
-                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, new TextComponent(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     });
                 }
             });
