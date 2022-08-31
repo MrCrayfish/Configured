@@ -91,7 +91,6 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     }
 
     @Override
-
     protected void constructEntries(List<Item> entries)
     {
         List<Item> configEntries = new ArrayList<>();
@@ -380,6 +379,18 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 RenderSystem.setShaderTexture(0, IconButton.ICONS);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 Screen.blit(poseStack, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
+            }
+
+            if(this.holder.requiresWorldRestart())
+            {
+                RenderSystem.setShaderTexture(0, IconButton.ICONS);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                Screen.blit(poseStack, left - 20, top + 5, 11, 11, 11, 22, 11, 11, 64, 64);
+
+                if(ScreenUtil.isMouseWithin(left - 20, top + 5, 11, 11, mouseX, mouseY))
+                {
+                    ConfigScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.requires_world_restart"), left - 24, top + 5, 0xFF194096, 0xFF275EA7);
+                }
             }
 
             if(this.isMouseOver(mouseX, mouseY))

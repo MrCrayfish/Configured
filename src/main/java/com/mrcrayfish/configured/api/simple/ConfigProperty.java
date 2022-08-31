@@ -117,6 +117,12 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
         return this.data.getComment();
     }
 
+    public boolean requiresWorldRestart()
+    {
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return this.data.requiresWorldRestart();
+    }
+
     public final void updateProxy(ConfigManager.ValueProxy proxy)
     {
         Preconditions.checkNotNull(proxy, "Tried to update config property with a null value proxy");

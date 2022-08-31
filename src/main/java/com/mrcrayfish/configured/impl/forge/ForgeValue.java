@@ -97,6 +97,12 @@ public class ForgeValue<T> implements IConfigValue<T>
         this.configValue.clearCache();
     }
 
+    @Override
+    public boolean requiresWorldRestart()
+    {
+        return this.valueSpec.needsWorldRestart();
+    }
+
     /**
      * Gets the last element in a list
      *

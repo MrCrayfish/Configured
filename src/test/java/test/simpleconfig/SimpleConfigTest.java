@@ -72,13 +72,13 @@ public class SimpleConfigTest
         @SimpleProperty(name = "lists", comment = "Lists of properties")
         public final Lists lists = new Lists();
 
-        @SimpleProperty(name = "more_properties", comment = "A sub config")
+        @SimpleProperty(name = "more_properties", comment = "A sub config", worldRestart = true)
         public final NestedConfig moreProperties = new NestedConfig();
 
         @SimpleProperty(name = "test_double", comment = "A test double property")
         public final DoubleProperty testDouble = DoubleProperty.create(1.0, 0.0, 1.0);
 
-        @SimpleProperty(name = "test_bool", comment = "A test boolean property")
+        @SimpleProperty(name = "test_bool", comment = "A test boolean property", worldRestart = true)
         public final BoolProperty testBoolean = BoolProperty.create(false);
 
         @SimpleProperty(name = "test_enum", comment = "A test enum property")
@@ -140,7 +140,7 @@ public class SimpleConfigTest
 
                     public static class Time
                     {
-                        @SimpleProperty(name = "yo", comment = "What's up?")
+                        @SimpleProperty(name = "yo", comment = "What's up?", worldRestart = true)
                         public final DoubleProperty yo = DoubleProperty.create(1.0, 0.0, 1.0);
                     }
                 }

@@ -568,13 +568,15 @@ public class ConfigManager
         private final List<String> path;
         private final String translationKey;
         private final String comment;
+        private final boolean worldRestart;
 
-        private PropertyData(String name, List<String> path, String translationKey, String comment)
+        private PropertyData(String name, List<String> path, String translationKey, String comment, boolean worldRestart)
         {
             this.name = name;
             this.path = ImmutableList.copyOf(path);
             this.translationKey = translationKey;
             this.comment = comment;
+            this.worldRestart = worldRestart;
         }
 
         public String getName()
@@ -595,6 +597,11 @@ public class ConfigManager
         public String getComment()
         {
             return this.comment;
+        }
+
+        public boolean requiresWorldRestart()
+        {
+            return this.worldRestart;
         }
     }
 
@@ -656,7 +663,7 @@ public class ConfigManager
                     {
                         List<String> path = new ArrayList<>(stack);
                         String key = ConfigUtil.createTranslationKey(this.config, path);
-                        property.initProperty(new PropertyData(sp.name(), path, key, sp.comment()));
+                        property.initProperty(new PropertyData(sp.name(), path, key, sp.comment(), sp.worldRestart()));
                         this.properties.add(property);
                     }
                     else

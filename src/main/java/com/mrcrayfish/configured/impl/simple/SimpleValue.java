@@ -109,6 +109,12 @@ public class SimpleValue<T> implements IConfigValue<T>
         this.property.invalidateCache();
     }
 
+    @Override
+    public boolean requiresWorldRestart()
+    {
+        return this.property.requiresWorldRestart();
+    }
+
     @Nullable
     public List<String> getPath()
     {

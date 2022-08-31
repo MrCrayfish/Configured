@@ -77,4 +77,6 @@ public interface IConfigValue<T>
      * If your config has a cache this is when it should be cleaned
      */
     void cleanCache();
+
+    boolean requiresWorldRestart();
 }
