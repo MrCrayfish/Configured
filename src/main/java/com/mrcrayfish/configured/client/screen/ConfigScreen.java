@@ -359,7 +359,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             boolean showValidationHint = this.validationHint != null;
             int trimLength = showValidationHint ? 100 : 80;
-            ChatFormatting labelStyle = this.holder.isChanged() ? ChatFormatting.ITALIC : ChatFormatting.RESET;
+            ChatFormatting labelStyle = this.holder.isChanged() ? Config.CLIENT.changedFormatting.get() : ChatFormatting.RESET;
             Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFF);
 
             if(showValidationHint)
