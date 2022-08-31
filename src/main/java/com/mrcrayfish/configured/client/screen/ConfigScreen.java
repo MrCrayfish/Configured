@@ -297,7 +297,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(new TextComponent(createLabel(folderEntry.getEntryName())));
             this.button = new IconButton(10, 5, 11, 33, 0, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
-                Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
+                Component newTitle = ConfigScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.getLabel());
                 ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, folderEntry));
             });
         }
