@@ -40,6 +40,7 @@ public class ConfigUtil
     private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
     private static final Set<Path> WATCHED_PATHS = new HashSet<>();
 
+    //TODO make read only configs not save and not linked to a file
     public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name, Supplier<CommentedConfig> fallback)
     {
         if(folder != null)
