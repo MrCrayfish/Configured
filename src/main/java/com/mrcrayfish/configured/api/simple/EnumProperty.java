@@ -12,13 +12,11 @@ import java.util.Set;
  */
 public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
 {
-    private final EnumGetMethod method;
     private final Set<T> allowedValues;
 
-    EnumProperty(T defaultValue, Set<T> allowedValues, EnumGetMethod method)
+    EnumProperty(T defaultValue, Set<T> allowedValues)
     {
         super(defaultValue, (config, path) -> config.getEnumOrElse(path, defaultValue));
-        this.method = method;
         this.allowedValues = ImmutableSet.copyOf(allowedValues);
     }
 
@@ -26,7 +24,7 @@ public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
     public void defineSpec(ConfigSpec spec)
     {
         Preconditions.checkState(this.data != null, "Config property is not initialized yet");
-        spec.defineRestrictedEnum(this.data.getPath(), this.defaultValue, this.allowedValues, this.method);
+        spec.defineRestrictedEnum(this.data.getPath(), this.defaultValue, this.allowedValues, EnumGetMethod.NAME_IGNORECASE);
     }
 
     @Override
@@ -37,21 +35,11 @@ public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
 
     public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue)
     {
-        return create(defaultValue, EnumGetMethod.NAME_IGNORECASE);
-    }
-
-    public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue, EnumGetMethod method)
-    {
-        return create(defaultValue, Set.of(defaultValue.getDeclaringClass().getEnumConstants()), method);
+        return create(defaultValue, Set.of(defaultValue.getDeclaringClass().getEnumConstants()));
     }
 
     public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue, Set<T> allowedValues)
     {
-        return create(defaultValue, allowedValues, EnumGetMethod.NAME_IGNORECASE);
-    }
-
-    public static <T extends Enum<T>> EnumProperty<T> create(T defaultValue, Set<T> allowedValues, EnumGetMethod method)
-    {
-        return new EnumProperty<>(defaultValue, allowedValues, method);
+        return new EnumProperty<>(defaultValue, allowedValues);
     }
 }
