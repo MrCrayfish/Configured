@@ -87,16 +87,15 @@ public class ForgeValue<T> implements IConfigValue<T>
     @Override
     public Component getValidationHint()
     {
-        this.loadRange();
-        if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
+        if(this.validationHint == null)
         {
-            if(this.validationHint == null)
+            this.loadRange();
+            if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
             {
                 this.validationHint = new TranslatableComponent("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
             }
-            return this.validationHint;
         }
-        return null;
+        return this.validationHint;
     }
 
     @Override
@@ -145,15 +144,17 @@ public class ForgeValue<T> implements IConfigValue<T>
             try
             {
                 Object range = ObfuscationReflectionHelper.getPrivateValue(ForgeConfigSpec.ValueSpec.class, this.valueSpec, "range");
-                Class rangeClass = Class.forName("net.minecraftforge.common.ForgeConfigSpec$Range");
-                Object min = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "min");
-                Object max = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "max");
-                this.range = Pair.of((T) min, (T) max);
+                if(range != null)
+                {
+                    Class rangeClass = Class.forName("net.minecraftforge.common.ForgeConfigSpec$Range");
+                    Object min = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "min");
+                    Object max = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "max");
+                    this.range = Pair.of((T) min, (T) max);
+                    return;
+                }
             }
-            catch(ClassNotFoundException e)
-            {
-                this.range = Pair.of(null, null);
-            }
+            catch(ClassNotFoundException ignored) {}
+            this.range = Pair.of(null, null);
         }
     }
 }
