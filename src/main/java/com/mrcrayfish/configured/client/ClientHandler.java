@@ -56,10 +56,11 @@ public class ClientHandler
     {
         ClientRegistry.registerKeyBinding(KEY_OPEN_MOD_LIST);
         ListMenuScreen.registerTooltipFactory();
+        generateConfigFactories();
     }
 
     // This is where the magic happens
-    public static void generateConfigFactories()
+    private static void generateConfigFactories()
     {
         Configured.LOGGER.info("Creating config GUI factories...");
         ModList.get().forEachModContainer((modId, container) ->

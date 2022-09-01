@@ -44,10 +44,12 @@ public class Configured
 
     private void onLoadComplete(FMLLoadCompleteEvent event)
     {
-        if(FMLLoader.getDist() == Dist.CLIENT)
+        event.enqueueWork(() ->
         {
-            ClientHandler.init();
-            ClientHandler.generateConfigFactories();
-        }
+            if(FMLLoader.getDist() == Dist.CLIENT)
+            {
+                ClientHandler.init();
+            }
+        });
     }
 }
