@@ -381,8 +381,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 Screen.blit(poseStack, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
             }
 
-            if(this.holder.requiresWorldRestart())
+            if(this.holder.requiresWorldRestart() && !ConfigScreen.this.config.isReadOnly())
             {
+                //TODO add a screen to let user know restart world is required
                 RenderSystem.setShaderTexture(0, IconButton.ICONS);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 Screen.blit(poseStack, left - 20, top + 5, 11, 11, 11, 22, 11, 11, 64, 64);
