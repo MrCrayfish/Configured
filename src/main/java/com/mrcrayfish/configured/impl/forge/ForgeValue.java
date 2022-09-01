@@ -88,7 +88,7 @@ public class ForgeValue<T> implements IConfigValue<T>
     public Component getValidationHint()
     {
         this.loadRange();
-        if(this.range != null)
+        if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
         {
             if(this.validationHint == null)
             {
