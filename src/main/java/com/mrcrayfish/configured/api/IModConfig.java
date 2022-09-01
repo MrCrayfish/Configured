@@ -89,6 +89,11 @@ public interface IModConfig
         return false;
     }
 
+    /**
+     * Restores the entire config to its default values. If the config is read only, it will simply
+     * be ignored. Implementations of this method should ensure that the config is loaded before
+     * performing a restore, otherwise just return.
+     */
     default void restoreDefaults() {}
 
     /**

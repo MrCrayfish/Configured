@@ -5,6 +5,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 /**
+ * A simple validator that to test if a number is within a range (inclusive).
+ *
  * Author: MrCrayfish
  */
 public class NumberRange<T extends Number & Comparable<T>> implements Validator<T>

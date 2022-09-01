@@ -66,21 +66,57 @@ public final class ListProperty<T> extends ConfigProperty<List<T>>
         return value != null && value.stream().allMatch(e -> e != null && this.type.test(e) && (this.elementValidator == null || this.elementValidator.test(e)));
     }
 
+    /**
+     * Creates a ListProperty with the given type. The default value will simply be an empty list.
+     * This list property will allow any value (as long as it matches the type) to be added into the
+     * list. If only specific values should be allowed, use {@link #create(Type, Validator)} to provide
+     * a custom element validator.
+     *
+     * @param type the type of the list
+     * @return a new ListProperty instance
+     */
     public static <T> ListProperty<T> create(Type<T> type)
     {
         return create(type, ArrayList::new);
     }
 
+    /**
+     * Creates a ListProperty with the given type and default list. This list property will allow any
+     * value (as long as it matches the type) to be added into the list. If only specific values
+     * should be allowed, while also providing a default list, used {@link #create(Type, Validator, Supplier)}
+     * to provide a custom element validator.
+     *
+     * @param type        the type of the list
+     * @param defaultList the default list of this property
+     * @return a new ListProperty instance
+     */
     public static <T> ListProperty<T> create(Type<T> type, Supplier<List<T>> defaultList)
     {
         return create(type, null, defaultList);
     }
 
+    /**
+     * Creates a ListProperty with the given type and element validator. The element validator
+     * is used to validate a value before allowing it to be added into the list. The default value
+     * of this property will simply be an empty list.
+     *
+     * @param type             the type of the list
+     * @param elementValidator the element validator to determine which values can be in the list
+     * @return a new ListProperty instance
+     */
     public static <T> ListProperty<T> create(Type<T> type, Validator<T> elementValidator)
     {
         return create(type, elementValidator, ArrayList::new);
     }
 
+    /**
+     * Creates a ListProperty with the given type, element validator, and default list.
+     *
+     * @param type             the type of the list
+     * @param elementValidator the element validator to determine which values can be in the list
+     * @param defaultList      the default list of this property
+     * @return a new ListProperty instance
+     */
     public static <T> ListProperty<T> create(Type<T> type, Validator<T> elementValidator, Supplier<List<T>> defaultList)
     {
         return new ListProperty<>(defaultList, type, elementValidator);

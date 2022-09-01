@@ -26,6 +26,12 @@ public final class BoolProperty extends ConfigProperty<Boolean>
         return value != null;
     }
 
+    /**
+     * Creates a BoolProperty with the given default value
+     *
+     * @param defaultValue the default value of this property
+     * @return a new BoolProperty instance
+     */
     public static BoolProperty create(boolean defaultValue)
     {
         return new BoolProperty(defaultValue);

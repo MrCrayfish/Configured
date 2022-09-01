@@ -65,8 +65,11 @@ public interface IConfigValue<T>
     @Nullable
     String getTranslationKey();
 
+    /**
+     * @return The hint to show to the user when the entered value is invalid (as determined by {@link #isValid(Object)}
+     */
     @Nullable
-    Component getValidationHint();
+    Component getValidationHint(); //TODO show on edit string screen
 
     /**
      * @return current directory name of the config entry this value is in.
@@ -78,5 +81,8 @@ public interface IConfigValue<T>
      */
     void cleanCache();
 
+    /**
+     * @return True if this value requires the world to be reloaded for the changes to take effect
+     */
     boolean requiresWorldRestart();
 }
