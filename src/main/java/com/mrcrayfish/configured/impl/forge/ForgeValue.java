@@ -2,7 +2,10 @@ package com.mrcrayfish.configured.impl.forge;
 
 import com.mrcrayfish.configured.api.IConfigValue;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -14,6 +17,8 @@ public class ForgeValue<T> implements IConfigValue<T>
     public final ForgeConfigSpec.ValueSpec valueSpec;
     private final T initialValue;
     protected T value;
+    private Pair<T, T> range;
+    private Component validationHint;
 
     public ForgeValue(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
@@ -82,6 +87,15 @@ public class ForgeValue<T> implements IConfigValue<T>
     @Override
     public Component getValidationHint()
     {
+        this.loadRange();
+        if(this.range != null)
+        {
+            if(this.validationHint == null)
+            {
+                this.validationHint = new TranslatableComponent("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
+            }
+            return this.validationHint;
+        }
         return null;
     }
 
@@ -118,5 +132,28 @@ public class ForgeValue<T> implements IConfigValue<T>
             return list.get(list.size() - 1);
         }
         return defaultValue;
+    }
+
+    /**
+     * Reflection to get Forge's range of a value
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void loadRange()
+    {
+        if(this.range == null)
+        {
+            try
+            {
+                Object range = ObfuscationReflectionHelper.getPrivateValue(ForgeConfigSpec.ValueSpec.class, this.valueSpec, "range");
+                Class rangeClass = Class.forName("net.minecraftforge.common.ForgeConfigSpec$Range");
+                Object min = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "min");
+                Object max = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "max");
+                this.range = Pair.of((T) min, (T) max);
+            }
+            catch(ClassNotFoundException e)
+            {
+                this.range = Pair.of(null, null);
+            }
+        }
     }
 }
