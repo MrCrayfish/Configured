@@ -39,8 +39,10 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -67,6 +69,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
     protected final IConfigEntry folderEntry;
     protected final IModConfig config;
+    protected final Map<String, String> cachedTextMap = new HashMap<>();
     protected Button saveButton;
     protected Button restoreButton;
     protected CheckBoxButton deepSearchCheckBox;
@@ -89,6 +92,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     public IModConfig getActiveConfig()
     {
         return this.config;
+    }
+
+    @Override
+    public void removed()
+    {
+        this.cachedTextMap.clear();
     }
 
     @Override
@@ -463,9 +472,11 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public NumberItem(IConfigValue<T> holder, Function<String, Number> parser)
         {
             super(holder);
+            String text = ConfigScreen.this.cachedTextMap.getOrDefault(holder.getName(), holder.get().toString());
             this.textField = new FocusedEditBox(ConfigScreen.this.font, 0, 0, 44, 18, this.label);
-            this.textField.setValue(holder.get().toString());
-            this.textField.setResponder((s) -> {
+            this.textField.setResponder((s) ->
+            {
+                ConfigScreen.this.cachedTextMap.put(holder.getName(), s);
                 try
                 {
                     Number n = parser.apply(s);
@@ -488,6 +499,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     this.setValidationHint(new TranslatableComponent("configured.validator.not_a_number"));
                 }
             });
+            this.textField.setValue(text);
             this.textField.setEditable(!ConfigScreen.this.config.isReadOnly());
             this.eventListeners.add(this.textField);
         }
