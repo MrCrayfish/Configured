@@ -118,6 +118,11 @@ public class SimpleConfigTest
         }
     }
 
+    public static class Validator
+    {
+
+    }
+
     public static class DeepConfig
     {
         @SimpleProperty(name = "once")

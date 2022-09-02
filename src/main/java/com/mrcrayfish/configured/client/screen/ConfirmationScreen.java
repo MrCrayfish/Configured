@@ -80,40 +80,12 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
 
         List<FormattedCharSequence> lines = this.font.split(this.message, 300);
 
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
-
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, IconButton.ICONS);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         Screen.blit(poseStack, this.width / 2 - 10, this.startY - 30, 20, 20, this.icon.u(), this.icon.v(), 10, 10, 64, 64);
 
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.vertex(0.0, this.endY, 0.0).uv(0.0F, this.endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        buffer.vertex(this.width, this.endY, 0.0).uv(this.width / 32.0F, this.endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        buffer.vertex(this.width, this.startY, 0.0).uv(this.width / 32.0F, this.startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        buffer.vertex(0.0, this.startY, 0.0).uv(0.0F, this.startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        tesselator.end();
-
-        RenderSystem.depthFunc(515);
-        RenderSystem.disableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableTexture();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        buffer.vertex(0.0, this.startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(this.width, this.startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(this.width, this.startY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(0.0, this.startY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(0.0, this.endY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(this.width, this.endY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(this.width, this.endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(0.0, this.endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        tesselator.end();
+        drawListBackground(0.0, this.width, this.startY, this.endY);
 
         for(int i = 0; i < lines.size(); i++)
         {
@@ -182,5 +154,38 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         {
             return this.v;
         }
+    }
+
+    public static void drawListBackground(double startX, double endX, double startY, double endY)
+    {
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.getBuilder();
+
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.vertex(startX, endY, 0.0).uv((float) startX / 32.0F, (float) endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        buffer.vertex(endX, endY, 0.0).uv((float) endX / 32.0F, (float) endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        buffer.vertex(endX, startY, 0.0).uv((float) endX / 32.0F, (float) startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        buffer.vertex(startX, startY, 0.0).uv((float) startX / 32.0F, (float) startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
+        tesselator.end();
+
+        RenderSystem.depthFunc(515);
+        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
+        RenderSystem.disableTexture();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(startX, startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        buffer.vertex(endX, startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        buffer.vertex(endX, startY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(startX, startY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(startX, endY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(endX, endY, 0.0).color(0, 0, 0, 255).endVertex();
+        buffer.vertex(endX, endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        buffer.vertex(startX, endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
+        tesselator.end();
     }
 }

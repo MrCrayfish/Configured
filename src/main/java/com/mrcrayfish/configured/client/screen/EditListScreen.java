@@ -22,6 +22,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,7 +74,15 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
             this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 22, 33, 90, new TranslatableComponent("configured.gui.add_value"), (button) -> {
                 this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
                     Object value = this.listType.getValueParser().apply(s);
-                    return value != null && this.holder.isValid(Collections.singletonList(value));
+                    if(value != null)
+                    {
+                        if(this.holder.isValid(Collections.singletonList(value)))
+                        {
+                            return Pair.of(true, TextComponent.EMPTY);
+                        }
+                        return Pair.of(false, this.holder.getValidationHint());
+                    }
+                    return Pair.of(false, new TranslatableComponent(this.listType.getHintKey()));
                 }, s -> {
                     StringHolder holder = new StringHolder(s);
                     this.values.add(holder);
@@ -182,7 +191,15 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
             this.editButton = new IconButton(0, 0, 1, 22, 20, TextComponent.EMPTY, onPress -> {
                 EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, EditListScreen.this.background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
-                    return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
+                    if(value != null)
+                    {
+                        if(EditListScreen.this.holder.isValid(Collections.singletonList(value)))
+                        {
+                            return Pair.of(true, TextComponent.EMPTY);
+                        }
+                        return Pair.of(false, EditListScreen.this.holder.getValidationHint());
+                    }
+                    return Pair.of(false, new TranslatableComponent(EditListScreen.this.listType.getHintKey()));
                 }, this.holder::setValue));
             }, (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHoveredOrFocused()) {
@@ -272,20 +289,22 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
 
     public enum ListType
     {
-        BOOLEAN(Object::toString, Boolean::valueOf),
-        INTEGER(Object::toString, Ints::tryParse),
-        LONG(Object::toString, Longs::tryParse),
-        DOUBLE(Object::toString, Doubles::tryParse),
-        STRING(Object::toString, o -> o),
-        UNKNOWN(Object::toString, o -> o);
+        BOOLEAN(Object::toString, Boolean::valueOf, "configured.parser.not_a_boolean"),
+        INTEGER(Object::toString, Ints::tryParse, "configured.parser.not_a_number"),
+        LONG(Object::toString, Longs::tryParse, "configured.parser.not_a_number"),
+        DOUBLE(Object::toString, Doubles::tryParse, "configured.parser.not_a_number"),
+        STRING(Object::toString, o -> o, "configured.parser.not_a_value"),
+        UNKNOWN(Object::toString, o -> o, "configured.parser.not_a_value");
 
         final Function<Object, String> stringParser;
         final Function<String, ?> valueParser;
+        final String hintKey;
 
-        ListType(Function<Object, String> stringParser, Function<String, ?> valueParser)
+        ListType(Function<Object, String> stringParser, Function<String, ?> valueParser, String hintKey)
         {
             this.stringParser = stringParser;
             this.valueParser = valueParser;
+            this.hintKey = hintKey;
         }
 
         public Function<Object, String> getStringParser()
@@ -296,6 +315,11 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         public Function<String, ?> getValueParser()
         {
             return this.valueParser;
+        }
+
+        public String getHintKey()
+        {
+            return this.hintKey;
         }
 
         private static ListType fromHolder(IConfigValue<List<?>> holder)

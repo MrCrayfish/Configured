@@ -33,6 +33,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -390,7 +391,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
                 if(ScreenUtil.isMouseWithin(left - 20, top + 5, 11, 11, mouseX, mouseY))
                 {
-                    ConfigScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.requires_world_restart"), left - 24, top + 5, 0xFF194096, 0xFF275EA7);
+                    ConfigScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.requires_world_restart"), left - 19, top + 3, 0xFF194096, 0xFF275EA7);
                 }
             }
 
@@ -398,7 +399,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             {
                 if(showValidationHint && ScreenUtil.isMouseWithin(left + width - 92, top, 23, 20, mouseX, mouseY))
                 {
-                    ConfigScreen.this.setActiveTooltip(this.validationHint, left + width - 92, top + 16, 0xFFDD0000, 0xFFFF0000);
+                    ConfigScreen.this.setActiveTooltip(this.validationHint, left + width - 88, top + 1, 0xFFDD0000, 0xFFFF0000);
                 }
                 else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
                 {
@@ -577,7 +578,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
-            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), s -> {
+                return holder.isValid(s) ? Pair.of(true, TextComponent.EMPTY) : Pair.of(false, holder.getValidationHint());
+            }, s -> {
                 holder.set(s);
                 ConfigScreen.this.updateButtons();
             })));

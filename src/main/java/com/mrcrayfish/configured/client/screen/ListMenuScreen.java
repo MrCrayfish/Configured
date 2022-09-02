@@ -45,11 +45,9 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
-public abstract class ListMenuScreen extends Screen implements IBackgroundTexture
+public abstract class ListMenuScreen extends TooltipScreen implements IBackgroundTexture
 {
     public static final ResourceLocation CONFIGURED_LOGO = new ResourceLocation(Reference.MOD_ID, "textures/gui/logo.png");
-    public static final List<Component> DUMMY_TOOLTIP = ImmutableList.of(TextComponent.EMPTY);
 
     protected final Screen parent;
     protected final ResourceLocation background;
@@ -58,13 +56,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected List<Item> entries;
     protected FocusedEditBox activeTextField;
     protected FocusedEditBox searchTextField;
-
-    // Tooltip properties
-    private List<FormattedCharSequence> tooltipText;
-    private Integer tooltipX;
-    private Integer tooltipY;
-    private Integer tooltipOutlineColour;
-    private Integer tooltipBackgroundColour;
 
     protected ListMenuScreen(Screen parent, Component title, ResourceLocation background, int itemHeight)
     {
@@ -118,57 +109,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }).collect(Collectors.toList());
     }
 
-    private void resetTooltip()
-    {
-        this.tooltipText = null;
-        this.tooltipX = null;
-        this.tooltipY = null;
-        this.tooltipBackgroundColour = null;
-        this.tooltipOutlineColour = null;
-    }
-
-    /**
-     * Sets the tool tip to render. Must be actively called in the render method as
-     * the tooltip is reset every draw call.
-     *
-     * @param tooltip a tooltip list to show
-     */
-    public void setTooltip(List<FormattedCharSequence> tooltip)
-    {
-        this.resetTooltip();
-        this.tooltipText = tooltip;
-    }
-
-    /**
-     * Sets the tool tip from the given component. Must be actively called in the
-     * render method as the tooltip is reset every draw call. This method automatically
-     * splits the text.
-     *
-     * @param text the text to show on the tooltip
-     */
-    public void setActiveTooltip(Component text)
-    {
-        this.resetTooltip();
-        this.tooltipText = this.minecraft.font.split(text, 200);
-    }
-
-    /**
-     * Set the tool tip from the given component and colours. Must be actively called
-     * in the render method as the tooltip is reset every draw call. This method
-     * automatically splits the text.
-     *
-     * @param text the text to show on the tooltip
-     */
-    public void setActiveTooltip(Component text, int x, int y, int outlineColour, int backgroundColour)
-    {
-        this.resetTooltip();
-        this.tooltipText = this.minecraft.font.split(text, 200);
-        this.tooltipX = x;
-        this.tooltipY = y;
-        this.tooltipBackgroundColour = backgroundColour;
-        this.tooltipOutlineColour = outlineColour;
-    }
-
     protected void updateTooltip(int mouseX, int mouseY)
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
@@ -220,10 +160,7 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         // Draws the active tooltip otherwise tries to draw button tooltips
         if(this.tooltipText != null)
         {
-            boolean positioned = this.tooltipX != null && this.tooltipY != null;
-            int x = positioned ? this.tooltipX + 12 : mouseX;
-            int y = positioned ? this.tooltipY - 12 : mouseY;
-            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
+            this.drawTooltip(poseStack, mouseX, mouseY);
         }
         else
         {
@@ -431,53 +368,4 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     }
 
     protected interface IIgnoreSearch {}
-
-    public static void registerTooltipFactory()
-    {
-        MinecraftForgeClient.registerTooltipComponentFactory(ListMenuTooltipComponent.class, ListMenuTooltipComponent::asClientTextTooltip);
-    }
-
-    private record ListMenuTooltipComponent(FormattedCharSequence text) implements TooltipComponent
-    {
-        public ClientTextTooltip asClientTextTooltip()
-        {
-            return new ClientTextTooltip(this.text);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event)
-    {
-        Minecraft minecraft = Minecraft.getInstance();
-        if(!(minecraft.screen instanceof ListMenuScreen listMenu))
-            return;
-
-        if(listMenu.tooltipText == null)
-            return;
-
-        event.getTooltipElements().clear();
-
-        for(FormattedCharSequence text : listMenu.tooltipText)
-        {
-            event.getTooltipElements().add(Either.right(new ListMenuTooltipComponent(text)));
-        }
-    }
-
-    @SubscribeEvent
-    public static void onGetTooltipColor(RenderTooltipEvent.Color event)
-    {
-        Minecraft minecraft = Minecraft.getInstance();
-        if(!(minecraft.screen instanceof ListMenuScreen listMenu))
-            return;
-
-        if(listMenu.tooltipText == null)
-            return;
-
-        if(listMenu.tooltipBackgroundColour == null || listMenu.tooltipOutlineColour == null)
-            return;
-
-        event.setBorderStart(listMenu.tooltipOutlineColour);
-        event.setBorderEnd(listMenu.tooltipOutlineColour);
-        event.setBackground(listMenu.tooltipBackgroundColour);
-    }
 }
