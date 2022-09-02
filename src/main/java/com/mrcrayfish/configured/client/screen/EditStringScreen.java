@@ -103,7 +103,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
 
             if(ScreenUtil.isMouseWithin(this.textField.x - 20, this.textField.y + 3, 16, 16, mouseX, mouseY))
             {
-                this.setActiveTooltip(this.validationHint, this.textField.x - 20, this.textField.y + 1, 0xFFDD0000, 0xFFFF0000);
+                this.setActiveTooltip(this.validationHint, 0xFFDD0000, 0xFFFF0000);
             }
         }
 

@@ -31,10 +31,6 @@ public abstract class TooltipScreen extends Screen
     @Nullable
     protected List<FormattedCharSequence> tooltipText;
     @Nullable
-    private Integer tooltipX;
-    @Nullable
-    private Integer tooltipY;
-    @Nullable
     private Integer tooltipOutlineColour;
     @Nullable
     private Integer tooltipBackgroundColour;
@@ -47,8 +43,6 @@ public abstract class TooltipScreen extends Screen
     protected void resetTooltip()
     {
         this.tooltipText = null;
-        this.tooltipX = null;
-        this.tooltipY = null;
         this.tooltipBackgroundColour = null;
         this.tooltipOutlineColour = null;
     }
@@ -85,12 +79,10 @@ public abstract class TooltipScreen extends Screen
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(Component text, int x, int y, int outlineColour, int backgroundColour)
+    public void setActiveTooltip(Component text, int outlineColour, int backgroundColour)
     {
         this.resetTooltip();
         this.tooltipText = this.minecraft.font.split(text, 200);
-        this.tooltipX = x;
-        this.tooltipY = y;
         this.tooltipBackgroundColour = backgroundColour;
         this.tooltipOutlineColour = outlineColour;
     }
@@ -99,11 +91,8 @@ public abstract class TooltipScreen extends Screen
     {
         if(this.tooltipText != null)
         {
-            int height = this.tooltipText.size() * 10 + (this.tooltipText.size() > 1 ? 2 : 0);
-            boolean positioned = this.tooltipX != null && this.tooltipY != null;
-            int x = positioned ? this.tooltipX - 8 : mouseX;
-            int y = positioned ? this.tooltipY + 10 - height : mouseY;
-            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
+            // Yep, this is strange. See the forge events below!
+            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, mouseX, mouseY);
         }
     }
 
