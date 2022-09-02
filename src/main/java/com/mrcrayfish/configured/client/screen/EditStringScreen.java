@@ -33,6 +33,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
     private Button doneButton;
     private EditBox textField;
     private Component validationHint;
+    private String value;
 
     protected EditStringScreen(Screen parent, IModConfig config, ResourceLocation background, Component component, String originalValue, Function<String, Pair<Boolean, Component>> validator, Consumer<String> onSave)
     {
@@ -43,6 +44,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
         this.originalValue = originalValue;
         this.validator = validator;
         this.onSave = onSave;
+        this.value = this.originalValue;
     }
 
     @Override
@@ -50,8 +52,11 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
     {
         this.textField = new EditBox(this.font, this.width / 2 - 130, this.height / 2 - 25, 260, 20, TextComponent.EMPTY);
         this.textField.setMaxLength(32500);
-        this.textField.setValue(this.originalValue);
-        this.textField.setResponder(s -> this.updateValidation());
+        this.textField.setValue(this.value);
+        this.textField.setResponder(s -> {
+            this.value = s;
+            this.updateValidation();
+        });
         this.textField.setEditable(!this.config.isReadOnly());
         this.addRenderableWidget(this.textField);
 
