@@ -41,6 +41,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
 
     private final Screen parent;
     private final IModConfig config;
+    private final List<StringHolder> initialValues = new ArrayList<>();
     private final List<StringHolder> values = new ArrayList<>();
     private final ResourceLocation background;
     private final IConfigValue<List<?>> holder;
@@ -54,7 +55,8 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         this.config = config;
         this.holder = holder;
         this.listType = getType(holder);
-        this.values.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
+        this.initialValues.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
+        this.values.addAll(this.initialValues);
         this.background = background;
     }
 
@@ -94,8 +96,21 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         int cancelWidth = readOnly ? 150 : 90;
         int cancelOffset = readOnly ? -75 : 50;
         Component cancelLabel = readOnly ? new TranslatableComponent("configured.gui.close") : CommonComponents.GUI_CANCEL;
-        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, cancelWidth, 20, cancelLabel, (button) -> {
-            this.minecraft.setScreen(this.parent);
+        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, cancelWidth, 20, cancelLabel, (button) ->
+        {
+            if(this.isModified())
+            {
+                ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(EditListScreen.this, EditListScreen.this.config, new TranslatableComponent("configured.gui.list_changed"), ConfirmationScreen.Icon.WARNING, result -> {
+                    if(!result) return true;
+                    this.minecraft.setScreen(this.parent);
+                    return false;
+                });
+                this.minecraft.setScreen(confirmScreen);
+            }
+            else
+            {
+                this.minecraft.setScreen(this.parent);
+            }
         }));
     }
 
@@ -118,6 +133,24 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
     public ResourceLocation getBackgroundTexture()
     {
         return this.background;
+    }
+
+    public boolean isModified()
+    {
+        if(this.initialValues.size() != this.values.size())
+        {
+            return true;
+        }
+        for(int i = 0; i < this.initialValues.size(); i++)
+        {
+            String s1 = this.initialValues.get(i).getValue();
+            String s2 = this.values.get(i).getValue();
+            if(!s1.equals(s2))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public class ObjectList extends ContainerObjectSelectionList<StringEntry> implements IBackgroundTexture

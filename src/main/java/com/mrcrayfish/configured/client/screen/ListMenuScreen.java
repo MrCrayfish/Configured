@@ -322,7 +322,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
+            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 6, 0xFFFFFF);
         }
     }
 

@@ -28,6 +28,7 @@
     "configured.gui.server_config_main_menu": "Server configs can only be edited from the main menu",
     "configured.gui.read_only_config": "This config is marked as read-only and cannot be edited while the game is running",
     "configured.gui.requires_world_restart": "If this property is changed, you will have to reload your world for it to take effect.",
+    "configured.gui.list_changed": "This list has been modified and changes will be lost if you exit. Are you sure you want to stop editing?",
     "configured.gui.title.client_configuration": "Client Configurations",
     "configured.gui.title.common_configuration": "Common Configurations",
     "configured.gui.title.server_configuration": "Server Configurations",
