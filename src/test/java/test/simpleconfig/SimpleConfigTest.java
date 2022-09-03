@@ -18,6 +18,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author: MrCrayfish
@@ -51,6 +52,9 @@ public class SimpleConfigTest
 
     @SimpleConfig(id = Constants.ID, name = "deep_config", type = ConfigType.UNIVERSAL)
     private static final DeepConfig DEEP_CONFIG = new DeepConfig();
+
+    @SimpleConfig(id = Constants.ID, name = "validator", type = ConfigType.UNIVERSAL)
+    private static final Validator VALIDATOR_CONFIG = new Validator();
 
     public SimpleConfigTest()
     {
@@ -120,7 +124,8 @@ public class SimpleConfigTest
 
     public static class Validator
     {
-
+        @SimpleProperty(name = "restricted_enum", comment = "A test enum property")
+        public final EnumProperty<Direction> testEnum = EnumProperty.create(Direction.NORTH, Set.of(Direction.UP, Direction.NORTH, Direction.DOWN));
     }
 
     public static class DeepConfig

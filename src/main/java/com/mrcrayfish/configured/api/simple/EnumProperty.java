@@ -34,6 +34,11 @@ public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
         return value != null && this.allowedValues.contains(value);
     }
 
+    public Set<T> getAllowedValues()
+    {
+        return this.allowedValues;
+    }
+
     /**
      * Creates an EnumProperty with the given default value. By default, all enum constants from
      * the default value's declaring class will be considered acceptable values. If more control is

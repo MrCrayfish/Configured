@@ -3,6 +3,8 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.api.IAllowedValues;
+import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
@@ -25,6 +27,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -37,18 +40,20 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
     private final IModConfig config;
     private final Consumer<Enum<?>> onSave;
     private final ResourceLocation background;
+    private final IConfigValue<Enum<?>> holder;
     private Enum<?> selectedValue;
     private EnumList list;
     private List<Entry> entries;
     private EditBox searchTextField;
 
-    protected ChangeEnumScreen(Screen parent, IModConfig config, Component title, ResourceLocation background, Enum<?> value, Consumer<Enum<?>> onSave)
+    protected ChangeEnumScreen(Screen parent, IModConfig config, Component title, ResourceLocation background, Enum<?> value, IConfigValue<Enum<?>> holder, Consumer<Enum<?>> onSave)
     {
         super(title);
         this.parent = parent;
         this.config = config;
         this.onSave = onSave;
         this.background = background;
+        this.holder = holder;
         this.selectedValue = value;
     }
 
@@ -94,13 +99,20 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        Enum<?> value = this.selectedValue;
-        if(value != null)
+        if(this.holder instanceof IAllowedValues<?>)
         {
-            Object[] enums = value.getDeclaringClass().getEnumConstants();
-            for(Object e : enums)
+            ((IAllowedValues<?>) this.holder).getAllowedValues().forEach(e -> entries.add(new Entry((Enum<?>) e)));
+        }
+        else
+        {
+            Enum<?> value = this.selectedValue;
+            if(value != null)
             {
-                entries.add(new Entry((Enum<?>) e));
+                Object[] enums = value.getDeclaringClass().getEnumConstants();
+                for(Object e : enums)
+                {
+                    entries.add(new Entry((Enum<?>) e));
+                }
             }
         }
         entries.sort(Comparator.comparing(entry -> entry.getFormattedLabel().getString()));

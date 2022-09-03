@@ -69,7 +69,7 @@ public interface IConfigValue<T>
      * @return The hint to show to the user when the entered value is invalid (as determined by {@link #isValid(Object)}
      */
     @Nullable
-    Component getValidationHint(); //TODO show on edit string screen
+    Component getValidationHint();
 
     /**
      * @return current directory name of the config entry this value is in.

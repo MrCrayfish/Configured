@@ -40,14 +40,17 @@ public class ForgeFolderEntry implements IConfigEntry
                 }
                 else if(o instanceof ForgeConfigSpec.ConfigValue<?> configValue)
                 {
-                    if(configValue.get() instanceof List)
+                    if(configValue.get() instanceof List<?>)
                     {
                         builder.add(new ValueEntry(new ForgeListValue((ForgeConfigSpec.ConfigValue<List<?>>) configValue, this.spec.getRaw(configValue.getPath()))));
+                    }
+                    else if(configValue.get() instanceof Enum<?>)
+                    {
+                        builder.add(new ValueEntry(new ForgeEnumValue<>((ForgeConfigSpec.EnumValue<?>) configValue, this.spec.getRaw(configValue.getPath()))));
                     }
                     else
                     {
                         builder.add(new ValueEntry(new ForgeValue<>(configValue, this.spec.getRaw(configValue.getPath()))));
-
                     }
                 }
             });
