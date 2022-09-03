@@ -39,6 +39,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -266,6 +267,7 @@ public class ConfigManager
             //TODO correct comments even if config is correct
             if(config instanceof Config && !this.spec.isCorrect((Config) config))
             {
+                ConfigUtil.createBackup(config);
                 this.spec.correct((Config) config);
                 if(config instanceof CommentedConfig c)
                     c.putAllComments(this.comments);

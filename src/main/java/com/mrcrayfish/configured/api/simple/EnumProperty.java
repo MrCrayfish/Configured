@@ -13,7 +13,7 @@ import java.util.Set;
  */
 public final class EnumProperty<T extends Enum<T>> extends ConfigProperty<T>
 {
-    private final Set<T> allowedValues; //TODO only show these values on change enum screen
+    private final Set<T> allowedValues;
 
     EnumProperty(T defaultValue, Set<T> allowedValues)
     {

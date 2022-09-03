@@ -204,4 +204,26 @@ public class ConfigUtil
     {
         return String.format("simpleconfig.%s.%s.%s", config.id(), config.name(), StringUtils.join(path, '.'));
     }
+
+    public static void createBackup(UnmodifiableConfig config)
+    {
+        if(config instanceof FileConfig fileConfig)
+        {
+            try
+            {
+                Path configPath = fileConfig.getNioPath();
+                // The length check prevents backing up on initial creation of the config file
+                // It also doesn't really make sense to back up an empty file
+                if(Files.exists(configPath) && fileConfig.getFile().length() > 0)
+                {
+                    Path backupPath = configPath.getParent().resolve(fileConfig.getFile().getName() + ".bak");
+                    Files.copy(configPath, backupPath);
+                }
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }
