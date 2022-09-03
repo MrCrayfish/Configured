@@ -167,7 +167,7 @@ public class ConfigManager
         private final ClassLoader classLoader;
         private final CommentedConfig comments; //TODO use comment node?
         @Nullable
-        private Config config;
+        private UnmodifiableConfig config;
 
         private SimpleConfigEntry(ConfigScanData data)
         {
@@ -213,7 +213,7 @@ public class ConfigManager
             if(dist.isPresent() && !FMLEnvironment.dist.equals(dist.get()))
                 return;
             Preconditions.checkState(this.config == null, "Config is already loaded. Unload before loading again.");
-            CommentedConfig config = ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
+            UnmodifiableConfig config = this.createConfig(configDir);
             ConfigUtil.loadFileConfig(config);
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
@@ -228,6 +228,16 @@ public class ConfigManager
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
+        }
+
+        private UnmodifiableConfig createConfig(@Nullable Path configDir)
+        {
+            if(this.readOnly)
+            {
+                Preconditions.checkArgument(configDir != null, "Config dir must not be null for read only configs");
+                return ConfigUtil.createReadOnlyConfig(configDir, this.id, this.name, this::correct);
+            }
+            return ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
         }
 
         void unload()
@@ -251,12 +261,12 @@ public class ConfigManager
             }
         }
 
-        private void correct(Config config)
+        private void correct(UnmodifiableConfig config)
         {
             //TODO correct comments even if config is correct
-            if(!this.spec.isCorrect(config))
+            if(config instanceof Config && !this.spec.isCorrect((Config) config))
             {
-                this.spec.correct(config);
+                this.spec.correct((Config) config);
                 if(config instanceof CommentedConfig c)
                     c.putAllComments(this.comments);
                 ConfigUtil.saveFileConfig(config);
@@ -268,8 +278,8 @@ public class ConfigManager
         {
             Preconditions.checkState(this.config != null, "Tried to update a config that is not loaded");
 
-            // Prevent updating if read only
-            if(this.readOnly)
+            // Prevent updating if read only or not a modifiable config
+            if(this.readOnly || !(this.config instanceof Config))
                 return;
 
             // Find changed values and return if nothing changed
@@ -287,7 +297,7 @@ public class ConfigManager
                 }
             });
             this.correct(newConfig);
-            this.config.putAll(newConfig);
+            ((Config) this.config).putAll(newConfig);
             this.allProperties.forEach(ConfigProperty::invalidateCache);
 
             // Post handling
@@ -515,7 +525,7 @@ public class ConfigManager
     {
         private static final ValueProxy EMPTY = new ValueProxy();
 
-        private final Config config;
+        private final UnmodifiableConfig config;
         private final List<String> path;
         private final boolean readOnly;
 
@@ -526,7 +536,7 @@ public class ConfigManager
             this.readOnly = true;
         }
 
-        private ValueProxy(Config config, List<String> path, boolean readOnly)
+        private ValueProxy(UnmodifiableConfig config, List<String> path, boolean readOnly)
         {
             this.config = config;
             this.path = path;
@@ -555,9 +565,9 @@ public class ConfigManager
 
         public <T> void set(T value)
         {
-            if(this.isLinked() && this.isWritable() && this.config != null)
+            if(this.isLinked() && this.isWritable() && this.config instanceof Config c)
             {
-                this.config.set(this.path, value);
+                c.set(this.path, value);
             }
         }
     }

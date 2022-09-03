@@ -4,7 +4,10 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.file.CommentedFileConfigBuilder;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
@@ -30,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -40,7 +44,6 @@ public class ConfigUtil
     private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
     private static final Set<Path> WATCHED_PATHS = new HashSet<>();
 
-    //TODO make read only configs not save and not linked to a file
     public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name, Supplier<CommentedConfig> fallback)
     {
         if(folder != null)
@@ -50,6 +53,17 @@ public class ConfigUtil
             return CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
         }
         return fallback.get();
+    }
+
+    public static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, String name, Consumer<Config> corrector)
+    {
+        CommentedFileConfig temp = createTempConfig(folder, id, name);
+        loadFileConfig(temp);
+        corrector.accept(temp);
+        CommentedConfig config = CommentedConfig.inMemory();
+        config.putAll(temp);
+        closeFileConfig(temp);
+        return config.unmodifiable();
     }
 
     public static CommentedConfig createTempServerConfig(Path folder, String id, String name)
@@ -81,7 +95,7 @@ public class ConfigUtil
         return false;
     }
 
-    public static void watchFileConfig(Config config, Runnable callback)
+    public static void watchFileConfig(UnmodifiableConfig config, Runnable callback)
     {
         if(config instanceof FileConfig fileConfig)
         {
@@ -98,7 +112,7 @@ public class ConfigUtil
         }
     }
 
-    public static void closeFileConfig(Config config)
+    public static void closeFileConfig(UnmodifiableConfig config)
     {
         if(config instanceof FileConfig fileConfig)
         {
@@ -112,7 +126,7 @@ public class ConfigUtil
         }
     }
 
-    public static void loadFileConfig(Config config)
+    public static void loadFileConfig(UnmodifiableConfig config)
     {
         if(config instanceof FileConfig fileConfig)
         {
@@ -127,7 +141,7 @@ public class ConfigUtil
         }
     }
 
-    public static void saveFileConfig(Config config)
+    public static void saveFileConfig(UnmodifiableConfig config)
     {
         if(config instanceof FileConfig fileConfig)
         {
