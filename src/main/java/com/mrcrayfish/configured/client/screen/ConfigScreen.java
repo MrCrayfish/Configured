@@ -416,7 +416,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 }
             }
 
-            this.resetButton.active = !this.holder.isDefault();
+            this.resetButton.active = !this.holder.isDefault() && !ConfigScreen.this.config.isReadOnly();
             this.resetButton.x = left + width - 21;
             this.resetButton.y = top;
             this.resetButton.render(poseStack, mouseX, mouseY, partialTicks);
