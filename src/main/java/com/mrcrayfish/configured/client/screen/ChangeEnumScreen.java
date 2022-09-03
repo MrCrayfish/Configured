@@ -3,7 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mrcrayfish.configured.api.IAllowedValues;
+import com.mrcrayfish.configured.api.IAllowedEnums;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -99,9 +98,9 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        if(this.holder instanceof IAllowedValues<?>)
+        if(this.holder instanceof IAllowedEnums<?>)
         {
-            ((IAllowedValues<?>) this.holder).getAllowedValues().forEach(e -> entries.add(new Entry((Enum<?>) e)));
+            ((IAllowedEnums<?>) this.holder).getAllowedValues().forEach(e -> entries.add(new Entry((Enum<?>) e)));
         }
         else
         {

@@ -5,7 +5,7 @@ import java.util.Set;
 /**
  * Author: MrCrayfish
  */
-public interface IAllowedValues<T>
+public interface IAllowedEnums<T>
 {
     Set<T> getAllowedValues();
 }

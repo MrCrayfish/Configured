@@ -1,6 +1,6 @@
 package com.mrcrayfish.configured.impl.forge;
 
-import com.mrcrayfish.configured.api.IAllowedValues;
+import com.mrcrayfish.configured.api.IAllowedEnums;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.HashSet;
@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Author: MrCrayfish
  */
-public class ForgeEnumValue<T extends Enum<T>> extends ForgeValue<T> implements IAllowedValues<T>
+public class ForgeEnumValue<T extends Enum<T>> extends ForgeValue<T> implements IAllowedEnums<T>
 {
     public ForgeEnumValue(ForgeConfigSpec.EnumValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
