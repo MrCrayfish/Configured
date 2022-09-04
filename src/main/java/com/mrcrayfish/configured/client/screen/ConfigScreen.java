@@ -167,17 +167,30 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
         if(this.folderEntry.isRoot())
         {
-            this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) -> {
+            this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) ->
+            {
                 this.saveConfig();
-                this.minecraft.setScreen(this.parent);
+                if(this.minecraft.level != null && ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresWorldRestart))
+                {
+                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.world_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
+                    confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
+                    confirm.setNegativeText(null);
+                    this.minecraft.setScreen(confirm);
+                }
+                else
+                {
+                    this.minecraft.setScreen(this.parent);
+                }
             }));
-            this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) -> {
+            this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) ->
+            {
                 if(this.folderEntry.isRoot())
                 {
                     this.showRestoreScreen();
                 }
             }));
-            this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) -> {
+            this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) ->
+            {
                 if(this.isChanged(this.folderEntry))
                 {
                     this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {

@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Function;
 
@@ -56,20 +57,24 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         this.startY = this.height / 2 - 10 - (lines.size() * (this.font.lineHeight + 2)) / 2 - MESSAGE_PADDING - 1;
         this.endY = this.startY + lines.size() * (this.font.lineHeight + 2) + MESSAGE_PADDING * 2;
 
-        this.addRenderableWidget(new Button(this.width / 2 - 105, this.endY + 10, 100, 20, this.positiveText, button ->
+        int offset = this.negativeText != null ? 105 : 50;
+        this.addRenderableWidget(new Button(this.width / 2 - offset, this.endY + 10, 100, 20, this.positiveText, button ->
         {
             if(this.handler.apply(true))
             {
                 this.minecraft.setScreen(this.parent);
             }
         }));
-        this.addRenderableWidget(new Button(this.width / 2 + 5, this.endY + 10, 100, 20, this.negativeText, button ->
+        if(this.negativeText != null)
         {
-            if(this.handler.apply(false))
+            this.addRenderableWidget(new Button(this.width / 2 + 5, this.endY + 10, 100, 20, this.negativeText, button ->
             {
-                this.minecraft.setScreen(this.parent);
-            }
-        }));
+                if(this.handler.apply(false))
+                {
+                    this.minecraft.setScreen(this.parent);
+                }
+            }));
+        }
     }
 
     @Override
@@ -115,7 +120,7 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
      *
      * @param negativeText the text component to display as the negative button label
      */
-    public void setNegativeText(Component negativeText)
+    public void setNegativeText(@Nullable Component negativeText)
     {
         this.negativeText = negativeText;
     }
