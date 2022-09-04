@@ -10,7 +10,11 @@ import com.mrcrayfish.configured.api.simple.LongProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.StringProperty;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -19,6 +23,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Author: MrCrayfish
@@ -124,6 +130,90 @@ public class SimpleConfigTest
 
     public static class Validator
     {
+        @SimpleProperty(name = "int_validation", comment = "A test int property with custom validation. The value must be one of the following: 1, 2, 4, 8, 16, or 32")
+        public final IntProperty intValue = IntProperty.create(1, new com.mrcrayfish.configured.api.simple.validate.Validator<>()
+        {
+            private final Set<Integer> allowed = Set.of(1, 2, 4, 8, 16, 32);
+
+            @Override
+            public boolean test(Integer value)
+            {
+                return this.allowed.contains(value);
+            }
+
+            @Override
+            public Component getHint()
+            {
+                return new TextComponent("Value must be one of the following: 1, 2, 4, 8, 16, or 32");
+            }
+        });
+
+        @SimpleProperty(name = "double_validation", comment = "A test double property with custom validation. The value must be greater than/equal to 10.0 or less than/equal to -10.0")
+        public final DoubleProperty doubleValue = DoubleProperty.create(10.0, new com.mrcrayfish.configured.api.simple.validate.Validator<>()
+        {
+            @Override
+            public boolean test(Double value)
+            {
+                return value >= 10.0 || value <= -10.0;
+            }
+
+            @Override
+            public Component getHint()
+            {
+                return new TextComponent("Value must be greater than/equal to 10.0 or less than/equal to -10.0");
+            }
+        });
+
+        @SimpleProperty(name = "list_element_validation", comment = "A test list property with custom element validation. An element in the list must start with https://mrcrayfish.com/mods?id=")
+        public final ListProperty<String> stringList = ListProperty.create(ListProperty.STRING, new com.mrcrayfish.configured.api.simple.validate.Validator<>()
+        {
+            @Override
+            public boolean test(String value)
+            {
+                return value.startsWith("https://mrcrayfish.com/mods?id=");
+            }
+
+            @Override
+            public Component getHint()
+            {
+                return new TextComponent("Value must start with ").append(new TextComponent("https://mrcrayfish.com/mods?id=").withStyle(ChatFormatting.YELLOW));
+            }
+        });
+
+        @SimpleProperty(name = "long_validation", comment = "A test long property with custom validation. The value must divisible by two.")
+        public final LongProperty longValue = LongProperty.create(0L, new com.mrcrayfish.configured.api.simple.validate.Validator<>()
+        {
+            @Override
+            public boolean test(Long value)
+            {
+                return value % 2 == 0;
+            }
+
+            @Override
+            public Component getHint()
+            {
+                return new TextComponent("Value must divisible by two");
+            }
+        });
+
+        @SimpleProperty(name = "string_validation", comment = "A test string property with custom validation. The value can only contain lowercase letters or numbers.")
+        public final StringProperty stringValue = StringProperty.create("hello", new com.mrcrayfish.configured.api.simple.validate.Validator<>()
+        {
+            private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z\\d]+$").asMatchPredicate();
+
+            @Override
+            public boolean test(String value)
+            {
+                return NAME_PATTERN.test(value);
+            }
+
+            @Override
+            public Component getHint()
+            {
+                return new TextComponent("Value can only contain lowercase letters or numbers");
+            }
+        });
+
         @SimpleProperty(name = "restricted_enum", comment = "A test enum property")
         public final EnumProperty<Direction> testEnum = EnumProperty.create(Direction.NORTH, Set.of(Direction.UP, Direction.NORTH, Direction.DOWN));
     }
