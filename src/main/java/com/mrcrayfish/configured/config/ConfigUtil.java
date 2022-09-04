@@ -24,8 +24,10 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -217,7 +219,7 @@ public class ConfigUtil
                 if(Files.exists(configPath) && fileConfig.getFile().length() > 0)
                 {
                     Path backupPath = configPath.getParent().resolve(fileConfig.getFile().getName() + ".bak");
-                    Files.copy(configPath, backupPath);
+                    Files.copy(configPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
             catch(IOException e)
