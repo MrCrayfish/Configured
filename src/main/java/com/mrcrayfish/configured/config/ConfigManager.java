@@ -117,7 +117,6 @@ public class ConfigManager
         if(connection != null && !connection.isMemoryConnection()) // Run only if disconnected from remote server
         {
             Configured.LOGGER.info("Unloading synced configs from server");
-            //TODO is this actually correct?
             this.configs.values().stream().filter(entry -> entry.getType().isSync()).forEach(ConfigManager.SimpleConfigEntry::unload);
         }
     }
@@ -166,7 +165,7 @@ public class ConfigManager
         private final PropertyMap propertyMap;
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
-        private final CommentedConfig comments; //TODO use comment node?
+        private final CommentedConfig comments;
         @Nullable
         private UnmodifiableConfig config;
 

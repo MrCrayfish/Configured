@@ -32,7 +32,6 @@ public class ForgeListValue extends ForgeValue<List<?>>
         {
             return LinkedList::new;
         }
-        // TODO allow developers to hook custom list
         return null;
     }
 

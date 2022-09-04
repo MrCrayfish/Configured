@@ -406,7 +406,6 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
             if(this.holder.requiresWorldRestart() && !ConfigScreen.this.config.isReadOnly())
             {
-                //TODO add a screen to let user know restart world is required
                 RenderSystem.setShaderTexture(0, IconButton.ICONS);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 Screen.blit(poseStack, left - 20, top + 5, 11, 11, 11, 22, 11, 11, 64, 64);
