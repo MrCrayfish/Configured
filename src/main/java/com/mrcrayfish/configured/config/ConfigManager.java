@@ -612,14 +612,16 @@ public class ConfigManager
         private final String translationKey;
         private final String comment;
         private final boolean worldRestart;
+        private final boolean gameRestart;
 
-        private PropertyData(String name, List<String> path, String translationKey, String comment, boolean worldRestart)
+        private PropertyData(String name, List<String> path, String translationKey, String comment, boolean worldRestart, boolean gameRestart)
         {
             this.name = name;
             this.path = ImmutableList.copyOf(path);
             this.translationKey = translationKey;
             this.comment = comment;
             this.worldRestart = worldRestart;
+            this.gameRestart = gameRestart;
         }
 
         public String getName()
@@ -645,6 +647,11 @@ public class ConfigManager
         public boolean requiresWorldRestart()
         {
             return this.worldRestart;
+        }
+
+        public boolean requiresGameRestart()
+        {
+            return this.gameRestart;
         }
     }
 
@@ -713,7 +720,7 @@ public class ConfigManager
                     {
                         List<String> path = new ArrayList<>(stack);
                         String key = ConfigUtil.createTranslationKey(this.config, path);
-                        property.initProperty(new PropertyData(sp.name(), path, key, sp.comment(), sp.worldRestart()));
+                        property.initProperty(new PropertyData(sp.name(), path, key, sp.comment(), sp.worldRestart(), sp.gameRestart()));
                         this.properties.add(property);
                     }
                     else

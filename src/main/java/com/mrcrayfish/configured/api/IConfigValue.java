@@ -85,4 +85,9 @@ public interface IConfigValue<T>
      * @return True if this value requires the world to be reloaded for the changes to take effect
      */
     boolean requiresWorldRestart();
+
+    /**
+     * @return True if this value requires the world to be reloaded for the changes to take effect
+     */
+    boolean requiresGameRestart();
 }

@@ -209,6 +209,15 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     }
 
     /**
+     * @return True if this property needs the game needs to be restarted for changes to take effect
+     */
+    public boolean requiresGameRestart()
+    {
+        Preconditions.checkState(this.data != null, "Config property is not initialized yet");
+        return this.data.requiresGameRestart();
+    }
+
+    /**
      * Internal method. Used for linking this property to a config
      */
     public final void updateProxy(ConfigManager.ValueProxy proxy)

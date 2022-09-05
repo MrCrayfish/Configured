@@ -35,11 +35,20 @@ public @interface SimpleProperty
     String comment() default "";
 
     /**
-     * After modifying this property, it may require the player to reload their world to take effect.
-     * In this case, world restart should be set to true. This will prompt the player to reload
-     * their world for the changes to apply.
+     * After modifying this property, it will require the player to reload their world for the
+     * changes to take effect. In this case, world restart should be set to true. This will prompt
+     * the player to reload their world for the changes to apply.
      *
      * @return True if this property requires the player to reload their world to take effect
      */
     boolean worldRestart() default false;
+
+    /**
+     * After modifying this property, it will require the player to reload their game for the
+     * changes to take effect. In this case, game restart should be set to true. This will prompt
+     * the player to reload their game for the changes to apply.
+     *
+     * @return True if this property requires the player to reload their game to take effect
+     */
+    boolean gameRestart() default false;
 }

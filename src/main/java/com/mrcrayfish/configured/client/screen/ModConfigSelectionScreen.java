@@ -275,7 +275,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private int getIconU()
         {
-            return (this.config.getType().ordinal() % 3) * 9 + 37;
+            return (this.config.getType().ordinal() % 3) * 9 + 33;
         }
 
         private int getIconV()

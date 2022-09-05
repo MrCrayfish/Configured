@@ -51,5 +51,5 @@ public @interface SimpleConfig
      */
     ConfigType type() default ConfigType.UNIVERSAL;
 
-    //TODO add needs game restart, hidden
+    //TODO add hidden
 }

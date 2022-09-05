@@ -116,6 +116,12 @@ public class ForgeValue<T> implements IConfigValue<T>
         return this.valueSpec.needsWorldRestart();
     }
 
+    @Override
+    public boolean requiresGameRestart()
+    {
+        return false;
+    }
+
     /**
      * Gets the last element in a list
      *

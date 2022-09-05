@@ -87,13 +87,13 @@ public class SimpleConfigTest
         @SimpleProperty(name = "lists", comment = "Lists of properties")
         public final Lists lists = new Lists();
 
-        @SimpleProperty(name = "more_properties", comment = "A sub config", worldRestart = true)
+        @SimpleProperty(name = "more_properties", comment = "A sub config")
         public final NestedConfig moreProperties = new NestedConfig();
 
-        @SimpleProperty(name = "test_double", comment = "A test double property")
+        @SimpleProperty(name = "test_double", comment = "A test double property", worldRestart = true)
         public final DoubleProperty testDouble = DoubleProperty.create(1.0, 0.0, 1.0);
 
-        @SimpleProperty(name = "test_bool", comment = "A test boolean property", worldRestart = true)
+        @SimpleProperty(name = "test_bool", comment = "A test boolean property", gameRestart = true)
         public final BoolProperty testBoolean = BoolProperty.create(false);
 
         @SimpleProperty(name = "test_enum", comment = "A test enum property")

@@ -170,7 +170,14 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) ->
             {
                 this.saveConfig();
-                if(this.minecraft.level != null && ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresWorldRestart))
+                if(ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresGameRestart))
+                {
+                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.game_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
+                    confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
+                    confirm.setNegativeText(null);
+                    this.minecraft.setScreen(confirm);
+                }
+                else if(this.minecraft.level != null && ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresWorldRestart))
                 {
                     ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.world_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
                     confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
@@ -404,15 +411,22 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 Screen.blit(poseStack, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
             }
 
-            if(this.holder.requiresWorldRestart() && !ConfigScreen.this.config.isReadOnly())
+            if(!ConfigScreen.this.config.isReadOnly())
             {
-                RenderSystem.setShaderTexture(0, IconButton.ICONS);
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                Screen.blit(poseStack, left - 20, top + 5, 11, 11, 11, 22, 11, 11, 64, 64);
-
-                if(ScreenUtil.isMouseWithin(left - 20, top + 5, 11, 11, mouseX, mouseY))
+                if(this.holder.requiresGameRestart() || this.holder.requiresWorldRestart())
                 {
-                    ConfigScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.requires_world_restart"), 0xFF194096, 0xFF275EA7);
+                    boolean gameRestart = this.holder.requiresGameRestart();
+                    RenderSystem.setShaderTexture(0, IconButton.ICONS);
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    Screen.blit(poseStack, left - 18, top + 5, 11, 11, gameRestart ? 51 : 11, 22, 11, 11, 64, 64);
+
+                    if(ScreenUtil.isMouseWithin(left - 18, top + 5, 11, 11, mouseX, mouseY))
+                    {
+                        String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
+                        int outline = gameRestart ? 0xFFDD873B : 0xFF194096;
+                        int background = gameRestart ? 0xFFDE923A : 0xFF275EA7;
+                        ConfigScreen.this.setActiveTooltip(new TranslatableComponent(translationKey), outline, background);
+                    }
                 }
             }
 

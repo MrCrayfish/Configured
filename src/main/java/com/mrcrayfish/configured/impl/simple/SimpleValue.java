@@ -115,6 +115,12 @@ public class SimpleValue<T> implements IConfigValue<T>
         return this.property.requiresWorldRestart();
     }
 
+    @Override
+    public boolean requiresGameRestart()
+    {
+        return this.property.requiresGameRestart();
+    }
+
     @Nullable
     public List<String> getPath()
     {
