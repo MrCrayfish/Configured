@@ -4,11 +4,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
+import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
-import com.mrcrayfish.configured.impl.ForgeConfig;
+import com.mrcrayfish.configured.impl.forge.ForgeConfig;
+import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -18,6 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.ConfigGuiHandler;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.gui.ModListScreen;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -35,6 +39,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -48,13 +53,15 @@ public class ClientHandler
 {
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
 
-    public static void registerKeyBindings()
+    public static void init()
     {
         ClientRegistry.registerKeyBinding(KEY_OPEN_MOD_LIST);
+        ListMenuScreen.registerTooltipFactory();
+        generateConfigFactories();
     }
 
     // This is where the magic happens
-    public static void generateConfigFactories()
+    private static void generateConfigFactories()
     {
         Configured.LOGGER.info("Creating config GUI factories...");
         ModList.get().forEachModContainer((modId, container) ->
@@ -63,7 +70,7 @@ public class ClientHandler
             if(container.getCustomExtension(ConfigGuiHandler.ConfigGuiFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
                 return;
 
-            Map<ModConfig.Type, Set<IModConfig>> modConfigMap = createConfigMap(container);
+            Map<ConfigType, Set<IModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
                 Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
@@ -81,16 +88,24 @@ public class ClientHandler
         return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
     }
 
-    public static Map<ModConfig.Type, Set<IModConfig>> createConfigMap(ModContainer container)
+    public static Map<ConfigType, Set<IModConfig>> createConfigMap(ModContainer container)
     {
-        Map<ModConfig.Type, Set<IModConfig>> modConfigMap = new HashMap<>();
-        addConfigSetToMap(container, ModConfig.Type.CLIENT, modConfigMap);
-        addConfigSetToMap(container, ModConfig.Type.COMMON, modConfigMap);
-        addConfigSetToMap(container, ModConfig.Type.SERVER, modConfigMap);
+        Map<ConfigType, Set<IModConfig>> modConfigMap = new HashMap<>();
+
+        // Add Forge configurations
+        addForgeConfigSetToMap(container, ModConfig.Type.CLIENT, ConfigType.CLIENT, modConfigMap);
+        addForgeConfigSetToMap(container, ModConfig.Type.COMMON, ConfigType.UNIVERSAL, modConfigMap);
+        addForgeConfigSetToMap(container, ModConfig.Type.SERVER, ConfigType.WORLD_SYNC, modConfigMap);
+
+        // Add SimpleConfig configurations
+        SimpleConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId())).forEach(entry -> {
+            modConfigMap.computeIfAbsent(entry.getType(), type -> new LinkedHashSet<>()).add(entry);
+        });
+
         return modConfigMap;
     }
 
-    private static void addConfigSetToMap(ModContainer container, ModConfig.Type type, Map<ModConfig.Type, Set<IModConfig>> configMap)
+    private static void addForgeConfigSetToMap(ModContainer container, ModConfig.Type type, ConfigType configType, Map<ConfigType, Set<IModConfig>> configMap)
     {
         /* Optifine basically breaks Forge's client config, so it's simply not added */
         if(type == ModConfig.Type.CLIENT && OptiFineHelper.isLoaded() && container.getModId().equals("forge"))
@@ -106,7 +121,7 @@ public class ClientHandler
                 .collect(Collectors.toSet());
         if(!filteredConfigSets.isEmpty())
         {
-            configMap.put(type, filteredConfigSets);
+            configMap.put(configType, filteredConfigSets);
         }
     }
 
@@ -167,5 +182,11 @@ public class ClientHandler
             Screen oldScreen = minecraft.screen;
             minecraft.setScreen(new ModListScreen(oldScreen));
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    {
+        SimpleConfigManager.getInstance().onClientDisconnect(event.getConnection());
     }
 }

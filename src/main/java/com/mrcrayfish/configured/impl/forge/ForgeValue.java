@@ -1,8 +1,13 @@
-package com.mrcrayfish.configured.impl;
+package com.mrcrayfish.configured.impl.forge;
 
 import com.mrcrayfish.configured.api.IConfigValue;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,8 +15,10 @@ public class ForgeValue<T> implements IConfigValue<T>
 {
     public final ForgeConfigSpec.ConfigValue<T> configValue;
     public final ForgeConfigSpec.ValueSpec valueSpec;
-    private final T initialValue;
+    protected final T initialValue;
     protected T value;
+    private Pair<T, T> range;
+    private Component validationHint;
 
     public ForgeValue(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {
@@ -76,8 +83,23 @@ public class ForgeValue<T> implements IConfigValue<T>
         return this.valueSpec.getTranslationKey();
     }
 
+    @Nullable
     @Override
-    public String getPath()
+    public Component getValidationHint()
+    {
+        if(this.validationHint == null)
+        {
+            this.loadRange();
+            if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
+            {
+                this.validationHint = new TranslatableComponent("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
+            }
+        }
+        return this.validationHint;
+    }
+
+    @Override
+    public String getName()
     {
         return lastValue(this.configValue.getPath(), "");
     }
@@ -86,6 +108,18 @@ public class ForgeValue<T> implements IConfigValue<T>
     public void cleanCache()
     {
         this.configValue.clearCache();
+    }
+
+    @Override
+    public boolean requiresWorldRestart()
+    {
+        return this.valueSpec.needsWorldRestart();
+    }
+
+    @Override
+    public boolean requiresGameRestart()
+    {
+        return false;
     }
 
     /**
@@ -103,5 +137,30 @@ public class ForgeValue<T> implements IConfigValue<T>
             return list.get(list.size() - 1);
         }
         return defaultValue;
+    }
+
+    /**
+     * Reflection to get Forge's range of a value
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void loadRange()
+    {
+        if(this.range == null)
+        {
+            try
+            {
+                Object range = ObfuscationReflectionHelper.getPrivateValue(ForgeConfigSpec.ValueSpec.class, this.valueSpec, "range");
+                if(range != null)
+                {
+                    Class rangeClass = Class.forName("net.minecraftforge.common.ForgeConfigSpec$Range");
+                    Object min = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "min");
+                    Object max = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "max");
+                    this.range = Pair.of((T) min, (T) max);
+                    return;
+                }
+            }
+            catch(ClassNotFoundException ignored) {}
+            this.range = Pair.of(null, null);
+        }
     }
 }

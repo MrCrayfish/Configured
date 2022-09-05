@@ -90,7 +90,7 @@ public class WorldSelectionScreen extends ListMenuScreen
         super.updateTooltip(mouseX, mouseY);
         if(ScreenUtil.isMouseWithin(this.width - 30, 15, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(Minecraft.getInstance().font.split(new TranslatableComponent("configured.gui.server_config_info"), 200));
+            this.setActiveTooltip(new TranslatableComponent("configured.gui.server_config_info"));
         }
     }
 
@@ -125,7 +125,7 @@ public class WorldSelectionScreen extends ListMenuScreen
             this.iconFile = summary.getIcon().isFile() ? summary.getIcon() : null;
             this.texture = this.loadWorldIcon();
             this.modifyButton = new Button(0, 0, 50, 20, new TranslatableComponent("configured.gui.select"), onPress -> {
-                this.loadServerConfig(summary.getLevelId(), summary.getLevelName());
+                this.loadWorldConfig(summary.getLevelId(), summary.getLevelName());
             });
         }
 
@@ -172,13 +172,13 @@ public class WorldSelectionScreen extends ListMenuScreen
             }
         }
 
-        private void loadServerConfig(String worldFileName, String worldName)
+        private void loadWorldConfig(String worldFileName, String worldName)
         {
             try(LevelStorageSource.LevelStorageAccess storageAccess = Minecraft.getInstance().getLevelSource().createAccess(worldFileName))
             {
-                Path serverConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
-                FileUtils.getOrCreateDirectory(serverConfigPath, "serverconfig");
-                WorldSelectionScreen.this.config.loadServerConfig(serverConfigPath, T -> {
+                Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
+                FileUtils.getOrCreateDirectory(worldConfigPath, "serverconfig");
+                WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
                     ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
                         WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, new TextComponent(worldName), T, WorldSelectionScreen.this.background));
                     });

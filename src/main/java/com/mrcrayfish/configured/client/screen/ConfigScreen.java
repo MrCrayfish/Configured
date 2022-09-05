@@ -1,15 +1,21 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.screen.widget.CheckBoxButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
@@ -20,26 +26,32 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
  */
-public class ConfigScreen extends ListMenuScreen
+public class ConfigScreen extends ListMenuScreen implements IEditing
 {
-    public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) ->
-    {
+    public static final Comparator<Item> SORT_ALPHABETICALLY = (o1, o2) -> {
         if(o1 instanceof FolderItem && o2 instanceof FolderItem)
         {
             return o1.getLabel().compareTo(o2.getLabel());
@@ -56,13 +68,16 @@ public class ConfigScreen extends ListMenuScreen
     };
 
     protected final IConfigEntry folderEntry;
-    protected IModConfig config;
+    protected final IModConfig config;
+    protected final Map<String, String> cachedTextMap = new HashMap<>();
     protected Button saveButton;
     protected Button restoreButton;
+    protected CheckBoxButton deepSearchCheckBox;
 
-    private ConfigScreen(Screen parent, Component title, ResourceLocation background, IConfigEntry folderEntry)
+    private ConfigScreen(Screen parent, Component title, IModConfig config, ResourceLocation background, IConfigEntry folderEntry)
     {
         super(parent, title, background, 24);
+        this.config = config;
         this.folderEntry = folderEntry;
     }
 
@@ -73,59 +88,76 @@ public class ConfigScreen extends ListMenuScreen
         this.folderEntry = config.getRoot();
     }
 
-	@Override
-    @SuppressWarnings("unchecked")
+    @Override
+    public IModConfig getActiveConfig()
+    {
+        return this.config;
+    }
+
+    @Override
+    public void removed()
+    {
+        this.cachedTextMap.clear();
+    }
+
+    @Override
     protected void constructEntries(List<Item> entries)
     {
         List<Item> configEntries = new ArrayList<>();
-        this.folderEntry.getChildren().forEach(c ->
-        {
-            if(c.isLeaf())
-            {
-            	IConfigValue<?> entry = c.getValue();
-            	if(entry == null) return;
-
-                Object value = entry.get();
-                if(value instanceof Boolean)
-                {
-                    configEntries.add(new BooleanItem((IConfigValue<Boolean>)entry));
-                }
-                else if(value instanceof Integer)
-                {
-                    configEntries.add(new IntegerItem((IConfigValue<Integer>)entry));
-                }
-                else if(value instanceof Double)
-                {
-                    configEntries.add(new DoubleItem((IConfigValue<Double>)entry));
-                }
-                else if(value instanceof Long)
-                {
-                    configEntries.add(new LongItem((IConfigValue<Long>)entry));
-                }
-                else if(value instanceof Enum)
-                {
-                    configEntries.add(new EnumItem((IConfigValue<Enum<?>>)entry));
-                }
-                else if(value instanceof String)
-                {
-                    configEntries.add(new StringItem((IConfigValue<String>)entry));
-                }
-                else if(value instanceof List<?>)
-                {
-                    configEntries.add(new ListItem((IConfigValue<List<?>>)entry));
-                }
-                else
-                {
-                    Configured.LOGGER.info("Unsupported config value: " + entry.getPath());
-                }
-            }
-            else
-            {
-                configEntries.add(new FolderItem(c));
-            }
+        this.folderEntry.getChildren().forEach(entry -> {
+            Item item = this.createItemFromEntry(entry);
+            if(item != null) configEntries.add(item);
         });
         configEntries.sort(SORT_ALPHABETICALLY);
         entries.addAll(configEntries);
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private Item createItemFromEntry(IConfigEntry entry)
+    {
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            if(value != null)
+            {
+                Object object = value.get();
+                if(object instanceof Boolean)
+                {
+                    return new BooleanItem((IConfigValue<Boolean>) value);
+                }
+                else if(object instanceof Integer)
+                {
+                    return new IntegerItem((IConfigValue<Integer>) value);
+                }
+                else if(object instanceof Double)
+                {
+                    return new DoubleItem((IConfigValue<Double>) value);
+                }
+                else if(object instanceof Long)
+                {
+                    return new LongItem((IConfigValue<Long>) value);
+                }
+                else if(object instanceof Enum)
+                {
+                    return new EnumItem((IConfigValue<Enum<?>>) value);
+                }
+                else if(object instanceof String)
+                {
+                    return new StringItem((IConfigValue<String>) value);
+                }
+                else if(object instanceof List<?>)
+                {
+                    return new ListItem((IConfigValue<List<?>>) value);
+                }
+                else
+                {
+                    Configured.LOGGER.info("Unsupported config value: " + value.getName());
+                }
+            }
+            return null;
+        }
+        return new FolderItem(entry);
     }
 
     @Override
@@ -137,11 +169,25 @@ public class ConfigScreen extends ListMenuScreen
         {
             this.saveButton = this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 22, 0, 90, new TranslatableComponent("configured.gui.save"), (button) ->
             {
-                if(this.config != null)
+                this.saveConfig();
+                if(ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresGameRestart))
                 {
-                    this.saveConfig();
+                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.game_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
+                    confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
+                    confirm.setNegativeText(null);
+                    this.minecraft.setScreen(confirm);
                 }
-                this.minecraft.setScreen(this.parent);
+                else if(this.minecraft.level != null && ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresWorldRestart))
+                {
+                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.world_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
+                    confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
+                    confirm.setNegativeText(null);
+                    this.minecraft.setScreen(confirm);
+                }
+                else
+                {
+                    this.minecraft.setScreen(this.parent);
+                }
             }));
             this.restoreButton = this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 0, 0, 90, new TranslatableComponent("configured.gui.reset_all"), (button) ->
             {
@@ -154,7 +200,7 @@ public class ConfigScreen extends ListMenuScreen
             {
                 if(this.isChanged(this.folderEntry))
                 {
-                    this.minecraft.setScreen(new ConfirmationScreen(this, new TranslatableComponent("configured.gui.unsaved_changes"), result -> {
+                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {
                         if(!result) return true;
                         this.minecraft.setScreen(this.parent);
                         return false;
@@ -169,8 +215,24 @@ public class ConfigScreen extends ListMenuScreen
         }
         else
         {
-            this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new IconButton(this.width / 2 - 130, this.height - 29, 22, 44, 128, new TranslatableComponent("configured.gui.home"), button -> {
+                ConfigScreen target = this;
+                while(true)
+                {
+                    if(target.parent instanceof ConfigScreen)
+                    {
+                        target = (ConfigScreen) target.parent;
+                        continue;
+                    }
+                    break;
+                }
+                this.minecraft.setScreen(target);
+            }));
+            this.addRenderableWidget(new Button(this.width / 2 + 2, this.height - 29, 128, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
         }
+
+        this.deepSearchCheckBox = new CheckBoxButton(this.width / 2 + 115, 25, button -> this.updateSearchResults());
+        this.addRenderableWidget(this.deepSearchCheckBox);
     }
 
     private void saveConfig()
@@ -178,13 +240,12 @@ public class ConfigScreen extends ListMenuScreen
         // Don't need to save if nothing changed
         if(!this.isChanged(this.folderEntry) || this.config == null)
             return;
-        this.config.saveConfig(this.folderEntry);
+        this.config.update(this.folderEntry);
     }
 
     private void showRestoreScreen()
     {
-        ConfirmationScreen confirmScreen = new ConfirmationScreen(ConfigScreen.this, new TranslatableComponent("configured.gui.restore_message"), result ->
-        {
+        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
             if(!result) return true;
             this.restoreDefaults(this.folderEntry);
             this.updateButtons();
@@ -198,16 +259,16 @@ public class ConfigScreen extends ListMenuScreen
 
     private void restoreDefaults(IConfigEntry entry)
     {
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-        	if(child.isLeaf())
-        	{
-        		IConfigValue<?> value = child.getValue();
-        		if(value != null) value.restore();
-        		continue;
-        	}
-    		this.restoreDefaults(child);
-    	}
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(child.isLeaf())
+            {
+                IConfigValue<?> value = child.getValue();
+                if(value != null) value.restore();
+                continue;
+            }
+            this.restoreDefaults(child);
+        }
     }
 
     private void updateButtons()
@@ -216,36 +277,70 @@ public class ConfigScreen extends ListMenuScreen
         {
             if(this.saveButton != null)
             {
-                this.saveButton.active = this.isChanged(this.folderEntry);
+                this.saveButton.active = !this.config.isReadOnly() && this.isChanged(this.folderEntry);
             }
             if(this.restoreButton != null)
             {
-                this.restoreButton.active = this.isModified(this.folderEntry);
+                this.restoreButton.active = !this.config.isReadOnly() && this.isModified(this.folderEntry);
             }
         }
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    protected void renderForeground(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
-        this.activeTooltip = null;
-        this.renderBackground(poseStack);
-        this.list.render(poseStack, mouseX, mouseY, partialTicks);
-        this.searchTextField.render(poseStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(poseStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
-        super.render(poseStack, mouseX, mouseY, partialTicks);
+        if(this.config.isReadOnly())
+        {
+            RenderSystem.setShaderTexture(0, IconButton.ICONS);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            Screen.blit(poseStack, this.width - 30, 14, 20, 20, 0, 11, 10, 10, 64, 64);
+            if(ScreenUtil.isMouseWithin(this.width - 30, 14, 20, 20, mouseX, mouseY))
+            {
+                this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
+            }
+        }
+
+        if(this.deepSearchCheckBox.isMouseOver(mouseX, mouseY))
+        {
+            this.setActiveTooltip(new TranslatableComponent("configured.gui.deep_search"));
+        }
+    }
+
+    @Override
+    protected Collection<Item> getSearchResults(String s)
+    {
+        List<Item> entries = this.entries;
+        if(this.deepSearchCheckBox.selected())
+        {
+            List<Item> allEntries = new ArrayList<>();
+            ConfigHelper.gatherAllConfigEntries(this.folderEntry).forEach(entry -> {
+                Item item = this.createItemFromEntry(entry);
+                if(item instanceof ConfigItem<?>) {
+                    allEntries.add(item);
+                }
+            });
+            allEntries.sort(SORT_ALPHABETICALLY);
+            entries = allEntries;
+        }
+        return entries.stream().filter(item -> {
+            if(item instanceof IIgnoreSearch)
+                return false;
+            if(item instanceof FolderItem && !Config.CLIENT.includeFoldersInSearch.get())
+                return false;
+            return item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+        }).collect(Collectors.toList());
     }
 
     public class FolderItem extends Item
     {
-        private final Button button;
+        private final IconButton button;
 
         public FolderItem(IConfigEntry folderEntry)
         {
             super(new TextComponent(createLabel(folderEntry.getEntryName())));
-            this.button = new Button(10, 5, 44, 20, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
-                Component newTitle = ConfigScreen.this.title.copy().append(" > " + this.getLabel());
-                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.background, folderEntry));
+            this.button = new IconButton(10, 5, 11, 33, 0, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
+                Component newTitle = ConfigScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.getLabel());
+                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, folderEntry));
             });
         }
 
@@ -270,6 +365,7 @@ public class ConfigScreen extends ListMenuScreen
         protected final IConfigValue<T> holder;
         protected final List<GuiEventListener> eventListeners = new ArrayList<>();
         protected final Button resetButton;
+        protected Component validationHint;
 
         public ConfigItem(IConfigValue<T> holder)
         {
@@ -284,11 +380,15 @@ public class ConfigScreen extends ListMenuScreen
             this.resetButton = new IconButton(0, 0, 0, 0, onPress -> {
                 this.holder.restore();
                 this.onResetValue();
+                ConfigScreen.this.updateButtons();
             }, tooltip);
+            this.resetButton.active = !ConfigScreen.this.config.isReadOnly();
             this.eventListeners.add(this.resetButton);
         }
 
-        protected void onResetValue() {}
+        protected void onResetValue()
+        {
+        }
 
         @Override
         public List<? extends GuiEventListener> children()
@@ -299,33 +399,69 @@ public class ConfigScreen extends ListMenuScreen
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - 75), left, top + 6, 0xFFFFFF);
+            boolean showValidationHint = this.validationHint != null;
+            int trimLength = showValidationHint ? 100 : 80;
+            ChatFormatting labelStyle = this.holder.isChanged() ? Config.CLIENT.changedFormatting.get() : ChatFormatting.RESET;
+            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFF);
 
-            if(this.isMouseOver(mouseX, mouseY) && mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 67)
+            if(showValidationHint)
             {
-                ConfigScreen.this.setActiveTooltip(this.tooltip);
+                RenderSystem.setShaderTexture(0, IconButton.ICONS);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                Screen.blit(poseStack, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
             }
 
-            this.resetButton.active = !this.holder.isDefault();
+            if(!ConfigScreen.this.config.isReadOnly())
+            {
+                if(this.holder.requiresGameRestart() || this.holder.requiresWorldRestart())
+                {
+                    boolean gameRestart = this.holder.requiresGameRestart();
+                    RenderSystem.setShaderTexture(0, IconButton.ICONS);
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    Screen.blit(poseStack, left - 18, top + 5, 11, 11, gameRestart ? 51 : 11, 22, 11, 11, 64, 64);
+
+                    if(ScreenUtil.isMouseWithin(left - 18, top + 5, 11, 11, mouseX, mouseY))
+                    {
+                        String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
+                        int outline = gameRestart ? 0xFFDD873B : 0xFF194096;
+                        int background = gameRestart ? 0xFFDE923A : 0xFF275EA7;
+                        ConfigScreen.this.setActiveTooltip(new TranslatableComponent(translationKey), outline, background);
+                    }
+                }
+            }
+
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                if(showValidationHint && ScreenUtil.isMouseWithin(left + width - 92, top, 23, 20, mouseX, mouseY))
+                {
+                    ConfigScreen.this.setActiveTooltip(this.validationHint, 0xFFDD0000, 0xFFFF0000);
+                }
+                else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
+                {
+                    ConfigScreen.this.setTooltip(this.tooltip);
+                }
+            }
+
+            this.resetButton.active = !this.holder.isDefault() && !ConfigScreen.this.config.isReadOnly();
             this.resetButton.x = left + width - 21;
             this.resetButton.y = top;
             this.resetButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
-        private Component getTrimmedLabel(int maxWidth)
+        private MutableComponent getTrimmedLabel(int maxWidth)
         {
             if(ConfigScreen.this.minecraft.font.width(this.label) > maxWidth)
             {
                 return new TextComponent(ConfigScreen.this.minecraft.font.substrByWidth(this.label, maxWidth).getString() + "...");
             }
-            return this.label;
+            return this.label.copy();
         }
 
         private List<FormattedCharSequence> createToolTip(IConfigValue<T> holder)
         {
             Font font = Minecraft.getInstance().font;
             List<FormattedText> lines = font.getSplitter().splitLines(new TextComponent(holder.getComment()), 200, Style.EMPTY);
-            String name = holder.getPath();
+            String name = holder.getName();
             lines.add(0, new TextComponent(name).withStyle(ChatFormatting.YELLOW));
             int rangeIndex = -1;
             for(int i = 0; i < lines.size(); i++)
@@ -346,20 +482,27 @@ public class ConfigScreen extends ListMenuScreen
             }
             return Language.getInstance().getVisualOrder(lines);
         }
+
+        public void setValidationHint(Component text)
+        {
+            this.validationHint = text;
+        }
     }
 
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
     {
         private final FocusedEditBox textField;
+        private long lastTick;
 
         @SuppressWarnings("unchecked")
         public NumberItem(IConfigValue<T> holder, Function<String, Number> parser)
         {
             super(holder);
+            String text = ConfigScreen.this.cachedTextMap.getOrDefault(holder.getName(), holder.get().toString());
             this.textField = new FocusedEditBox(ConfigScreen.this.font, 0, 0, 44, 18, this.label);
-            this.textField.setValue(holder.get().toString());
             this.textField.setResponder((s) ->
             {
+                ConfigScreen.this.cachedTextMap.put(holder.getName(), s);
                 try
                 {
                     Number n = parser.apply(s);
@@ -368,17 +511,22 @@ public class ConfigScreen extends ListMenuScreen
                         this.textField.setTextColor(14737632);
                         holder.set((T) n);
                         ConfigScreen.this.updateButtons();
+                        this.setValidationHint(null);
                     }
                     else
                     {
                         this.textField.setTextColor(16711680);
+                        this.setValidationHint(holder.getValidationHint());
                     }
                 }
                 catch(Exception ignored)
                 {
                     this.textField.setTextColor(16711680);
+                    this.setValidationHint(new TranslatableComponent("configured.validator.not_a_number"));
                 }
             });
+            this.textField.setValue(text);
+            this.textField.setEditable(!ConfigScreen.this.config.isReadOnly());
             this.eventListeners.add(this.textField);
         }
 
@@ -386,6 +534,12 @@ public class ConfigScreen extends ListMenuScreen
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            long time = Util.getMillis();
+            if(time - this.lastTick >= 50)
+            {
+                this.textField.tick();
+                this.lastTick = time;
+            }
             this.textField.x = left + width - 68;
             this.textField.y = top + 1;
             this.textField.render(poseStack, mouseX, mouseY, partialTicks);
@@ -429,12 +583,12 @@ public class ConfigScreen extends ListMenuScreen
         public BooleanItem(IConfigValue<Boolean> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, CommonComponents.optionStatus(holder.get()), button ->
-            {
+            this.button = new Button(10, 5, 46, 20, CommonComponents.optionStatus(holder.get()), button -> {
                 holder.set(!holder.get());
                 button.setMessage(CommonComponents.optionStatus(holder.get()));
                 ConfigScreen.this.updateButtons();
             });
+            this.button.active = !ConfigScreen.this.config.isReadOnly();
             this.eventListeners.add(this.button);
         }
 
@@ -461,7 +615,10 @@ public class ConfigScreen extends ListMenuScreen
         public StringItem(IConfigValue<String> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.background, this.label, holder.get(), holder::isValid, s -> {
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), s -> {
+                return holder.isValid(s) ? Pair.of(true, TextComponent.EMPTY) : Pair.of(false, holder.getValidationHint());
+            }, s -> {
                 holder.set(s);
                 ConfigScreen.this.updateButtons();
             })));
@@ -485,7 +642,8 @@ public class ConfigScreen extends ListMenuScreen
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.edit"), button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, this.label, holder, ConfigScreen.this.background)));
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
             this.eventListeners.add(this.button);
         }
 
@@ -506,7 +664,8 @@ public class ConfigScreen extends ListMenuScreen
         public EnumItem(IConfigValue<Enum<?>> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, new TranslatableComponent("configured.gui.change"), button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, this.label, ConfigScreen.this.background, holder.get(), e -> {
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.change");
+            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), holder, e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));
@@ -537,7 +696,7 @@ public class ConfigScreen extends ListMenuScreen
         {
             return new TranslatableComponent(holder.getTranslationKey()).getString();
         }
-        return createLabel(holder.getPath());
+        return createLabel(holder.getName());
     }
 
     /**
@@ -566,7 +725,7 @@ public class ConfigScreen extends ListMenuScreen
     @Override
     public boolean shouldCloseOnEsc()
     {
-        return this.config == null || this.config.getConfigType() != ModConfig.Type.SERVER;
+        return this.config == null || this.config.getType() != ConfigType.WORLD;
     }
 
     /**
@@ -577,15 +736,15 @@ public class ConfigScreen extends ListMenuScreen
      */
     public boolean isModified(IConfigEntry entry)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		return value != null && value.isDefault();
-    	}
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-    		if(this.isChanged(child)) return true;
-    	}
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            return value != null && !value.isDefault();
+        }
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(this.isModified(child)) return true;
+        }
         return false;
     }
 
@@ -597,15 +756,15 @@ public class ConfigScreen extends ListMenuScreen
      */
     public boolean isChanged(IConfigEntry entry)
     {
-    	if(entry.isLeaf())
-    	{
-    		IConfigValue<?> value = entry.getValue();
-    		return value != null && value.isChanged();
-    	}
-    	for(IConfigEntry child : entry.getChildren())
-    	{
-    		if(this.isChanged(child)) return true;
-    	}
-    	return false;
+        if(entry.isLeaf())
+        {
+            IConfigValue<?> value = entry.getValue();
+            return value != null && value.isChanged();
+        }
+        for(IConfigEntry child : entry.getChildren())
+        {
+            if(this.isChanged(child)) return true;
+        }
+        return false;
     }
 }

@@ -8,7 +8,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +44,7 @@ public class ConfiguredHelper
      */
     public static Screen createForgeConfigSelectionScreen(Screen parent, Component title, ModContainer mod, ResourceLocation background)
     {
-        Map<ModConfig.Type, Set<IModConfig>> configs = ClientHandler.createConfigMap(mod);
+        Map<ConfigType, Set<IModConfig>> configs = ClientHandler.createConfigMap(mod);
         return createSelectionScreen(parent, title, configs, background);
     }
 
@@ -58,7 +57,7 @@ public class ConfiguredHelper
      * @param background of the config screen
      * @return a new screen with config selection included
      */
-    public static Screen createSelectionScreen(Screen parent, Component title, Map<ModConfig.Type, Set<IModConfig>> configs, ResourceLocation background)
+    public static Screen createSelectionScreen(Screen parent, Component title, Map<ConfigType, Set<IModConfig>> configs, ResourceLocation background)
     {
         return new ModConfigSelectionScreen(parent, title, background, configs);
     }

@@ -6,7 +6,10 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IConfigValue;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.impl.simple.SimpleListValue;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -19,6 +22,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,24 +35,28 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class EditListScreen extends Screen implements IBackgroundTexture
+public class EditListScreen extends Screen implements IBackgroundTexture, IEditing
 {
-    private static final Map<IConfigValue<List<?>>, ListType> TYPE_CACHE = new HashMap<>();
+    private static final Map<IConfigValue<?>, ListType> TYPE_CACHE = new HashMap<>();
 
     private final Screen parent;
+    private final IModConfig config;
+    private final List<StringHolder> initialValues = new ArrayList<>();
     private final List<StringHolder> values = new ArrayList<>();
     private final ResourceLocation background;
     private final IConfigValue<List<?>> holder;
     private final ListType listType;
     private ObjectList list;
 
-    public EditListScreen(Screen parent, Component titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
+    public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
+        this.config = config;
         this.holder = holder;
         this.listType = getType(holder);
-        this.values.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
+        this.initialValues.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
+        this.values.addAll(this.initialValues);
         this.background = background;
     }
 
@@ -56,25 +64,53 @@ public class EditListScreen extends Screen implements IBackgroundTexture
     protected void init()
     {
         this.list = new ObjectList();
-        this.list.setRenderBackground(!ListMenuScreen.isPlayingGame());
+        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.addWidget(this.list);
-        this.addRenderableWidget(new Button(this.width / 2 - 140, this.height - 29, 90, 20, CommonComponents.GUI_DONE, (button) -> {
-            List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
-            this.holder.set(newValues);
-            this.minecraft.setScreen(this.parent);
-        }));
-        this.addRenderableWidget(new Button(this.width / 2 - 45, this.height - 29, 90, 20, new TranslatableComponent("configured.gui.add_value"), (button) -> {
-            this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
-                Object value = this.listType.getValueParser().apply(s);
-                return value != null && this.holder.isValid(Collections.singletonList(value));
-            }, s -> {
-                StringHolder holder = new StringHolder(s);
-                this.values.add(holder);
-                this.list.addEntry(new StringEntry(this.list, holder));
+        if(!this.config.isReadOnly())
+        {
+            this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 0, 44, 90, new TranslatableComponent("configured.gui.apply"), (button) -> {
+                List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
+                this.holder.set(newValues);
+                this.minecraft.setScreen(this.parent);
             }));
-        }));
-        this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) -> {
-            this.minecraft.setScreen(this.parent);
+            this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 22, 33, 90, new TranslatableComponent("configured.gui.add_value"), (button) -> {
+                this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, new TranslatableComponent("configured.gui.edit_value"), "", s -> {
+                    Object value = this.listType.getValueParser().apply(s);
+                    if(value != null)
+                    {
+                        if(this.holder.isValid(Collections.singletonList(value)))
+                        {
+                            return Pair.of(true, TextComponent.EMPTY);
+                        }
+                        return Pair.of(false, this.holder.getValidationHint());
+                    }
+                    return Pair.of(false, new TranslatableComponent(this.listType.getHintKey()));
+                }, s -> {
+                    StringHolder holder = new StringHolder(s);
+                    this.values.add(holder);
+                    this.list.addEntry(new StringEntry(this.list, holder));
+                }));
+            }));
+        }
+        boolean readOnly = this.config.isReadOnly();
+        int cancelWidth = readOnly ? 150 : 90;
+        int cancelOffset = readOnly ? -75 : 50;
+        Component cancelLabel = readOnly ? new TranslatableComponent("configured.gui.close") : CommonComponents.GUI_CANCEL;
+        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, cancelWidth, 20, cancelLabel, (button) ->
+        {
+            if(this.isModified())
+            {
+                ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(EditListScreen.this, EditListScreen.this.config, new TranslatableComponent("configured.gui.list_changed"), ConfirmationScreen.Icon.WARNING, result -> {
+                    if(!result) return true;
+                    this.minecraft.setScreen(this.parent);
+                    return false;
+                });
+                this.minecraft.setScreen(confirmScreen);
+            }
+            else
+            {
+                this.minecraft.setScreen(this.parent);
+            }
         }));
     }
 
@@ -88,9 +124,33 @@ public class EditListScreen extends Screen implements IBackgroundTexture
     }
 
     @Override
+    public IModConfig getActiveConfig()
+    {
+        return this.config;
+    }
+
+    @Override
     public ResourceLocation getBackgroundTexture()
     {
         return this.background;
+    }
+
+    public boolean isModified()
+    {
+        if(this.initialValues.size() != this.values.size())
+        {
+            return true;
+        }
+        for(int i = 0; i < this.initialValues.size(); i++)
+        {
+            String s1 = this.initialValues.get(i).getValue();
+            String s2 = this.values.get(i).getValue();
+            if(!s1.equals(s2))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public class ObjectList extends ContainerObjectSelectionList<StringEntry> implements IBackgroundTexture
@@ -161,34 +221,48 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         {
             this.list = list;
             this.holder = holder;
-            this.editButton = new Button(0, 0, 42, 20, new TextComponent("Edit"), onPress -> {
-                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
+            this.editButton = new IconButton(0, 0, 1, 22, 20, TextComponent.EMPTY, onPress -> {
+                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, EditListScreen.this.background, new TranslatableComponent("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
-                    return value != null && EditListScreen.this.holder.isValid(Collections.singletonList(value));
+                    if(value != null)
+                    {
+                        if(EditListScreen.this.holder.isValid(Collections.singletonList(value)))
+                        {
+                            return Pair.of(true, TextComponent.EMPTY);
+                        }
+                        return Pair.of(false, EditListScreen.this.holder.getValidationHint());
+                    }
+                    return Pair.of(false, new TranslatableComponent(EditListScreen.this.listType.getHintKey()));
                 }, this.holder::setValue));
-            });
-            Button.OnTooltip tooltip = (button, matrixStack, mouseX, mouseY) -> {
+            }, (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHoveredOrFocused()) {
-                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.edit"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
                 }
-            };
+            });
+            this.editButton.active = !EditListScreen.this.config.isReadOnly();
             this.deleteButton = new IconButton(0, 0, 11, 0, onPress -> {
                 EditListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
-            }, tooltip);
+            }, (button, matrixStack, mouseX, mouseY) -> {
+                if(button.active && button.isHoveredOrFocused()) {
+                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(new TranslatableComponent("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
+                }
+            });
+            this.deleteButton.active = !EditListScreen.this.config.isReadOnly();
         }
 
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            EditListScreen.this.minecraft.font.draw(poseStack, new TextComponent(this.holder.getValue()), left + 5, top + 6, 0xFFFFFF);
+            if(x % 2 != 0) Screen.fill(poseStack, left, top, left + width, top + 24, 0x55000000);
+            EditListScreen.this.minecraft.font.draw(poseStack, new TextComponent(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
             this.editButton.visible = true;
-            this.editButton.x = left + width - 65;
-            this.editButton.y = top;
+            this.editButton.x = left + width - 44;
+            this.editButton.y = top + 2;
             this.editButton.render(poseStack, mouseX, mouseY, partialTicks);
             this.deleteButton.visible = true;
-            this.deleteButton.x = left + width - 21;
-            this.deleteButton.y = top;
+            this.deleteButton.x = left + width - 22;
+            this.deleteButton.y = top + 2;
             this.deleteButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
@@ -236,27 +310,34 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         }
     }
 
-    protected static ListType getType(IConfigValue<List<?>> holder)
+    @SuppressWarnings("unchecked")
+    protected static ListType getType(IConfigValue<?> holder)
     {
-        return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder(holder));
+        if(holder instanceof SimpleListValue<?> listValue)
+        {
+            return listValue.getListType();
+        }
+        return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder((IConfigValue<List<?>>) holder));
     }
 
-    protected enum ListType
+    public enum ListType
     {
-        BOOLEAN(Object::toString, Boolean::valueOf),
-        INTEGER(Object::toString, Ints::tryParse),
-        LONG(Object::toString, Longs::tryParse),
-        DOUBLE(Object::toString, Doubles::tryParse),
-        STRING(Object::toString, o -> o),
-        UNKNOWN(Object::toString, o -> o);
+        BOOLEAN(Object::toString, Boolean::valueOf, "configured.parser.not_a_boolean"),
+        INTEGER(Object::toString, Ints::tryParse, "configured.parser.not_a_number"),
+        LONG(Object::toString, Longs::tryParse, "configured.parser.not_a_number"),
+        DOUBLE(Object::toString, Doubles::tryParse, "configured.parser.not_a_number"),
+        STRING(Object::toString, o -> o, "configured.parser.not_a_value"),
+        UNKNOWN(Object::toString, o -> o, "configured.parser.not_a_value");
 
         final Function<Object, String> stringParser;
         final Function<String, ?> valueParser;
+        final String hintKey;
 
-        ListType(Function<Object, String> stringParser, Function<String, ?> valueParser)
+        ListType(Function<Object, String> stringParser, Function<String, ?> valueParser, String hintKey)
         {
             this.stringParser = stringParser;
             this.valueParser = valueParser;
+            this.hintKey = hintKey;
         }
 
         public Function<Object, String> getStringParser()
@@ -267,6 +348,11 @@ public class EditListScreen extends Screen implements IBackgroundTexture
         public Function<String, ?> getValueParser()
         {
             return this.valueParser;
+        }
+
+        public String getHintKey()
+        {
+            return this.hintKey;
         }
 
         private static ListType fromHolder(IConfigValue<List<?>> holder)

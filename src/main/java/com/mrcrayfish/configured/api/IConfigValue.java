@@ -1,5 +1,7 @@
 package com.mrcrayfish.configured.api;
 
+import net.minecraft.network.chat.Component;
+
 import javax.annotation.Nullable;
 
 /**
@@ -64,12 +66,28 @@ public interface IConfigValue<T>
     String getTranslationKey();
 
     /**
+     * @return The hint to show to the user when the entered value is invalid (as determined by {@link #isValid(Object)}
+     */
+    @Nullable
+    Component getValidationHint();
+
+    /**
      * @return current directory name of the config entry this value is in.
      */
-    String getPath();
+    String getName();
 
     /**
      * If your config has a cache this is when it should be cleaned
      */
     void cleanCache();
+
+    /**
+     * @return True if this value requires the world to be reloaded for the changes to take effect
+     */
+    boolean requiresWorldRestart();
+
+    /**
+     * @return True if this value requires the world to be reloaded for the changes to take effect
+     */
+    boolean requiresGameRestart();
 }

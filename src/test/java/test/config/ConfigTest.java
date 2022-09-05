@@ -6,6 +6,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
@@ -45,6 +47,7 @@ public class ConfigTest
         public final ForgeConfigSpec.ConfigValue<List<? extends Integer>> intList;
         public final ForgeConfigSpec.ConfigValue<List<? extends Long>> longList;
         public final ForgeConfigSpec.ConfigValue<List<? extends Double>> doubleList;
+        public final ForgeConfigSpec.EnumValue<ChatFormatting> restrictedEnums;
 
         public Test(ForgeConfigSpec.Builder builder)
         {
@@ -55,6 +58,7 @@ public class ConfigTest
             this.doubleValue = builder.comment("This is a Double value").defineInRange("doubleValue", 0.0, 0.0, 10.0);
             this.longValue = builder.comment("This is a Long value").defineInRange("longValue", 0L, 0L, 10L);
             this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", ChatFormatting.BLACK);
+            this.restrictedEnums = builder.comment("An enum value but with restricted values").defineEnum("restrictedEnums", ChatFormatting.RED, ChatFormatting.RED, ChatFormatting.GREEN, ChatFormatting.BLUE);
             builder.pop();
             builder.push("lists");
             this.intList = builder.comment("This is an Integer list").defineList("intList", Arrays.asList(5, 10), o -> o instanceof Integer);

@@ -21,7 +21,20 @@ version="1.0.0"
 displayName="Config Test"
 authors="MrCrayfish"
 
+[[mods]]
+modId="simple_config_test"
+version="1.0.0"
+displayName="SimpleConfig Test"
+authors="MrCrayfish"
+
 [[dependencies.config_test]]
+modId="configured"
+mandatory=true
+versionRange="[1.5.3,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.simple_config_test]]
 modId="configured"
 mandatory=true
 versionRange="[1.5.3,)"

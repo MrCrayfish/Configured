@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.impl;
+package com.mrcrayfish.configured.impl.forge;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
@@ -32,7 +32,6 @@ public class ForgeListValue extends ForgeValue<List<?>>
         {
             return LinkedList::new;
         }
-        // TODO allow developers to hook custom list
         return null;
     }
 
