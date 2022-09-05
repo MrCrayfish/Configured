@@ -50,6 +50,4 @@ public @interface SimpleConfig
      * @return the config type of this config
      */
     ConfigType type() default ConfigType.UNIVERSAL;
-
-    //TODO add hidden
 }

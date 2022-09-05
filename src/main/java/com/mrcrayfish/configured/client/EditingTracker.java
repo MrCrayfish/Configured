@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.config;
+package com.mrcrayfish.configured.client;
 
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.api.IModConfig;

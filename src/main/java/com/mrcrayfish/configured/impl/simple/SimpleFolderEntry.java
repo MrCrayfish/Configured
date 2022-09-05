@@ -6,7 +6,6 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
 import com.mrcrayfish.configured.api.simple.EnumProperty;
 import com.mrcrayfish.configured.api.simple.ListProperty;
-import com.mrcrayfish.configured.config.ConfigManager;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -17,11 +16,11 @@ import java.util.List;
 public class SimpleFolderEntry implements IConfigEntry
 {
     private final String label;
-    private final ConfigManager.PropertyMap map;
+    private final SimpleConfigManager.PropertyMap map;
     private final boolean root;
     private List<IConfigEntry> entries;
 
-    public SimpleFolderEntry(String label, ConfigManager.PropertyMap map, boolean root)
+    public SimpleFolderEntry(String label, SimpleConfigManager.PropertyMap map, boolean root)
     {
         this.label = label;
         this.map = map;

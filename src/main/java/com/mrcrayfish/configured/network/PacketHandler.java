@@ -1,7 +1,7 @@
 package com.mrcrayfish.configured.network;
 
 import com.mrcrayfish.configured.Reference;
-import com.mrcrayfish.configured.config.ConfigManager;
+import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -28,7 +28,7 @@ public class PacketHandler
                 .decoder(HandshakeMessages.S2CConfigData::decode)
                 .encoder(HandshakeMessages.S2CConfigData::encode)
                 .consumer(net.minecraftforge.network.HandshakeHandler.biConsumerFor((handler, msg, supplier) -> HandshakeHandler.handleConfigData(msg, supplier)))
-                .buildLoginPacketList(ConfigManager.getInstance()::getMessagesForLogin)
+                .buildLoginPacketList(SimpleConfigManager.getInstance()::getMessagesForLogin)
                 .add();
     }
 

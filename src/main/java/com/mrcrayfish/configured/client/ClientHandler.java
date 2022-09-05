@@ -10,8 +10,8 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.client.util.OptiFineHelper;
-import com.mrcrayfish.configured.config.ConfigManager;
 import com.mrcrayfish.configured.impl.forge.ForgeConfig;
+import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -97,7 +97,7 @@ public class ClientHandler
         addForgeConfigSetToMap(container, ModConfig.Type.SERVER, ConfigType.WORLD_SYNC, modConfigMap);
 
         // Add SimpleConfig configurations
-        ConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId())).forEach(entry -> {
+        SimpleConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId())).forEach(entry -> {
             modConfigMap.computeIfAbsent(entry.getType(), type -> new LinkedHashSet<>()).add(entry);
         });
 
@@ -183,6 +183,6 @@ public class ClientHandler
     @SubscribeEvent
     public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggedOutEvent event)
     {
-        ConfigManager.getInstance().onClientDisconnect(event.getConnection());
+        SimpleConfigManager.getInstance().onClientDisconnect(event.getConnection());
     }
 }

@@ -4,7 +4,7 @@ import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.api.simple.validate.Validator;
-import com.mrcrayfish.configured.config.ConfigManager;
+import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -14,15 +14,15 @@ import java.util.function.BiFunction;
 /**
  * Author: MrCrayfish
  */
-public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntry permits BoolProperty, DoubleProperty, EnumProperty, IntProperty, ListProperty, LongProperty, StringProperty
+public abstract sealed class ConfigProperty<T> implements SimpleConfigManager.IMapEntry permits BoolProperty, DoubleProperty, EnumProperty, IntProperty, ListProperty, LongProperty, StringProperty
 {
     protected final T defaultValue;
     protected final BiFunction<UnmodifiableConfig, List<String>, T> getFunction;
     protected final Validator<T> validator;
     private T value;
     private boolean cached;
-    protected ConfigManager.ValueProxy proxy;
-    protected ConfigManager.PropertyData data;
+    protected SimpleConfigManager.ValueProxy proxy;
+    protected SimpleConfigManager.PropertyData data;
 
     ConfigProperty(T defaultValue)
     {
@@ -220,7 +220,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     /**
      * Internal method. Used for linking this property to a config
      */
-    public final void updateProxy(ConfigManager.ValueProxy proxy)
+    public final void updateProxy(SimpleConfigManager.ValueProxy proxy)
     {
         Preconditions.checkNotNull(proxy, "Tried to update config property with a null value proxy");
         this.proxy = proxy;
@@ -230,7 +230,7 @@ public abstract sealed class ConfigProperty<T> implements ConfigManager.IMapEntr
     /**
      * Internal method. Used for initializing the property with data required for it to work
      */
-    public final void initProperty(ConfigManager.PropertyData data)
+    public final void initProperty(SimpleConfigManager.PropertyData data)
     {
         Preconditions.checkNotNull(data, "Tried to update path with a null path object");
         if(this.data == null)

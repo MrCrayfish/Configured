@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;

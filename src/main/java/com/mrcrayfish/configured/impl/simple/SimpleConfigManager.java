@@ -1,8 +1,10 @@
-package com.mrcrayfish.configured.config;
+package com.mrcrayfish.configured.impl.simple;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.ConfigSpec;
+import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
@@ -20,8 +22,6 @@ import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
-import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
-import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.network.Connection;
@@ -35,24 +35,23 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.javafmlmod.FMLModContainer;
+import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
+import net.minecraftforge.forgespi.language.ModFileScanData;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -63,37 +62,38 @@ import java.util.stream.Stream;
 /**
  * Author: MrCrayfish
  */
-public class ConfigManager
+public class SimpleConfigManager
 {
     private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z_]+$").asMatchPredicate();
     private static final LevelResource WORLD_CONFIG = new LevelResource("serverconfig");
+    private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
 
-    private static ConfigManager instance;
+    private static SimpleConfigManager instance;
 
-    public static ConfigManager getInstance()
+    public static SimpleConfigManager getInstance()
     {
         if(instance == null)
         {
-            instance = new ConfigManager();
+            instance = new SimpleConfigManager();
         }
         return instance;
     }
 
-    private final Map<ResourceLocation, SimpleConfigEntry> configs;
+    private final Map<ResourceLocation, SimpleConfigImpl> configs;
 
-    private ConfigManager()
+    private SimpleConfigManager()
     {
-        Map<ResourceLocation, SimpleConfigEntry> configs = new HashMap<>();
-        ConfigUtil.getAllSimpleConfigs().forEach(pair ->
+        Map<ResourceLocation, SimpleConfigImpl> configs = new HashMap<>();
+        getAllSimpleConfigs().forEach(pair ->
         {
             ConfigScanData data = ConfigScanData.analyze(pair.getLeft(), pair.getRight());
-            SimpleConfigEntry entry = new SimpleConfigEntry(data);
+            SimpleConfigImpl entry = new SimpleConfigImpl(data);
             configs.put(entry.getName(), entry);
         });
         this.configs = ImmutableMap.copyOf(configs);
     }
 
-    public List<SimpleConfigEntry> getConfigs()
+    public List<SimpleConfigImpl> getConfigs()
     {
         return ImmutableList.copyOf(this.configs.values());
     }
@@ -105,7 +105,7 @@ public class ConfigManager
             .filter(entry -> entry.getType().isSync() && entry.getFilePath() != null)
             .map(entry -> {
                 ResourceLocation key = entry.getName();
-                byte[] data = ConfigUtil.readBytes(entry.getFilePath());
+                byte[] data = ConfigHelper.readBytes(entry.getFilePath());
                 return Pair.of("SimpleConfig " + key, new HandshakeMessages.S2CConfigData(key, data));
             }).collect(Collectors.toList());
     }
@@ -113,7 +113,7 @@ public class ConfigManager
     public boolean processConfigData(HandshakeMessages.S2CConfigData message)
     {
         Configured.LOGGER.info("Loading synced config from server: " + message.getKey());
-        SimpleConfigEntry entry = this.configs.get(message.getKey());
+        SimpleConfigImpl entry = this.configs.get(message.getKey());
         if(entry != null && entry.getType().isSync())
         {
             entry.loadFromData(message.getData());
@@ -166,7 +166,7 @@ public class ConfigManager
         this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(entry -> entry.unload(true));
     }
 
-    public static final class SimpleConfigEntry implements IModConfig
+    public static final class SimpleConfigImpl implements IModConfig
     {
         private final Object source;
         private final String id;
@@ -181,7 +181,7 @@ public class ConfigManager
         @Nullable
         private UnmodifiableConfig config;
 
-        private SimpleConfigEntry(ConfigScanData data)
+        private SimpleConfigImpl(ConfigScanData data)
         {
             Preconditions.checkArgument(!data.getConfig().id().trim().isEmpty(), "The 'id' of the config cannot be empty");
             Preconditions.checkArgument(ModList.get().isLoaded(data.getConfig().id()), "The 'id' of the config must match a mod id");
@@ -196,8 +196,8 @@ public class ConfigManager
             this.configType = data.getConfig().type();
             this.allProperties = ImmutableSet.copyOf(data.getProperties());
             this.propertyMap = new PropertyMap(this.allProperties);
-            this.spec = ConfigUtil.createSpec(this.allProperties);
-            this.comments = ConfigUtil.createComments(this.spec, data.getComments());
+            this.spec = createSpec(this.allProperties);
+            this.comments = createComments(this.spec, data.getComments());
             this.classLoader = Thread.currentThread().getContextClassLoader();
 
             // Load non-server configs immediately
@@ -227,11 +227,11 @@ public class ConfigManager
                 return;
             Preconditions.checkState(this.config == null, "Config is already loaded. Unload before loading again.");
             UnmodifiableConfig config = this.createConfig(configDir);
-            ConfigUtil.loadFileConfig(config);
+            ConfigHelper.loadConfig(config);
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
-            ConfigUtil.watchFileConfig(config, this::changeCallback);
+            ConfigHelper.watchConfig(config, this::changeCallback);
             this.sendEvent(new SimpleConfigEvent.Load(this.source));
         }
 
@@ -250,9 +250,9 @@ public class ConfigManager
             if(this.readOnly)
             {
                 Preconditions.checkArgument(configDir != null, "Config dir must not be null for read only configs");
-                return ConfigUtil.createReadOnlyConfig(configDir, this.id, this.name, this::correct);
+                return createReadOnlyConfig(configDir, this.id, this.name, this::correct);
             }
-            return ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
+            return createSimpleConfig(configDir, this.id, this.name);
         }
 
         void unload(boolean sendEvent)
@@ -260,7 +260,7 @@ public class ConfigManager
             if(this.config != null)
             {
                 this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
-                ConfigUtil.closeFileConfig(this.config);
+                ConfigHelper.closeConfig(this.config);
                 this.config = null;
                 if(sendEvent)
                 {
@@ -275,7 +275,7 @@ public class ConfigManager
             Thread.currentThread().setContextClassLoader(this.classLoader);
             if(this.config != null && !this.isReadOnly())
             {
-                ConfigUtil.loadFileConfig(this.config);
+                ConfigHelper.loadConfig(this.config);
                 this.correct(this.config);
                 this.allProperties.forEach(ConfigProperty::invalidateCache);
                 LogicalSidedProvider.WORKQUEUE.get(FMLEnvironment.dist.isClient() ? LogicalSide.CLIENT : LogicalSide.SERVER).submit(() -> {
@@ -289,11 +289,11 @@ public class ConfigManager
             //TODO correct comments even if config is correct
             if(config instanceof Config && !this.spec.isCorrect((Config) config))
             {
-                ConfigUtil.createBackup(config);
+                ConfigHelper.createBackup(config);
                 this.spec.correct((Config) config);
                 if(config instanceof CommentedConfig c)
                     c.putAllComments(this.comments);
-                ConfigUtil.saveFileConfig(config);
+                ConfigHelper.saveConfig(config);
             }
         }
 
@@ -419,8 +419,8 @@ public class ConfigManager
             if(!ConfigHelper.isServerConfig(this))
                 return;
             Preconditions.checkState(this.config == null, "Something went wrong and tried to load the server config again!");
-            CommentedConfig config = ConfigUtil.createTempServerConfig(configDir, this.id, this.name);
-            ConfigUtil.loadFileConfig(config);
+            CommentedConfig config = createSimpleConfig(configDir, this.id, this.name);
+            ConfigHelper.loadConfig(config);
             this.correct(config);
             config.putAllComments(this.comments);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
@@ -444,8 +444,8 @@ public class ConfigManager
                 return this.allProperties.stream().anyMatch(property -> !property.isDefault());
 
             // Temporarily load config to test for changes. Unloads immediately after test.
-            CommentedFileConfig tempConfig = ConfigUtil.createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
-            ConfigUtil.loadFileConfig(tempConfig);
+            CommentedFileConfig tempConfig = createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
+            ConfigHelper.loadConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(tempConfig, p.getPath(), this.readOnly)));
@@ -473,12 +473,12 @@ public class ConfigManager
             }
 
             // Temporarily loads the config, restores the defaults then saves and closes.
-            CommentedFileConfig tempConfig = ConfigUtil.createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
-            ConfigUtil.loadFileConfig(tempConfig);
+            CommentedFileConfig tempConfig = createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
+            ConfigHelper.loadConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
             this.allProperties.forEach(property -> tempConfig.set(property.getPath(), property.getDefaultValue()));
-            ConfigUtil.saveFileConfig(tempConfig);
+            ConfigHelper.saveConfig(tempConfig);
             tempConfig.close();
         }
 
@@ -719,7 +719,7 @@ public class ConfigManager
                     if(obj instanceof ConfigProperty<?> property)
                     {
                         List<String> path = new ArrayList<>(stack);
-                        String key = ConfigUtil.createTranslationKey(this.config, path);
+                        String key = String.format("simpleconfig.%s.%s.%s", this.config.id(), this.config.name(), StringUtils.join(path, '.'));
                         property.initProperty(new PropertyData(sp.name(), path, key, sp.comment(), sp.worldRestart(), sp.gameRestart()));
                         this.properties.add(property);
                     }
@@ -735,5 +735,88 @@ public class ConfigManager
                 stack.pop();
             }));
         }
+    }
+
+    public static List<Pair<SimpleConfig, Object>> getAllSimpleConfigs()
+    {
+        List<ModFileScanData.AnnotationData> annotations = ModList.get().getAllScanData().stream().map(ModFileScanData::getAnnotations).flatMap(Collection::stream).filter(a -> SIMPLE_CONFIG.equals(a.annotationType())).toList();
+        List<Pair<SimpleConfig, Object>> configs = new ArrayList<>();
+        annotations.forEach(data ->
+        {
+            try
+            {
+                Class<?> configClass = Class.forName(data.clazz().getClassName());
+                Field field = configClass.getDeclaredField(data.memberName());
+                field.setAccessible(true);
+                Object object = field.get(null);
+                Optional.ofNullable(field.getDeclaredAnnotation(SimpleConfig.class)).ifPresent(simpleConfig -> {
+                    configs.add(Pair.of(simpleConfig, object));
+                });
+            }
+            catch(NoSuchFieldException | ClassNotFoundException | IllegalAccessException e)
+            {
+                throw new RuntimeException(e);
+            }
+        });
+        return configs;
+    }
+
+    public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name)
+    {
+        if(folder != null)
+        {
+            String fileName = String.format("%s.%s.toml", id, name);
+            File file = new File(folder.toFile(), fileName);
+            return CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
+        }
+        return CommentedConfig.inMemory();
+    }
+
+    public static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, String name, Consumer<Config> corrector)
+    {
+        CommentedFileConfig temp = createTempConfig(folder, id, name);
+        ConfigHelper.loadConfig(temp);
+        corrector.accept(temp);
+        CommentedConfig config = CommentedConfig.inMemory();
+        config.putAll(temp);
+        ConfigHelper.closeConfig(temp);
+        return config.unmodifiable();
+    }
+
+    public static CommentedFileConfig createTempConfig(Path folder, String id, String name)
+    {
+        String fileName = String.format("%s.%s.toml", id, name);
+        File file = new File(folder.toFile(), fileName);
+        return CommentedFileConfig.builder(file).sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
+    }
+
+    private static boolean initConfig(final Path file, final ConfigFormat<?> format, final String fileName) throws IOException
+    {
+        Files.createDirectories(file.getParent());
+        Path defaultConfigPath = FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
+        Path defaultConfigFile = defaultConfigPath.resolve(fileName);
+        if(Files.exists(defaultConfigFile))
+        {
+            Files.copy(defaultConfigFile, file);
+            return true;
+        }
+        Files.createFile(file);
+        format.initEmptyFile(file);
+        return false;
+    }
+
+    public static ConfigSpec createSpec(Set<ConfigProperty<?>> properties)
+    {
+        ConfigSpec spec = new ConfigSpec();
+        properties.forEach(p -> p.defineSpec(spec));
+        return spec;
+    }
+
+    public static CommentedConfig createComments(ConfigSpec spec, Map<List<String>, String> comments)
+    {
+        CommentedConfig config = CommentedConfig.inMemory();
+        spec.correct(config);
+        comments.forEach(config::setComment);
+        return config;
     }
 }

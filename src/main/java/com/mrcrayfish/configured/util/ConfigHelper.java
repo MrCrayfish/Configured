@@ -4,6 +4,7 @@ import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
@@ -24,8 +25,12 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,19 +44,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConfigHelper
 {
+    private static final Set<Path> WATCHED_PATHS = new HashSet<>();
     private static final Method MOD_CONFIG_SET_CONFIG_DATA = ObfuscationReflectionHelper.findMethod(ModConfig.class, "setConfigData", CommentedConfig.class);
     private static final Method MOD_CONFIG_FIRE_EVENT = ObfuscationReflectionHelper.findMethod(ModConfig.class, "fireEvent", IConfigEvent.class);
-
-    /**
-     * Determines if the given ModConfig differs compared to it's default values.
-     *
-     * @param config the mod config to test
-     * @return true if the config is different
-     */
-    public static boolean isModified(IModConfig config)
-    {
-        return gatherAllConfigValues(config).stream().anyMatch(T -> !T.isDefault());
-    }
 
     /**
      * Gathers all the config entries with a deep search. Used for deep searches
@@ -86,15 +81,15 @@ public class ConfigHelper
     public static List<IConfigValue<?>> gatherAllConfigValues(IConfigEntry entry)
     {
     	List<IConfigValue<?>> values = new ObjectArrayList<>();
-    	gatherValuesFromConfig(entry, values);
+    	gatherValuesFromForgeConfig(entry, values);
     	return ImmutableList.copyOf(values);
     }
 
     /**
-     * Gathers all the config values from the given config and adds it's to the provided list. This
-     * will search deeper if it finds another config and recursively call itself.
+     * Gathers all the config values from the given Forge config and adds it's to the provided list.
+     * This will search deeper if it finds another config and recursively call itself.
      */
-    private static void gatherValuesFromConfig(IConfigEntry entry, List<IConfigValue<?>> values)
+    private static void gatherValuesFromForgeConfig(IConfigEntry entry, List<IConfigValue<?>> values)
     {
     	if(entry.isLeaf())
     	{
@@ -104,31 +99,31 @@ public class ConfigHelper
     	}
     	for(IConfigEntry children : entry.getChildren())
     	{
-    		gatherValuesFromConfig(children, values);
+    		gatherValuesFromForgeConfig(children, values);
     	}
     }
 
     /**
-     * Gathers all the config values with a deep search. Used for resetting defaults
+     * Gathers all the Forge config values with a deep search. Used for resetting defaults
      */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllConfigValues(UnmodifiableConfig config, ForgeConfigSpec spec)
+    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(UnmodifiableConfig config, ForgeConfigSpec spec)
     {
         List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values = new ArrayList<>();
-        gatherValuesFromConfig(config, spec, values);
+        gatherValuesFromForgeConfig(config, spec, values);
         return ImmutableList.copyOf(values);
     }
 
     /**
-     * Gathers all the config values from the given config and adds it's to the provided list. This
-     * will search deeper if it finds another config and recursively call itself.
+     * Gathers all the config values from the given Forge config and adds it's to the provided list.
+     * This will search deeper if it finds another config and recursively call itself.
      */
-    private static void gatherValuesFromConfig(UnmodifiableConfig config, ForgeConfigSpec spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
+    private static void gatherValuesFromForgeConfig(UnmodifiableConfig config, ForgeConfigSpec spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
     {
         config.valueMap().forEach((s, o) ->
         {
             if(o instanceof AbstractConfig)
             {
-                gatherValuesFromConfig((UnmodifiableConfig) o, spec, values);
+                gatherValuesFromForgeConfig((UnmodifiableConfig) o, spec, values);
             }
             else if(o instanceof ForgeConfigSpec.ConfigValue<?> configValue)
             {
@@ -144,7 +139,7 @@ public class ConfigHelper
      * @param config     the config to update
      * @param configData the new data for the config
      */
-    public static void setModConfigData(ModConfig config, @Nullable CommentedConfig configData)
+    public static void setForgeConfigData(ModConfig config, @Nullable CommentedConfig configData)
     {
         try
         {
@@ -167,7 +162,7 @@ public class ConfigHelper
      * @return the mod config instance for the file name or null if it doesn't exist
      */
     @Nullable
-    public static ModConfig getModConfig(String fileName)
+    public static ModConfig getForgeConfig(String fileName)
     {
         ConcurrentHashMap<String, ModConfig> configMap = ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "fileMap");
         return configMap != null ? configMap.get(fileName) : null;
@@ -176,9 +171,9 @@ public class ConfigHelper
     /**
      * Gathers all the config values with a deep search. Used for resetting defaults
      */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllConfigValues(ModConfig config)
+    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(ModConfig config)
     {
-        return gatherAllConfigValues(((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec());
+        return gatherAllForgeConfigValues(((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec());
     }
 
     /**
@@ -188,7 +183,7 @@ public class ConfigHelper
      * @param config the config to fire the event for
      * @param event  the event
      */
-    public static void fireEvent(ModConfig config, ModConfigEvent event)
+    public static void fireForgeConfigEvent(ModConfig config, ModConfigEvent event)
     {
         try
         {
@@ -198,24 +193,6 @@ public class ConfigHelper
         {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Resets the spec cache for the given mod config
-     * @param config the mod config to reset
-     */
-    public static void resetCache(IModConfig config)
-    {
-        gatherAllConfigValues(config).forEach(IConfigValue::cleanCache);
-    }
-
-    /**
-     * Resets the spec cache for the given mod config
-     * @param config the mod config to reset
-     */
-    public static void resetCache(ModConfig config)
-    {
-        gatherAllConfigValues(config).forEach(pair -> pair.getLeft().clearCache());
     }
 
     public static boolean isWorldConfig(IModConfig config)
@@ -276,5 +253,93 @@ public class ConfigHelper
     public static boolean isRunningLocalServer()
     {
         return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().hasSingleplayerServer());
+    }
+
+    public static void createBackup(UnmodifiableConfig config)
+    {
+        if(config instanceof FileConfig fileConfig)
+        {
+            try
+            {
+                Path configPath = fileConfig.getNioPath();
+                // The length check prevents backing up on initial creation of the config file
+                // It also doesn't really make sense to back up an empty file
+                if(Files.exists(configPath) && fileConfig.getFile().length() > 0)
+                {
+                    Path backupPath = configPath.getParent().resolve(fileConfig.getFile().getName() + ".bak");
+                    Files.copy(configPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static void closeConfig(UnmodifiableConfig config)
+    {
+        if(config instanceof FileConfig fileConfig)
+        {
+            Path path = fileConfig.getNioPath();
+            if(WATCHED_PATHS.contains(path))
+            {
+                FileWatcher.defaultInstance().removeWatch(path);
+                WATCHED_PATHS.remove(path);
+            }
+            fileConfig.close();
+        }
+    }
+
+    public static void loadConfig(UnmodifiableConfig config)
+    {
+        if(config instanceof FileConfig fileConfig)
+        {
+            try
+            {
+                fileConfig.load();
+            }
+            catch(Exception ignored)
+            {
+                //TODO error handling
+            }
+        }
+    }
+
+    public static void saveConfig(UnmodifiableConfig config)
+    {
+        if(config instanceof FileConfig fileConfig)
+        {
+            fileConfig.save();
+        }
+    }
+
+    public static void watchConfig(UnmodifiableConfig config, Runnable callback)
+    {
+        if(config instanceof FileConfig fileConfig)
+        {
+            try
+            {
+                Path path = fileConfig.getNioPath();
+                WATCHED_PATHS.add(path);
+                FileWatcher.defaultInstance().setWatch(path, callback);
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static byte[] readBytes(Path path)
+    {
+        try
+        {
+            return Files.readAllBytes(path);
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

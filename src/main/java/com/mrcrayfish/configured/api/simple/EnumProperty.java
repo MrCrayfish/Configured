@@ -4,7 +4,6 @@ import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.EnumGetMethod;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.mrcrayfish.configured.api.simple.validate.Validator;
 
 import java.util.Set;
 

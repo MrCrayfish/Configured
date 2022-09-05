@@ -70,14 +70,14 @@ public class ForgeConfig implements IModConfig
             {
                 // Unload server configs since still in main menu
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
-                ConfigHelper.setModConfigData(this.config, null);
+                ConfigHelper.setForgeConfigData(this.config, null);
             }
         }
         else if(!changedValues.isEmpty())
         {
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
             this.config.getSpec().afterReload();
-            ConfigHelper.fireEvent(this.config, new ModConfigEvent.Reloading(this.config));
+            ConfigHelper.fireForgeConfigEvent(this.config, new ModConfigEvent.Reloading(this.config));
         }
     }
 
@@ -109,7 +109,7 @@ public class ForgeConfig implements IModConfig
     public void loadWorldConfig(Path path, Consumer<IModConfig> result)
     {
         final CommentedFileConfig data = this.config.getHandler().reader(path).apply(this.config);
-        ConfigHelper.setModConfigData(this.config, data);
+        ConfigHelper.setForgeConfigData(this.config, data);
         result.accept(this);
     }
 
@@ -123,7 +123,7 @@ public class ForgeConfig implements IModConfig
             {
                 // Unload server configs since still in main menu
                 this.config.getHandler().unload(this.config.getFullPath().getParent(), this.config);
-                ConfigHelper.setModConfigData(this.config, null);
+                ConfigHelper.setForgeConfigData(this.config, null);
             }
         }
     }
@@ -159,7 +159,7 @@ public class ForgeConfig implements IModConfig
 
     private static List<ForgeValueEntry> getAllConfigValues(ModConfig config)
     {
-        return ConfigHelper.gatherAllConfigValues(config).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
+        return ConfigHelper.gatherAllForgeConfigValues(config).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
     }
 
     private record ForgeValueEntry(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec) {}
