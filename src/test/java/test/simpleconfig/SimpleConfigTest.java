@@ -10,11 +10,13 @@ import com.mrcrayfish.configured.api.simple.LongProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.StringProperty;
+import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
 import com.mrcrayfish.configured.api.simple.validate.Validator;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -66,6 +68,9 @@ public class SimpleConfigTest
     {
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         eventBus.addListener(this::onCommonSetup);
+        eventBus.addListener(this::onConfigLoad);
+        eventBus.addListener(this::onConfigUnload);
+        eventBus.addListener(this::onConfigReload);
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event)
@@ -246,5 +251,20 @@ public class SimpleConfigTest
                 }
             }
         }
+    }
+
+    public void onConfigLoad(SimpleConfigEvent.Load event)
+    {
+        System.out.println("Loaded config: " + event.getSource());
+    }
+
+    public void onConfigUnload(SimpleConfigEvent.Unload event)
+    {
+        System.out.println("Unloaded config: " + event.getSource());
+    }
+
+    public void onConfigReload(SimpleConfigEvent.Reload event)
+    {
+        System.out.println("Reloading config: " + event.getSource());
     }
 }

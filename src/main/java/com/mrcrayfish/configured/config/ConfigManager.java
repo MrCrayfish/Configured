@@ -19,6 +19,7 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
+import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
 import com.mrcrayfish.configured.impl.simple.SimpleFolderEntry;
 import com.mrcrayfish.configured.impl.simple.SimpleValue;
 import com.mrcrayfish.configured.network.HandshakeMessages;
@@ -27,10 +28,13 @@ import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LogicalSidedProvider;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
@@ -39,9 +43,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -117,7 +128,7 @@ public class ConfigManager
         if(connection != null && !connection.isMemoryConnection()) // Run only if disconnected from remote server
         {
             Configured.LOGGER.info("Unloading synced configs from server");
-            this.configs.values().stream().filter(entry -> entry.getType().isSync()).forEach(ConfigManager.SimpleConfigEntry::unload);
+            this.configs.values().stream().filter(entry -> entry.getType().isSync()).forEach(entry -> entry.unload(true));
         }
     }
 
@@ -152,11 +163,12 @@ public class ConfigManager
     public void onServerStopped(ServerStoppedEvent event)
     {
         Configured.LOGGER.info("Unloading server configs...");
-        this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(SimpleConfigEntry::unload);
+        this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(entry -> entry.unload(true));
     }
 
     public static final class SimpleConfigEntry implements IModConfig
     {
+        private final Object source;
         private final String id;
         private final String name;
         private final boolean readOnly;
@@ -177,6 +189,7 @@ public class ConfigManager
             Preconditions.checkArgument(data.getConfig().name().length() <= 64, "The 'name' of the config must be 64 characters or less");
             Preconditions.checkArgument(NAME_PATTERN.test(data.getConfig().name()), "The 'name' of the config is invalid. It can only contain 'a-z' and '_'");
 
+            this.source = data.getSource();
             this.id = data.getConfig().id();
             this.name = data.getConfig().name();
             this.readOnly = data.getConfig().readOnly();
@@ -219,15 +232,17 @@ public class ConfigManager
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
             ConfigUtil.watchFileConfig(config, this::changeCallback);
+            this.sendEvent(new SimpleConfigEvent.Load(this.source));
         }
 
         private void loadFromData(byte[] data)
         {
-            this.unload();
+            this.unload(false);
             CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
+            this.sendEvent(new SimpleConfigEvent.Load(this.source));
         }
 
         private UnmodifiableConfig createConfig(@Nullable Path configDir)
@@ -240,13 +255,18 @@ public class ConfigManager
             return ConfigUtil.createSimpleConfig(configDir, this.id, this.name, CommentedConfig::inMemory);
         }
 
-        void unload()
+        void unload(boolean sendEvent)
         {
             if(this.config != null)
             {
                 this.allProperties.forEach(p -> p.updateProxy(ValueProxy.EMPTY));
                 ConfigUtil.closeFileConfig(this.config);
                 this.config = null;
+                if(sendEvent)
+                {
+                    Configured.LOGGER.info("Sending config unload event for {}", this.getFileName());
+                    this.sendEvent(new SimpleConfigEvent.Unload(this.source));
+                }
             }
         }
 
@@ -258,6 +278,9 @@ public class ConfigManager
                 ConfigUtil.loadFileConfig(this.config);
                 this.correct(this.config);
                 this.allProperties.forEach(ConfigProperty::invalidateCache);
+                LogicalSidedProvider.WORKQUEUE.get(FMLEnvironment.dist.isClient() ? LogicalSide.CLIENT : LogicalSide.SERVER).submit(() -> {
+                    this.sendEvent(new SimpleConfigEvent.Reload(this.source));
+                });
             }
         }
 
@@ -307,29 +330,27 @@ public class ConfigManager
                 if(!ConfigHelper.isPlayingGame())
                 {
                     // Unload world configs since still in main menu
-                    this.unload();
+                    this.unload(false);
+                    return;
                 }
                 else if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
                 {
-                    this.unload();
+                    this.unload(false);
+                    return;
                 }
             }
-            else
-            {
-                //TODO events for simple configs
-                /*Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
-                this.config.getSpec().afterReload();
-                ConfigHelper.fireEvent(this.config, new ModConfigEvent.Reloading(this.config));*/
-            }
+
+            Configured.LOGGER.info("Sending config reloading event for {}", this.getFileName());
+            this.sendEvent(new SimpleConfigEvent.Reload(this.source));
         }
 
-        public ResourceLocation getName()
+        private ResourceLocation getName()
         {
             return new ResourceLocation(this.id, this.name);
         }
 
         @Nullable
-        public Path getFilePath()
+        private Path getFilePath()
         {
             return this.config instanceof FileConfig ? ((FileConfig) this.config).getNioPath() : null;
         }
@@ -386,7 +407,7 @@ public class ConfigManager
             {
                 if(this.getType().isServer() && (!ConfigHelper.isPlayingGame() || (!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())))
                 {
-                    this.unload();
+                    this.unload(false);
                 }
             }
         }
@@ -459,6 +480,17 @@ public class ConfigManager
             this.allProperties.forEach(property -> tempConfig.set(property.getPath(), property.getDefaultValue()));
             ConfigUtil.saveFileConfig(tempConfig);
             tempConfig.close();
+        }
+
+        private void sendEvent(SimpleConfigEvent event)
+        {
+            ModList.get().getModContainerById(this.id).ifPresent(container ->
+            {
+                if(container instanceof FMLModContainer modContainer)
+                {
+                    modContainer.getEventBus().post(event);
+                }
+            });
         }
     }
 
@@ -621,17 +653,24 @@ public class ConfigManager
     private static class ConfigScanData
     {
         private final SimpleConfig config;
+        private final Object source;
         private final Set<ConfigProperty<?>> properties = new HashSet<>();
         private final Map<List<String>, String> comments = new HashMap<>();
 
-        private ConfigScanData(SimpleConfig config)
+        private ConfigScanData(SimpleConfig config, Object source)
         {
             this.config = config;
+            this.source = source;
         }
 
         public SimpleConfig getConfig()
         {
             return this.config;
+        }
+
+        public Object getSource()
+        {
+            return this.source;
         }
 
         public Set<ConfigProperty<?>> getProperties()
@@ -644,11 +683,11 @@ public class ConfigManager
             return this.comments;
         }
 
-        private static ConfigScanData analyze(SimpleConfig config, Object object)
+        private static ConfigScanData analyze(SimpleConfig config, Object source)
         {
-            Preconditions.checkArgument(!object.getClass().isPrimitive(), "SimpleConfig annotation can only be attached");
-            ConfigScanData data = new ConfigScanData(config);
-            data.scan(new Stack<>(), object);
+            Preconditions.checkArgument(!source.getClass().isPrimitive(), "SimpleConfig annotation can only be attached");
+            ConfigScanData data = new ConfigScanData(config, source);
+            data.scan(new Stack<>(), source);
             return data;
         }
 
