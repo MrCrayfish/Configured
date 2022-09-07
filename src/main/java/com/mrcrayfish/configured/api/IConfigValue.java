@@ -55,7 +55,7 @@ public interface IConfigValue<T>
      * @return the comment of the current config. If present.
      */
     @Nullable
-    String getComment();
+    Component getComment();
 
     /**
      * If the config has translation support included this can return the translation key into the config

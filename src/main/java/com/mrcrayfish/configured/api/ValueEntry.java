@@ -1,5 +1,8 @@
 package com.mrcrayfish.configured.api;
 
+import net.minecraft.network.chat.Component;
+
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,4 +45,17 @@ public class ValueEntry implements IConfigEntry
         return "I am Error";
     }
 
+    @Nullable
+    @Override
+    public Component getTooltip()
+    {
+        return this.value.getComment();
+    }
+
+    @Nullable
+    @Override
+    public String getTranslationKey()
+    {
+        return this.value.getTranslationKey();
+    }
 }

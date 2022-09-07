@@ -51,7 +51,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         Set<IModConfig> localConfigs = this.getLocalConfigs();
         if(!localConfigs.isEmpty())
         {
-            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.client_configuration").getString()));
+            entries.add(new TitleItem(Component.translatable("configured.gui.title.client_configuration").getString()));
             List<Item> localEntries = new ArrayList<>();
             localConfigs.forEach(config -> localEntries.add(new FileItem(config)));
             Collections.sort(localEntries);
@@ -61,10 +61,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         Set<IModConfig> remoteConfigs = this.getRemoteConfigs();
         if(!remoteConfigs.isEmpty())
         {
-            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
+            entries.add(new TitleItem(Component.translatable("configured.gui.title.server_configuration").getString()));
             if(ConfigHelper.isPlayingGame())
             {
-                entries.add(new SubTitleItem(new TranslatableComponent("configured.gui.server_config_main_menu")));
+                entries.add(new SubTitleItem(Component.translatable("configured.gui.server_config_main_menu")));
             }
             else
             {
@@ -121,7 +121,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private void showRestoreScreen()
         {
-            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslatableComponent("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
+            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, Component.translatable("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
                 if(!result)
                     return true;
                 this.config.restoreDefaults();
@@ -129,7 +129,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 return true;
             });
             confirmScreen.setBackground(ModConfigSelectionScreen.this.background);
-            confirmScreen.setPositiveText(new TranslatableComponent("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+            confirmScreen.setPositiveText(Component.translatable("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
             Minecraft.getInstance().setScreen(confirmScreen);
         }
@@ -168,7 +168,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                     }
                     else if(config.getType() != ConfigType.DEDICATED_SERVER)
                     {
-                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     }
                 }
@@ -176,7 +176,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
                     {
-                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     });
                 }
@@ -216,17 +216,17 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(config.isReadOnly())
             {
-                return new TranslatableComponent("configured.gui.view");
+                return Component.translatable("configured.gui.view");
             }
             if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
             {
-                return new TranslatableComponent("configured.gui.select_world");
+                return Component.translatable("configured.gui.select_world");
             }
             if(ConfigHelper.isPlayingGame() && config.getType().isServer() && !config.getType().isSync())
             {
-                return new TranslatableComponent("configured.gui.request");
+                return Component.translatable("configured.gui.request");
             }
-            return new TranslatableComponent("configured.gui.modify");
+            return Component.translatable("configured.gui.modify");
         }
 
         private Button createRestoreButton(IModConfig config)
@@ -267,7 +267,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
             if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 14, 10, 10, mouseX, mouseY))
             {
-                ModConfigSelectionScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
+                ModConfigSelectionScreen.this.setActiveTooltip(Component.translatable("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
             }
         }
 

@@ -18,7 +18,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEditing
+public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTexture, IEditing
 {
     private final Screen parent;
     private final IModConfig config;
@@ -129,8 +128,9 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEdi
         blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.activeTooltip = this.minecraft.font.split(Component.translatable("configured.gui.info"), 200);
+            this.setActiveTooltip(Component.translatable("configured.gui.info"));
         }
+        this.drawTooltip(poseStack, mouseX, mouseY);
     }
 
     @Override

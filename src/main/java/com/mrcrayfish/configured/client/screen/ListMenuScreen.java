@@ -74,7 +74,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         this.addWidget(this.list);
 
         // Adds a search text field to the top of the screen
-        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TextComponent("Search"));
+        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.literal("Search"));
         this.searchTextField.setResponder(s -> this.updateSearchResults());
         this.addWidget(this.searchTextField);
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
@@ -102,7 +102,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(new TranslatableComponent("configured.gui.info"));
+            this.setActiveTooltip(Component.translatable("configured.gui.info"));
         }
     }
 
@@ -259,9 +259,13 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
             return this.label.getString();
         }
 
-        public void setMouseTooltip(Component text, int maxWidth)
+        @Override
+        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            this.tooltip = ListMenuScreen.this.minecraft.font.split(text, maxWidth);
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                ListMenuScreen.this.setActiveTooltip(this.tooltip);
+            }
         }
 
         @Override
@@ -325,44 +329,6 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         public SubTitleItem(String title)
         {
             super(Component.literal(title).withStyle(ChatFormatting.GRAY));
-        }
-
-        @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
-        {
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 6, 0xFFFFFF);
-        }
-    }
-
-    public class SubTitleItem extends Item implements IIgnoreSearch
-    {
-        public SubTitleItem(Component title)
-        {
-            super(title);
-        }
-
-        public SubTitleItem(String title)
-        {
-            super(new TextComponent(title).withStyle(ChatFormatting.GRAY));
-        }
-
-        @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
-        {
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
-        }
-    }
-
-    public class SubTitleItem extends Item implements IIgnoreSearch
-    {
-        public SubTitleItem(Component title)
-        {
-            super(title);
-        }
-
-        public SubTitleItem(String title)
-        {
-            super(new TextComponent(title).withStyle(ChatFormatting.GRAY));
         }
 
         @Override

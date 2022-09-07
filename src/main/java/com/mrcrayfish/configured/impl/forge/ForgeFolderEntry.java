@@ -5,24 +5,31 @@ import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.ForgeConfigSpec;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ForgeFolderEntry implements IConfigEntry
 {
-    private final String label;
+    private final List<String> path;
     private final UnmodifiableConfig config;
     private final ForgeConfigSpec spec;
-    private final boolean root;
     private List<IConfigEntry> entries;
 
-    public ForgeFolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
+    public ForgeFolderEntry(UnmodifiableConfig config, ForgeConfigSpec spec)
     {
-        this.label = label;
+        this(new ArrayList<>(), config, spec);
+    }
+
+    public ForgeFolderEntry(List<String> path, UnmodifiableConfig config, ForgeConfigSpec spec)
+    {
+        this.path = path;
         this.config = config;
         this.spec = spec;
-        this.root = root;
     }
 
     @Override
@@ -36,7 +43,9 @@ public class ForgeFolderEntry implements IConfigEntry
 			{
                 if(o instanceof UnmodifiableConfig)
                 {
-                    builder.add(new ForgeFolderEntry(s, (UnmodifiableConfig) o, this.spec, false));
+                    List<String> path = new ArrayList<>(this.path);
+                    path.add(s);
+                    builder.add(new ForgeFolderEntry(path, (UnmodifiableConfig) o, this.spec));
                 }
                 else if(o instanceof ForgeConfigSpec.ConfigValue<?> configValue)
                 {
@@ -62,7 +71,7 @@ public class ForgeFolderEntry implements IConfigEntry
     @Override
     public boolean isRoot()
     {
-        return this.root;
+        return this.path.isEmpty();
     }
 
     @Override
@@ -80,6 +89,34 @@ public class ForgeFolderEntry implements IConfigEntry
     @Override
     public String getEntryName()
     {
-        return this.label;
+        return ForgeValue.lastValue(this.path, "Root");
+    }
+
+    @Nullable
+    @Override
+    public Component getTooltip()
+    {
+        String translationKey = this.getTranslationKey();
+        if(translationKey != null)
+        {
+            String tooltipKey = translationKey + ".tooltip";
+            if(I18n.exists(tooltipKey))
+            {
+                return Component.translatable(tooltipKey);
+            }
+        }
+        String comment = this.spec.getLevelComment(this.path);
+        if(comment != null)
+        {
+            return Component.literal(comment);
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public String getTranslationKey()
+    {
+        return this.spec.getLevelTranslationKey(this.path);
     }
 }

@@ -195,7 +195,7 @@ public class SimpleConfigManager
             this.readOnly = data.getConfig().readOnly();
             this.configType = data.getConfig().type();
             this.allProperties = ImmutableSet.copyOf(data.getProperties());
-            this.propertyMap = new PropertyMap(this.allProperties);
+            this.propertyMap = new PropertyMap(this);
             this.spec = createSpec(this.allProperties);
             this.comments = createComments(this.spec, data.getComments());
             this.classLoader = Thread.currentThread().getContextClassLoader();
@@ -358,7 +358,7 @@ public class SimpleConfigManager
         @Override
         public IConfigEntry getRoot()
         {
-            return new SimpleFolderEntry("Root", this.propertyMap, true);
+            return new SimpleFolderEntry(this.propertyMap);
         }
 
         @Override
@@ -498,25 +498,29 @@ public class SimpleConfigManager
     {
         private final Map<String, IMapEntry> map = new HashMap<>();
 
+        private final SimpleConfigImpl config;
         private final List<String> path;
 
-        private PropertyMap(List<String> path)
+        private PropertyMap(SimpleConfigImpl config, List<String> path)
         {
+            this.config = config;
             this.path = path;
+            System.out.println(StringUtils.join(path, '.'));
         }
 
-        private PropertyMap(Set<ConfigProperty<?>> properties)
+        private PropertyMap(SimpleConfigImpl config)
         {
-            this.path = null;
-            properties.forEach(p ->
+            this.config = config;
+            this.path = new ArrayList<>();
+            config.allProperties.forEach(p ->
             {
                 PropertyMap current = this;
                 List<String> path = p.getPath();
                 for(int i = 0; i < path.size() - 1; i++)
                 {
-                    int finalI = i;
+                    int finalI = i + 1;
                     current = (PropertyMap) current.map.computeIfAbsent(path.get(i), s -> {
-                        return new PropertyMap(path.subList(0, finalI));
+                        return new PropertyMap(config, path.subList(0, finalI));
                     });
                 }
                 current.map.put(path.get(path.size() - 1), p);
@@ -542,6 +546,25 @@ public class SimpleConfigManager
                 }
             });
             return properties;
+        }
+
+        @Nullable
+        public String getComment()
+        {
+            if(this.path != null && !this.path.isEmpty())
+            {
+                return this.config.comments.getComment(this.path);
+            }
+            return null;
+        }
+
+        public String getTranslationKey()
+        {
+            if(this.path == null || this.path.isEmpty())
+            {
+                return String.format("simpleconfig.%s.%s", this.config.id, this.config.name);
+            }
+            return String.format("simpleconfig.%s.%s.%s", this.config.id, this.config.name, StringUtils.join(this.path, '.'));
         }
 
         public List<String> getPath()

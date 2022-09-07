@@ -1,8 +1,9 @@
 package com.mrcrayfish.configured.impl.forge;
 
 import com.mrcrayfish.configured.api.IConfigValue;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
@@ -72,9 +73,22 @@ public class ForgeValue<T> implements IConfigValue<T>
     }
 
     @Override
-    public String getComment()
+    public Component getComment()
     {
-        return this.valueSpec.getComment();
+        String rawComment = this.valueSpec.getComment();
+        String key = this.getTranslationKey() + ".tooltip";
+        if(I18n.exists(key))
+        {
+            MutableComponent comment = Component.translatable(key);
+            int rangeIndex = rawComment.indexOf("Range: ");
+            int allowedValIndex = rawComment.indexOf("Allowed Values: ");
+            if(rangeIndex >= 0 || allowedValIndex >= 0)
+            {
+                comment.append(Component.literal(rawComment.substring(Math.max(rangeIndex, allowedValIndex) - 1))); // - 1 to include new line char
+            }
+            return comment;
+        }
+        return Component.literal(rawComment);
     }
 
     @Override
@@ -92,7 +106,7 @@ public class ForgeValue<T> implements IConfigValue<T>
             this.loadRange();
             if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
             {
-                this.validationHint = new TranslatableComponent("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
+                this.validationHint = Component.translatable("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
             }
         }
         return this.validationHint;

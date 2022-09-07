@@ -8,11 +8,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -26,7 +25,7 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
 public abstract class TooltipScreen extends Screen
 {
-    private static final List<Component> DUMMY_TOOLTIP = ImmutableList.of(TextComponent.EMPTY);
+    private static final List<Component> DUMMY_TOOLTIP = ImmutableList.of(Component.empty());
 
     @Nullable
     protected List<FormattedCharSequence> tooltipText;
@@ -53,7 +52,7 @@ public abstract class TooltipScreen extends Screen
      *
      * @param tooltip a tooltip list to show
      */
-    public void setTooltip(List<FormattedCharSequence> tooltip)
+    public void setActiveTooltip(List<FormattedCharSequence> tooltip)
     {
         this.resetTooltip();
         this.tooltipText = tooltip;
@@ -96,9 +95,9 @@ public abstract class TooltipScreen extends Screen
         }
     }
 
-    public static void registerTooltipFactory()
+    public static void registerTooltipFactory(RegisterClientTooltipComponentFactoriesEvent event)
     {
-        MinecraftForgeClient.registerTooltipComponentFactory(ListMenuTooltipComponent.class, ListMenuTooltipComponent::asClientTextTooltip);
+        event.register(ListMenuTooltipComponent.class, ListMenuTooltipComponent::asClientTextTooltip);
     }
 
     private record ListMenuTooltipComponent(FormattedCharSequence text) implements TooltipComponent

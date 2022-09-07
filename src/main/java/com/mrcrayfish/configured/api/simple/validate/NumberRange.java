@@ -2,7 +2,6 @@ package com.mrcrayfish.configured.api.simple.validate;
 
 import com.google.common.base.Preconditions;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 /**
  * A simple validator that to test if a number is within a range (inclusive).
@@ -30,6 +29,6 @@ public class NumberRange<T extends Number & Comparable<T>> implements Validator<
     @Override
     public Component getHint()
     {
-        return new TranslatableComponent("configured.validator.range_hint", this.minValue, this.maxValue);
+        return Component.translatable("configured.validator.range_hint", this.minValue, this.maxValue);
     }
 }

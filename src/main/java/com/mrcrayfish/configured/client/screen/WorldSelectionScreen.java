@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.ChatFormatting;
-import net.minecraft.CrashReport;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -25,19 +24,11 @@ import net.minecraft.world.level.storage.LevelSummary;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FileUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Author: MrCrayfish
@@ -94,7 +85,7 @@ public class WorldSelectionScreen extends ListMenuScreen
         super.updateTooltip(mouseX, mouseY);
         if(ScreenUtil.isMouseWithin(this.width - 30, 15, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(new TranslatableComponent("configured.gui.server_config_info"));
+            this.setActiveTooltip(Component.translatable("configured.gui.server_config_info"));
         }
     }
 
@@ -131,7 +122,7 @@ public class WorldSelectionScreen extends ListMenuScreen
                 this.iconFile = null;
             }
             this.texture = this.loadWorldIcon();
-            this.modifyButton = new Button(0, 0, 50, 20, new TranslatableComponent("configured.gui.select"), onPress -> {
+            this.modifyButton = new Button(0, 0, 50, 20, Component.translatable("configured.gui.select"), onPress -> {
                 this.loadWorldConfig(summary.getLevelId(), summary.getLevelName());
             });
         }
@@ -187,7 +178,7 @@ public class WorldSelectionScreen extends ListMenuScreen
                 FileUtils.getOrCreateDirectory(worldConfigPath, "serverconfig");
                 WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
                     ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
-                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, new TextComponent(worldName), T, WorldSelectionScreen.this.background));
+                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, Component.literal(worldName), T, WorldSelectionScreen.this.background));
                     });
                 });
             }

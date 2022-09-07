@@ -6,6 +6,9 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
 import com.mrcrayfish.configured.api.simple.EnumProperty;
 import com.mrcrayfish.configured.api.simple.ListProperty;
+import com.mrcrayfish.configured.impl.forge.ForgeValue;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -15,16 +18,12 @@ import java.util.List;
  */
 public class SimpleFolderEntry implements IConfigEntry
 {
-    private final String label;
     private final SimpleConfigManager.PropertyMap map;
-    private final boolean root;
     private List<IConfigEntry> entries;
 
-    public SimpleFolderEntry(String label, SimpleConfigManager.PropertyMap map, boolean root)
+    public SimpleFolderEntry(SimpleConfigManager.PropertyMap map)
     {
-        this.label = label;
         this.map = map;
-        this.root = root;
     }
 
     @Override
@@ -35,7 +34,7 @@ public class SimpleFolderEntry implements IConfigEntry
             ImmutableList.Builder<IConfigEntry> builder = ImmutableList.builder();
             this.map.getConfigMaps().forEach(pair ->
             {
-                builder.add(new SimpleFolderEntry(pair.getLeft(), pair.getRight(), false));
+                builder.add(new SimpleFolderEntry(pair.getRight()));
             });
             this.map.getConfigProperties().forEach(property ->
             {
@@ -60,7 +59,7 @@ public class SimpleFolderEntry implements IConfigEntry
     @Override
     public boolean isRoot()
     {
-        return this.root;
+        return this.map.getPath().isEmpty();
     }
 
     @Override
@@ -79,6 +78,30 @@ public class SimpleFolderEntry implements IConfigEntry
     @Override
     public String getEntryName()
     {
-        return this.label;
+        return ForgeValue.lastValue(this.map.getPath(), "Root");
+    }
+
+    @Nullable
+    @Override
+    public Component getTooltip()
+    {
+        String key = this.map.getTranslationKey() + ".tooltip";
+        if(I18n.exists(key))
+        {
+            return Component.translatable(key);
+        }
+        String comment = this.map.getComment();
+        if(comment != null)
+        {
+            return Component.literal(comment);
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public String getTranslationKey()
+    {
+        return this.map.getTranslationKey();
     }
 }

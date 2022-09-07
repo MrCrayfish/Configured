@@ -51,7 +51,7 @@ public class ConfigTest
 
         public Test(ForgeConfigSpec.Builder builder)
         {
-            this.stringValue = builder.comment("This is an String value").define("stringValue", "YEP");
+            this.stringValue = builder.comment("This is an String value").translation("forge_config.config_test.client.string_value").define("stringValue", "YEP");
             this.booleanValue = builder.comment("This is a Boolean value").define("booleanValue", false);
             builder.comment("YEP").push("more_properties");
             this.intValue = builder.comment("This is an Integer value").defineInRange("int_Value", 0, 0, 10);
@@ -60,7 +60,7 @@ public class ConfigTest
             this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", ChatFormatting.BLACK);
             this.restrictedEnums = builder.comment("An enum value but with restricted values").defineEnum("restrictedEnums", ChatFormatting.RED, ChatFormatting.RED, ChatFormatting.GREEN, ChatFormatting.BLUE);
             builder.pop();
-            builder.push("lists");
+            builder.translation("forge_config.config_test.client.lists").push("lists");
             this.intList = builder.comment("This is an Integer list").defineList("intList", Arrays.asList(5, 10), o -> o instanceof Integer);
             this.longList = builder.comment("This is an Long list").defineList("longList", Arrays.asList(5L, 10L), o -> o instanceof Long);
             this.doubleList = builder.comment("This is an Double list").defineList("doubleList", Arrays.asList(0.5, 1.0), o -> o instanceof Double);

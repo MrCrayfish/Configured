@@ -1,0 +1,4 @@
+{
+    "forge_config.config_test.client.string_value": "Translated String Value",
+    "forge_config.config_test.client.string_value.tooltip": "Translated Tooltip!"
+}

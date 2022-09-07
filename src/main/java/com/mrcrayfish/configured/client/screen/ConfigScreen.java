@@ -17,6 +17,7 @@ import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -171,15 +172,15 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 this.saveConfig();
                 if(ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresGameRestart))
                 {
-                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.game_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
-                    confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
+                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, Component.translatable("configured.gui.game_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
+                    confirm.setPositiveText(Component.translatable("configured.gui.close"));
                     confirm.setNegativeText(null);
                     this.minecraft.setScreen(confirm);
                 }
                 else if(this.minecraft.level != null && ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresWorldRestart))
                 {
-                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, new TranslatableComponent("configured.gui.world_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
-                    confirm.setPositiveText(new TranslatableComponent("configured.gui.close"));
+                    ConfirmationScreen confirm = new ConfirmationScreen(this.parent, Component.translatable("configured.gui.world_restart_needed"), ConfirmationScreen.Icon.INFO, result -> true);
+                    confirm.setPositiveText(Component.translatable("configured.gui.close"));
                     confirm.setNegativeText(null);
                     this.minecraft.setScreen(confirm);
                 }
@@ -199,7 +200,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             {
                 if(this.isChanged(this.folderEntry))
                 {
-                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, Component("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {
+                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, Component.translatable("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {
                         if(!result) return true;
                         this.minecraft.setScreen(this.parent);
                         return false;
@@ -214,7 +215,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
         else
         {
-            this.addRenderableWidget(new IconButton(this.width / 2 - 130, this.height - 29, 22, 44, 128, new TranslatableComponent("configured.gui.home"), button -> {
+            this.addRenderableWidget(new IconButton(this.width / 2 - 130, this.height - 29, 22, 44, 128, Component.translatable("configured.gui.home"), button -> {
                 ConfigScreen target = this;
                 while(true)
                 {
@@ -244,14 +245,14 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
     private void showRestoreScreen()
     {
-        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, new TranslatableComponent("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
+        ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(ConfigScreen.this, ConfigScreen.this.config, Component.translatable("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
             if(!result) return true;
             this.restoreDefaults(this.folderEntry);
             this.updateButtons();
             return true;
         });
         confirmScreen.setBackground(this.background);
-        confirmScreen.setPositiveText(new TranslatableComponent("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        confirmScreen.setPositiveText(Component.translatable("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
         Minecraft.getInstance().setScreen(confirmScreen);
     }
@@ -295,13 +296,13 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             Screen.blit(poseStack, this.width - 30, 14, 20, 20, 0, 11, 10, 10, 64, 64);
             if(ScreenUtil.isMouseWithin(this.width - 30, 14, 20, 20, mouseX, mouseY))
             {
-                this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
+                this.setActiveTooltip(Component.translatable("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
             }
         }
 
         if(this.deepSearchCheckBox.isMouseOver(mouseX, mouseY))
         {
-            this.setActiveTooltip(new TranslatableComponent("configured.gui.deep_search"));
+            this.setActiveTooltip(Component.translatable("configured.gui.deep_search"));
         }
     }
 
@@ -334,16 +335,16 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     {
         private final IconButton button;
 
-        public FolderItem(IConfigEntry folderEntry)
+        public FolderItem(IConfigEntry entry)
         {
-            super(new TextComponent(createLabel(folderEntry.getEntryName())));
-            this.button = new IconButton(10, 5, 11, 33, 0, new TextComponent(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
-                Component newTitle = ConfigScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.getLabel());
-                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, folderEntry));
+            super(createLabelForFolderEntry(entry));
+            this.button = new IconButton(10, 5, 11, 33, 0, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
+                Component newTitle = ConfigScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.getLabel());
+                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, entry));
             });
-            if(folderEntry.getComment() != null)
+            if(entry.getTooltip() != null)
             {
-                this.tooltip = Language.getInstance().getVisualOrder(ConfigScreen.this.getTranslatableComment(folderEntry));
+                this.tooltip = Language.getInstance().getVisualOrder(splitTooltip(entry.getTooltip()));
             }
         }
 
@@ -354,26 +355,23 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(PoseStack poseStack, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            if(this.isMouseOver(mouseX, mouseY))
-            {
-                ConfigScreen.this.setActiveTooltip(this.tooltip);
-            }
-
+            super.render(poseStack, index, top, left, width, height, mouseX, mouseY, selected, partialTicks);
             this.button.x = left - 1;
             this.button.y = top;
             this.button.setWidth(width);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
-        private static Component createLabelForFolderEntry(FolderEntry folderEntry)
+        private static Component createLabelForFolderEntry(IConfigEntry entry)
         {
-            if(folderEntry.getTranslationKey() != null && I18n.exists(folderEntry.getTranslationKey()))
+            String key = entry.getTranslationKey();
+            if(key != null && I18n.exists(key))
             {
-                return Component.translatable(folderEntry.getTranslationKey());
+                return Component.translatable(key);
             }
-            return Component.literal(createLabel(folderEntry.getLabel()));
+            return Component.literal(createLabel(entry.getEntryName()));
         }
     }
 
@@ -388,10 +386,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(createLabelFromHolder(holder));
             this.holder = holder;
-            if(this.holder.getComment() != null)
-            {
-                this.tooltip = this.createToolTip(holder);
-            }
+            this.tooltip = this.createToolTip(holder);
             int maxTooltipWidth = Math.max(ConfigScreen.this.width / 2 - 43, 170);
             Button.OnTooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, Component.translatable("configured.gui.reset"), maxTooltipWidth);
             this.resetButton = new IconButton(0, 0, 0, 0, onPress -> {
@@ -442,7 +437,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                         String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
                         int outline = gameRestart ? 0xFFDD873B : 0xFF194096;
                         int background = gameRestart ? 0xFFDE923A : 0xFF275EA7;
-                        ConfigScreen.this.setActiveTooltip(new TranslatableComponent(translationKey), outline, background);
+                        ConfigScreen.this.setActiveTooltip(Component.translatable(translationKey), outline, background);
                     }
                 }
             }
@@ -455,7 +450,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 }
                 else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
                 {
-                    ConfigScreen.this.setTooltip(this.tooltip);
+                    ConfigScreen.this.setActiveTooltip(this.tooltip);
                 }
             }
 
@@ -474,27 +469,32 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             return this.label.copy();
         }
 
+        @Nullable
         private List<FormattedCharSequence> createToolTip(IConfigValue<T> holder)
         {
-            Font font = Minecraft.getInstance().font;
-            List<FormattedText> lines = font.getSplitter().splitLines(new TextComponent(holder.getComment()), 200, Style.EMPTY);
-            String name = holder.getName();
-            lines.add(0, new TextComponent(name).withStyle(ChatFormatting.YELLOW));
-            int rangeIndex = -1;
-            for(int i = 0; i < lines.size(); i++)
+            Component comment = holder.getComment();
+            if(comment != null)
             {
-                String text = lines.get(i).getString();
-                if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                Font font = Minecraft.getInstance().font;
+                List<FormattedText> lines = font.getSplitter().splitLines(comment, 200, Style.EMPTY);
+                String name = holder.getName();
+                lines.add(0, Component.literal(name).withStyle(ChatFormatting.YELLOW));
+                int rangeIndex = -1;
+                for(int i = 0; i < lines.size(); i++)
                 {
-                    rangeIndex = i;
-                    break;
+                    String text = lines.get(i).getString();
+                    if(text.startsWith("Range: ") || text.startsWith("Allowed Values: "))
+                    {
+                        rangeIndex = i;
+                        break;
+                    }
                 }
-            }
-            if(rangeIndex != -1)
-            {
-                for(int i = rangeIndex; i < lines.size(); i++)
+                if(rangeIndex != -1)
                 {
-                    lines.set(i, new TextComponent(lines.get(i).getString()).withStyle(ChatFormatting.GRAY));
+                    for(int i = rangeIndex; i < lines.size(); i++)
+                    {
+                        lines.set(i, Component.literal(lines.get(i).getString()).withStyle(ChatFormatting.GRAY));
+                    }
                 }
                 return Language.getInstance().getVisualOrder(lines);
             }
@@ -505,34 +505,6 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             this.validationHint = text;
         }
-    }
-
-    /**
-     * Creates a translatable comment for tooltip
-     *
-     * @param entry a commented translatable to use for creating tooltip lines
-     * @return a list of formatted text representing the tooltip lines or null if no comment exists
-     */
-    @Nullable
-    private List<FormattedText> getTranslatableComment(ICommentedTranslatable entry)
-    {
-        String rawComment = entry.getComment();
-        String key = entry.getTranslationKey();
-        if(key != null && I18n.exists(key + ".tooltip")) // Still check for translation even if rawComment is null
-        {
-            MutableComponent comment = Component.translatable(key + ".tooltip");
-            if(rawComment != null)
-            {
-                int rangeIndex = rawComment.indexOf("Range: ");
-                int allowedValIndex = rawComment.indexOf("Allowed Values: ");
-                if(rangeIndex >= 0 || allowedValIndex >= 0)
-                {
-                    comment.append(Component.literal(rawComment.substring(Math.max(rangeIndex, allowedValIndex) - 1))); // - 1 to include new line char
-                }
-            }
-            return splitTooltip(comment);
-        }
-        return rawComment != null ? splitTooltip(Component.literal(rawComment)) : null;
     }
 
     public abstract class NumberItem<T extends Number> extends ConfigItem<T>
@@ -568,7 +540,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 catch(Exception ignored)
                 {
                     this.textField.setTextColor(16711680);
-                    this.setValidationHint(new TranslatableComponent("configured.validator.not_a_number"));
+                    this.setValidationHint(Component.translatable("configured.validator.not_a_number"));
                 }
             });
             this.textField.setValue(text);
@@ -661,9 +633,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public StringItem(IConfigValue<String> holder)
         {
             super(holder);
-            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
             this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), s -> {
-                return holder.isValid(s) ? Pair.of(true, TextComponent.EMPTY) : Pair.of(false, holder.getValidationHint());
+                return holder.isValid(s) ? Pair.of(true, CommonComponents.EMPTY) : Pair.of(false, holder.getValidationHint());
             }, s -> {
                 holder.set(s);
                 ConfigScreen.this.updateButtons();
@@ -688,7 +660,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
-            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.edit");
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
             this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
             this.eventListeners.add(this.button);
         }
@@ -710,7 +682,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public EnumItem(IConfigValue<Enum<?>> holder)
         {
             super(holder);
-            Component buttonText = ConfigScreen.this.config.isReadOnly() ? new TranslatableComponent("configured.gui.view") : new TranslatableComponent("configured.gui.change");
+            Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.change");
             this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), holder, e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
@@ -740,7 +712,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     {
         if(holder.getTranslationKey() != null && I18n.exists(holder.getTranslationKey()))
         {
-            return new TranslatableComponent(holder.getTranslationKey()).getString();
+            return Component.translatable(holder.getTranslationKey()).getString();
         }
         return createLabel(holder.getName());
     }

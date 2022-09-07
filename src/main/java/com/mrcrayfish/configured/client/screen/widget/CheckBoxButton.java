@@ -6,7 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -22,7 +22,7 @@ public class CheckBoxButton extends Checkbox
 
     public CheckBoxButton(int x, int y, OnPress onPress)
     {
-        super(x, y, 14, 14, TextComponent.EMPTY, false);
+        super(x, y, 14, 14, CommonComponents.EMPTY, false);
         this.onPress = onPress;
     }
 

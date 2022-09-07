@@ -72,14 +72,15 @@ public class SimpleValue<T> implements IConfigValue<T>
 
     @Nullable
     @Override
-    public String getComment()
+    public Component getComment()
     {
         String key = this.getTranslationKey() + ".tooltip";
         if(I18n.exists(key))
         {
-            return I18n.get(key);
+            return Component.translatable(key);
         }
-        return this.property.getComment();
+        String comment = this.property.getComment();
+        return !comment.isEmpty() ? Component.literal(comment) : null;
     }
 
     @Nullable

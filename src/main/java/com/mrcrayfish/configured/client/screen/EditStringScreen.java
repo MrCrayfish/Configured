@@ -10,8 +10,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -49,7 +47,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
     @Override
     protected void init()
     {
-        this.textField = new EditBox(this.font, this.width / 2 - 130, this.height / 2 - 25, 260, 20, TextComponent.EMPTY);
+        this.textField = new EditBox(this.font, this.width / 2 - 130, this.height / 2 - 25, 260, 20, CommonComponents.EMPTY);
         this.textField.setMaxLength(32500);
         this.textField.setValue(this.value);
         this.textField.setResponder(s -> {
@@ -59,7 +57,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
         this.textField.setEditable(!this.config.isReadOnly());
         this.addRenderableWidget(this.textField);
 
-        this.doneButton = this.addRenderableWidget(new IconButton(this.width / 2 - 1 - 130, this.height / 2 + 13, 0, 44, 128, new TranslatableComponent("configured.gui.apply"), (button) -> {
+        this.doneButton = this.addRenderableWidget(new IconButton(this.width / 2 - 1 - 130, this.height / 2 + 13, 0, 44, 128, Component.translatable("configured.gui.apply"), (button) -> {
             String text = this.textField.getValue();
             if(this.validator.apply(text).getLeft()) {
                 this.onSave.accept(text);

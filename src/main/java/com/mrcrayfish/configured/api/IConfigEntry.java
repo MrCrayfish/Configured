@@ -1,5 +1,7 @@
 package com.mrcrayfish.configured.api;
 
+import net.minecraft.network.chat.Component;
+
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -44,4 +46,10 @@ public interface IConfigEntry
      * @return name of the current folder.
      */
     String getEntryName();
+
+    @Nullable
+    Component getTooltip();
+
+    @Nullable
+    String getTranslationKey();
 }

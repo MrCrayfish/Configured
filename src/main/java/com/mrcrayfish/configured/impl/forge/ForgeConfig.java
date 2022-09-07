@@ -84,7 +84,7 @@ public class ForgeConfig implements IModConfig
     @Override
     public IConfigEntry getRoot()
     {
-        return new ForgeFolderEntry("Root", ((ForgeConfigSpec) this.config.getSpec()).getValues(), (ForgeConfigSpec) this.config.getSpec(), true);
+        return new ForgeFolderEntry(((ForgeConfigSpec) this.config.getSpec()).getValues(), (ForgeConfigSpec) this.config.getSpec());
     }
 
     @Override

@@ -16,13 +16,13 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
-import net.minecraftforge.client.ConfigGuiHandler;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.gui.ModListScreen;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -59,9 +59,13 @@ public class ClientHandler
         event.register(ClientHandler.KEY_OPEN_MOD_LIST);
     }
 
+    public static void onRegisterTooltipComponentFactory(RegisterClientTooltipComponentFactoriesEvent event)
+    {
+        ListMenuScreen.registerTooltipFactory(event);
+    }
+
     public static void init()
     {
-        ListMenuScreen.registerTooltipFactory();
         generateConfigFactories();
     }
 
@@ -81,8 +85,8 @@ public class ClientHandler
                 Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
-                container.registerExtensionPoint(ConfigGuiHandler.ConfigGuiFactory.class, () -> new ConfigGuiHandler.ConfigGuiFactory((mc, screen) -> {
-                    return ConfiguredHelper.createSelectionScreen(screen, new TextComponent(displayName), modConfigMap, backgroundTexture);
+                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> {
+                    return ConfiguredHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
                 }));
             }
         });
@@ -190,7 +194,7 @@ public class ClientHandler
     }
 
     @SubscribeEvent
-    public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggingOut event)
     {
         SimpleConfigManager.getInstance().onClientDisconnect(event.getConnection());
     }

@@ -11,19 +11,15 @@ import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.StringProperty;
 import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
-import com.mrcrayfish.configured.api.simple.validate.Validator;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -149,7 +145,7 @@ public class SimpleConfigTest
             @Override
             public Component getHint()
             {
-                return new TextComponent("Value must be one of the following: 1, 2, 4, 8, 16, or 32");
+                return Component.literal("Value must be one of the following: 1, 2, 4, 8, 16, or 32");
             }
         });
 
@@ -165,7 +161,7 @@ public class SimpleConfigTest
             @Override
             public Component getHint()
             {
-                return new TextComponent("Value must be greater than/equal to 10.0 or less than/equal to -10.0");
+                return Component.literal("Value must be greater than/equal to 10.0 or less than/equal to -10.0");
             }
         });
 
@@ -181,7 +177,7 @@ public class SimpleConfigTest
             @Override
             public Component getHint()
             {
-                return new TextComponent("Value must start with ").append(new TextComponent("https://mrcrayfish.com/mods?id=").withStyle(ChatFormatting.YELLOW));
+                return Component.literal("Value must start with ").append(Component.literal("https://mrcrayfish.com/mods?id=").withStyle(ChatFormatting.YELLOW));
             }
         });
 
@@ -197,7 +193,7 @@ public class SimpleConfigTest
             @Override
             public Component getHint()
             {
-                return new TextComponent("Value must divisible by two");
+                return Component.literal("Value must divisible by two");
             }
         });
 
@@ -215,7 +211,7 @@ public class SimpleConfigTest
             @Override
             public Component getHint()
             {
-                return new TextComponent("Value can only contain lowercase letters or numbers");
+                return Component.literal("Value can only contain lowercase letters or numbers");
             }
         });
 
