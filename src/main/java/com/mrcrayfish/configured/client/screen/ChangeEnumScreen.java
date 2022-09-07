@@ -3,7 +3,11 @@ package com.mrcrayfish.configured.client.screen;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.api.IAllowedEnums;
+import com.mrcrayfish.configured.api.IConfigValue;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Button;
@@ -27,23 +31,26 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class ChangeEnumScreen extends Screen implements IBackgroundTexture
+public class ChangeEnumScreen extends Screen implements IBackgroundTexture, IEditing
 {
     private final Screen parent;
+    private final IModConfig config;
     private final Consumer<Enum<?>> onSave;
     private final ResourceLocation background;
+    private final IConfigValue<Enum<?>> holder;
     private Enum<?> selectedValue;
     private EnumList list;
     private List<Entry> entries;
     private EditBox searchTextField;
-    private List<FormattedCharSequence> activeTooltip;
 
-    protected ChangeEnumScreen(Screen parent, Component title, ResourceLocation background, Enum<?> value, Consumer<Enum<?>> onSave)
+    protected ChangeEnumScreen(Screen parent, IModConfig config, Component title, ResourceLocation background, Enum<?> value, IConfigValue<Enum<?>> holder, Consumer<Enum<?>> onSave)
     {
         super(title);
         this.parent = parent;
+        this.config = config;
         this.onSave = onSave;
         this.background = background;
+        this.holder = holder;
         this.selectedValue = value;
     }
 
@@ -52,7 +59,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     {
         this.constructEntries();
         this.list = new EnumList(this.entries);
-        this.list.setRenderBackground(!ListMenuScreen.isPlayingGame());
+        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.list.setSelected(this.list.children().stream().filter(entry -> entry.getEnumValue() == this.selectedValue).findFirst().orElse(null));
         this.addWidget(this.list);
 
@@ -69,28 +76,40 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         this.addWidget(this.searchTextField);
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
 
-        this.addRenderableWidget(new Button(this.width / 2 - 155, this.height - 29, 150, 20, CommonComponents.GUI_DONE, button ->
+        if(!this.config.isReadOnly())
         {
-            if(this.list.getSelected() != null)
+            this.addRenderableWidget(new Button(this.width / 2 - 155, this.height - 29, 150, 20, CommonComponents.GUI_DONE, button ->
             {
-                this.onSave.accept(this.list.getSelected().enumValue);
-            }
-            this.minecraft.setScreen(this.parent);
-        }));
+                if(this.list.getSelected() != null)
+                {
+                    this.onSave.accept(this.list.getSelected().enumValue);
+                }
+                this.minecraft.setScreen(this.parent);
+            }));
+        }
 
-        this.addRenderableWidget(new Button(this.width / 2 - 155 + 160, this.height - 29, 150, 20, CommonComponents.GUI_CANCEL, button -> this.minecraft.setScreen(this.parent)));
+        int cancelOffset = this.config.isReadOnly() ? -75 : -155 + 160;
+        Component cancelLabel = this.config.isReadOnly() ? CommonComponents.GUI_BACK : CommonComponents.GUI_CANCEL;
+        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, 150, 20, cancelLabel, button -> this.minecraft.setScreen(this.parent)));
     }
 
     private void constructEntries()
     {
         List<Entry> entries = new ArrayList<>();
-        Object value = this.selectedValue;
-        if(value != null)
+        if(this.holder instanceof IAllowedEnums<?>)
         {
-            Object[] enums = ((Enum<?>) value).getDeclaringClass().getEnumConstants();
-            for(Object e : enums)
+            ((IAllowedEnums<?>) this.holder).getAllowedValues().forEach(e -> entries.add(new Entry((Enum<?>) e)));
+        }
+        else
+        {
+            Enum<?> value = this.selectedValue;
+            if(value != null)
             {
-                entries.add(new Entry((Enum<?>) e));
+                Object[] enums = value.getDeclaringClass().getEnumConstants();
+                for(Object e : enums)
+                {
+                    entries.add(new Entry((Enum<?>) e));
+                }
             }
         }
         entries.sort(Comparator.comparing(entry -> entry.getFormattedLabel().getString()));
@@ -100,7 +119,6 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
-        this.activeTooltip = null;
         this.renderBackground(poseStack);
         this.list.render(poseStack, mouseX, mouseY, partialTicks);
         this.searchTextField.render(poseStack, mouseX, mouseY, partialTicks);
@@ -113,10 +131,12 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         {
             this.activeTooltip = this.minecraft.font.split(Component.translatable("configured.gui.info"), 200);
         }
-        if(this.activeTooltip != null)
-        {
-            this.renderTooltip(poseStack, this.activeTooltip, mouseX, mouseY);
-        }
+    }
+
+    @Override
+    public IModConfig getActiveConfig()
+    {
+        return this.config;
     }
 
     @Override
@@ -142,7 +162,7 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
         @Override
         public ResourceLocation getBackgroundTexture()
         {
-            return background;
+            return ChangeEnumScreen.this.background;
         }
 
         @Override
@@ -152,6 +172,14 @@ public class ChangeEnumScreen extends Screen implements IBackgroundTexture
             {
                 output.add(NarratedElementType.TITLE, this.getSelected().label);
             }
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY)
+        {
+            if(ChangeEnumScreen.this.config.isReadOnly())
+                return false;
+            return super.isMouseOver(mouseX, mouseY);
         }
     }
 

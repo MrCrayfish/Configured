@@ -1,80 +1,77 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.api.ConfigType;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
  */
 public class ModConfigSelectionScreen extends ListMenuScreen
 {
-    private final Map<ModConfig.Type, Set<ModConfig>> configMap;
+    private final Map<ConfigType, Set<IModConfig>> configMap;
 
-    public ModConfigSelectionScreen(Screen parent, String displayName, ResourceLocation background, Map<ModConfig.Type, Set<ModConfig>> configMap)
+    public ModConfigSelectionScreen(Screen parent, Component title, ResourceLocation background, Map<ConfigType, Set<IModConfig>> configMap)
     {
-        super(parent, Component.literal(displayName), background, 30);
+        super(parent, title, background, 30);
         this.configMap = configMap;
     }
 
     @Override
     protected void constructEntries(List<Item> entries)
     {
-        Set<ModConfig> clientConfigs = this.configMap.get(ModConfig.Type.CLIENT);
-        if(clientConfigs != null)
+        Set<IModConfig> localConfigs = this.getLocalConfigs();
+        if(!localConfigs.isEmpty())
         {
-            entries.add(new TitleItem(Component.translatable("configured.gui.title.client_configuration").getString()));
-            clientConfigs.forEach(config ->
-            {
-                entries.add(new FileItem(config));
-            });
+            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.client_configuration").getString()));
+            List<Item> localEntries = new ArrayList<>();
+            localConfigs.forEach(config -> localEntries.add(new FileItem(config)));
+            Collections.sort(localEntries);
+            entries.addAll(localEntries);
+
         }
-        Set<ModConfig> commonConfigs = this.configMap.get(ModConfig.Type.COMMON);
-        if(commonConfigs != null)
+        Set<IModConfig> remoteConfigs = this.getRemoteConfigs();
+        if(!remoteConfigs.isEmpty())
         {
-            entries.add(new TitleItem(Component.translatable("configured.gui.title.common_configuration").getString()));
-            commonConfigs.forEach(config ->
+            entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
+            if(ConfigHelper.isPlayingGame())
             {
-                entries.add(new FileItem(config));
-            });
-        }
-        Set<ModConfig> serverConfigs = this.configMap.get(ModConfig.Type.SERVER);
-        if(serverConfigs != null)
-        {
-            entries.add(new TitleItem(Component.translatable("configured.gui.title.server_configuration").getString()));
-            if(isPlayingGame())
-            {
-                entries.add(new SubTitleItem(Component.translatable("configured.gui.server_config_main_menu")));
+                entries.add(new SubTitleItem(new TranslatableComponent("configured.gui.server_config_main_menu")));
             }
             else
             {
-                serverConfigs.forEach(config -> {
-                    entries.add(new FileItem(config));
-                });
+                List<Item> remoteEntries = new ArrayList<>();
+                remoteConfigs.forEach(config -> remoteEntries.add(new FileItem(config)));
+                Collections.sort(remoteEntries);
+                entries.addAll(remoteEntries);
             }
         }
     }
@@ -86,85 +83,55 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
     }
 
-    @OnlyIn(Dist.CLIENT)
+    private Set<IModConfig> getLocalConfigs()
+    {
+        return this.configMap.entrySet().stream().filter(entry -> {
+            return !entry.getKey().isServer();
+        }).flatMap(entry -> entry.getValue().stream()).collect(Collectors.toSet());
+    }
+
+    private Set<IModConfig> getRemoteConfigs()
+    {
+        return this.configMap.entrySet().stream().filter(entry -> {
+            ConfigType type = entry.getKey();
+            return type.isServer() && type.getDist().orElse(null) != Dist.DEDICATED_SERVER;
+        }).flatMap(entry -> entry.getValue().stream()).collect(Collectors.toSet());
+    }
+
     public class FileItem extends Item
     {
-        protected final ModConfig config;
+        protected final IModConfig config;
         protected final Component title;
         protected final Component fileName;
         protected final Button modifyButton;
         @Nullable
         protected final Button restoreButton;
-        private final List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> allConfigValues;
 
-        public FileItem(ModConfig config)
+        public FileItem(IModConfig config)
         {
             super(createLabelFromModConfig(config));
             this.config = config;
             this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
-            this.allConfigValues = ConfigHelper.gatherAllConfigValues(config);
             this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.GRAY);
             this.modifyButton = this.createModifyButton(config);
-            this.modifyButton.active = !ConfigScreen.isPlayingGame() || this.config.getType() != ModConfig.Type.SERVER;
-            if(config.getType() != ModConfig.Type.SERVER || Minecraft.getInstance().player != null)
-            {
-                this.restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) ->
-                {
-                    if(button.isHoveredOrFocused())
-                    {
-                        if(this.hasRequiredPermission() && button.active)
-                        {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(Component.translatable("configured.gui.reset_all"), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                        }
-                        else if(!this.hasRequiredPermission())
-                        {
-                            ModConfigSelectionScreen.this.renderTooltip(poseStack, Minecraft.getInstance().font.split(Component.translatable("configured.gui.no_permission").withStyle(ChatFormatting.RED), Math.max(ModConfigSelectionScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                        }
-                    }
-                });
-                this.restoreButton.active = this.hasRequiredPermission();
-                this.updateRestoreDefaultButton();
-            }
-            else
-            {
-                this.restoreButton = null;
-            }
+            this.modifyButton.active = canEditConfig(Minecraft.getInstance().player, config);
+            this.restoreButton = this.createRestoreButton(config);
+            this.updateRestoreDefaultButton();
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
         private void showRestoreScreen()
         {
-            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, Component.translatable("configured.gui.restore_message"), result ->
-            {
-                if(!result || this.allConfigValues == null)
+            ConfirmationScreen confirmScreen = new ConfirmationScreen(ModConfigSelectionScreen.this, new TranslatableComponent("configured.gui.restore_message"), ConfirmationScreen.Icon.WARNING, result -> {
+                if(!result)
                     return true;
-
-                // Resets all config values
-                CommentedConfig newConfig = CommentedConfig.copy(this.config.getConfigData());
-                this.allConfigValues.forEach(pair ->
-                {
-                    ForgeConfigSpec.ConfigValue configValue = pair.getLeft();
-                    ForgeConfigSpec.ValueSpec valueSpec = pair.getRight();
-                    newConfig.set(configValue.getPath(), valueSpec.getDefault());
-                });
+                this.config.restoreDefaults();
                 this.updateRestoreDefaultButton();
-                this.config.getConfigData().putAll(newConfig);
-                ConfigHelper.resetCache(this.config);
                 return true;
             });
-            confirmScreen.setBackground(background);
-            confirmScreen.setPositiveText(Component.translatable("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+            confirmScreen.setBackground(ModConfigSelectionScreen.this.background);
+            confirmScreen.setPositiveText(new TranslatableComponent("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
             Minecraft.getInstance().setScreen(confirmScreen);
-        }
-
-        private boolean hasRequiredPermission()
-        {
-            if(this.config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().player != null)
-            {
-                return Minecraft.getInstance().player.hasPermissions(2);
-            }
-            return true;
         }
 
         private MutableComponent createTrimmedFileName(String fileName)
@@ -181,30 +148,96 @@ public class ModConfigSelectionScreen extends ListMenuScreen
          * Creates and returns a new modify button instance. Since server configurations are handled
          * different, the label and click handler of this button is different if the given ModConfig
          * instance is of the server type.
+         *
          * @param config
          * @return
          */
-        private Button createModifyButton(ModConfig config)
+        private Button createModifyButton(IModConfig config)
         {
-            boolean serverConfig = config.getType() == ModConfig.Type.SERVER && Minecraft.getInstance().level == null;
-            String langKey = serverConfig ? "configured.gui.select_world" : "configured.gui.modify";
-            return new IconButton(0, 0, serverConfig ? 44 : 33, 0, serverConfig ? 80 : 60, Component.translatable(langKey), onPress ->
+            int width = canRestoreConfig(Minecraft.getInstance().player, config) ? 60 : 82;
+            return new IconButton(0, 0, this.getModifyIconU(config), this.getModifyIconV(config), width, this.getModifyLabel(config), button ->
             {
-                if(ConfigScreen.isPlayingGame() && this.config.getType() == ModConfig.Type.SERVER)
+                if(!button.isActive() || !button.visible)
                     return;
 
-                if(serverConfig)
+                if(!ConfigHelper.isPlayingGame())
                 {
-                    Minecraft.getInstance().setScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
+                    if(ConfigHelper.isWorldConfig(config))
+                    {
+                        Minecraft.getInstance().setScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
+                    }
+                    else if(config.getType() != ConfigType.DEDICATED_SERVER)
+                    {
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
+                    }
                 }
                 else
                 {
                     ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
                     {
-                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, Component.literal(container.getModInfo().getDisplayName()), config, ModConfigSelectionScreen.this.background));
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     });
                 }
             });
+        }
+
+        private int getModifyIconU(IModConfig config)
+        {
+            if(config.isReadOnly())
+            {
+                return 0;
+            }
+            else if(ConfigHelper.isPlayingGame())
+            {
+                if(config.getType().isServer() && !config.getType().isSync())
+                {
+                    return 22;
+                }
+            }
+            else if(ConfigHelper.isWorldConfig(config))
+            {
+                return 11;
+            }
+            return 0;
+        }
+
+        private int getModifyIconV(IModConfig config)
+        {
+            if(config.isReadOnly())
+            {
+                return 33;
+            }
+            return 22;
+        }
+
+        private Component getModifyLabel(IModConfig config)
+        {
+            if(config.isReadOnly())
+            {
+                return new TranslatableComponent("configured.gui.view");
+            }
+            if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
+            {
+                return new TranslatableComponent("configured.gui.select_world");
+            }
+            if(ConfigHelper.isPlayingGame() && config.getType().isServer() && !config.getType().isSync())
+            {
+                return new TranslatableComponent("configured.gui.request");
+            }
+            return new TranslatableComponent("configured.gui.modify");
+        }
+
+        private Button createRestoreButton(IModConfig config)
+        {
+            if(canRestoreConfig(Minecraft.getInstance().player, config))
+            {
+                IconButton restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) -> {});
+                restoreButton.active = !config.isReadOnly() && ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config);
+                return restoreButton;
+            }
+            return null;
         }
 
         @Override
@@ -212,11 +245,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             Screen.drawString(poseStack, Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFF);
             Screen.drawString(poseStack, Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFF);
-            float brightness = true ? 1.0F : 0.5F;
             RenderSystem.setShaderTexture(0, IconButton.ICONS);
-            RenderSystem.setShaderColor(brightness, brightness, brightness, 1.0F);
-            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), 11, 9, 11, 64, 64);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), this.getIconV(), 9, 11, 64, 64);
+
+            if(this.config.isReadOnly())
+            {
+                blit(poseStack, left - 1, top + 14, 10, 10, 0, 11, 10, 10, 64, 64);
+            }
 
             this.modifyButton.x = left + width - 83;
             this.modifyButton.y = top;
@@ -228,19 +264,21 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 this.restoreButton.y = top;
                 this.restoreButton.render(poseStack, mouseX, mouseY, partialTicks);
             }
+
+            if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 14, 10, 10, mouseX, mouseY))
+            {
+                ModConfigSelectionScreen.this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.GOLD));
+            }
         }
 
         private int getIconU()
         {
-            switch(this.config.getType())
-            {
-                case COMMON:
-                    return 9;
-                case SERVER:
-                    return 18;
-                default:
-                    return 0;
-            }
+            return (this.config.getType().ordinal() % 3) * 9 + 33;
+        }
+
+        private int getIconV()
+        {
+            return (this.config.getType().ordinal() / 3) * 11;
         }
 
         @Override
@@ -259,9 +297,9 @@ public class ModConfigSelectionScreen extends ListMenuScreen
          */
         private void updateRestoreDefaultButton()
         {
-            if(this.config != null && this.restoreButton != null && this.hasRequiredPermission())
+            if(this.config != null && this.restoreButton != null && canRestoreConfig(Minecraft.getInstance().player, this.config))
             {
-                this.restoreButton.active = ConfigHelper.isModified(this.config);
+                this.restoreButton.active = !this.config.isReadOnly() && this.config.isChanged();
             }
         }
     }
@@ -272,13 +310,40 @@ public class ModConfigSelectionScreen extends ListMenuScreen
      * @param config
      * @return
      */
-    private static String createLabelFromModConfig(ModConfig config)
+    private static String createLabelFromModConfig(IModConfig config)
     {
+        if(config.getTranslationKey() != null) {
+            return I18n.get(config.getTranslationKey());
+        }
         String fileName = config.getFileName();
         fileName = fileName.replace(config.getModId() + "-", "");
-        fileName = fileName.substring(0, fileName.length() - ".toml".length());
+        if(fileName.endsWith(".toml")) {
+            fileName = fileName.substring(0, fileName.length() - ".toml".length());
+        }
         fileName = FilenameUtils.getName(fileName);
         fileName = ConfigScreen.createLabel(fileName);
         return fileName;
+    }
+
+    public static boolean canEditConfig(@Nullable Player player, IModConfig config)
+    {
+        return switch(config.getType())
+        {
+            case CLIENT -> FMLEnvironment.dist.isClient();
+            case UNIVERSAL, MEMORY -> true;
+            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame();
+            case DEDICATED_SERVER -> false;
+        };
+    }
+
+    public static boolean canRestoreConfig(Player player, IModConfig config)
+    {
+        return switch(config.getType())
+        {
+            case CLIENT, UNIVERSAL, MEMORY -> true;
+            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame();
+            case WORLD, WORLD_SYNC -> false;
+            case DEDICATED_SERVER -> false;
+        };
     }
 }

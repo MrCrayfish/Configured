@@ -25,5 +25,6 @@
     "configured.config.client.force_configured_menu": "强制使用Configured菜单",
     "configured.config.client.force_configured_menu.tooltip": "让Configured生成的配置菜单强制覆盖原有配置菜单。需要重启游戏以使设置生效。",
     "key.configured.open_mod_list": "打开模组列表",
+    "configured.config.client.force_configured_menu": "强制使用Configured菜单",
     "key.categories.configured": "Configured"
 }

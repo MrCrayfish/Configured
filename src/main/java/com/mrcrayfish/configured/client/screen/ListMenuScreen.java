@@ -4,9 +4,10 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -21,9 +22,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public abstract class ListMenuScreen extends Screen implements IBackgroundTexture
+public abstract class ListMenuScreen extends TooltipScreen implements IBackgroundTexture
 {
     public static final ResourceLocation CONFIGURED_LOGO = new ResourceLocation(Reference.MOD_ID, "textures/gui/logo.png");
 
@@ -43,7 +43,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
     protected final int itemHeight;
     protected EntryList list;
     protected List<Item> entries;
-    protected List<FormattedCharSequence> activeTooltip;
     protected FocusedEditBox activeTextField;
     protected FocusedEditBox searchTextField;
 
@@ -55,34 +54,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         this.itemHeight = itemHeight;
     }
 
-    @Override
-    protected void init()
-    {
-        // Constructs a list of entries and adds them to an option list
-        List<Item> entries = new ArrayList<>();
-        this.constructEntries(entries);
-        this.entries = ImmutableList.copyOf(entries); //Should this still be immutable?
-        this.list = new EntryList(this.entries);
-        this.list.setRenderBackground(!isPlayingGame());
-        this.addWidget(this.list);
-
-        // Adds a search text field to the top of the screen
-        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.literal("Search"));
-        this.searchTextField.setResponder(s ->
-        {
-            ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);
-            this.list.replaceEntries(s.isEmpty() ? this.entries : this.entries.stream().filter(item -> {
-                return !(item instanceof IIgnoreSearch) && item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
-            }).collect(Collectors.toList()));
-            if(!s.isEmpty())
-            {
-                this.list.setScrollAmount(0);
-            }
-        });
-        this.addWidget(this.searchTextField);
-        ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
-    }
-
     protected abstract void constructEntries(List<Item> entries);
 
     @Override
@@ -91,30 +62,61 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         return this.background;
     }
 
-    /**
-     * Sets the tool tip to render. Must be actively called in the render method as
-     * the tooltip is reset every draw call.
-     *
-     * @param tooltip a tooltip list to show
-     */
-    public void setActiveTooltip(List<FormattedCharSequence> tooltip)
+    @Override
+    protected void init()
     {
-        this.activeTooltip = tooltip;
+        // Constructs a list of entries and adds them to an option list
+        List<Item> entries = new ArrayList<>();
+        this.constructEntries(entries);
+        this.entries = ImmutableList.copyOf(entries); //Should this still be immutable?
+        this.list = new EntryList(this.entries);
+        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
+        this.addWidget(this.list);
+
+        // Adds a search text field to the top of the screen
+        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TextComponent("Search"));
+        this.searchTextField.setResponder(s -> this.updateSearchResults());
+        this.addWidget(this.searchTextField);
+        ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
+    }
+
+    protected void updateSearchResults()
+    {
+        String query = this.searchTextField.getValue();
+        ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, query, this.entries);
+        this.list.replaceEntries(query.isEmpty() ? this.entries : this.getSearchResults(query));
+        if(!query.isEmpty())
+        {
+            this.list.setScrollAmount(0);
+        }
+    }
+
+    protected Collection<Item> getSearchResults(String s)
+    {
+        return this.entries.stream().filter(item -> {
+            return !(item instanceof IIgnoreSearch) && item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
+        }).collect(Collectors.toList());
     }
 
     protected void updateTooltip(int mouseX, int mouseY)
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(this.minecraft.font.split(Component.translatable("configured.gui.info"), 200));
+            this.setActiveTooltip(new TranslatableComponent("configured.gui.info"));
         }
+    }
+
+    @Override
+    public void tick()
+    {
+        this.searchTextField.tick();
     }
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
         // Resets the active tooltip each draw call
-        this.activeTooltip = null;
+        this.resetTooltip();
 
         // Draws the background texture (dirt or custom texture)
         this.renderBackground(poseStack);
@@ -128,18 +130,26 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         super.render(poseStack, mouseX, mouseY, partialTicks);
 
+        // Draws the foreground. Allows subclasses to draw onto the screen at the appropriate time.
+        this.renderForeground(poseStack, mouseX, mouseY, partialTicks);
+
         // Draws the Configured logo in the top left of the screen
         RenderSystem.setShaderTexture(0, CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         Screen.blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
 
+        // Draws the search icon next to the search text field
+        RenderSystem.setShaderTexture(0, IconButton.ICONS);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        Screen.blit(poseStack, this.width / 2 - 128, 26, 14, 14, 22, 11, 10, 10, 64, 64);
+
         // Gives a chance for child classes to set the active tooltip
         this.updateTooltip(mouseX, mouseY);
 
         // Draws the active tooltip otherwise tries to draw button tooltips
-        if(this.activeTooltip != null)
+        if(this.tooltipText != null)
         {
-            this.renderTooltip(poseStack, this.activeTooltip, mouseX, mouseY);
+            this.drawTooltip(poseStack, mouseX, mouseY);
         }
         else
         {
@@ -154,6 +164,8 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
+    protected void renderForeground(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {}
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button)
     {
@@ -163,12 +175,11 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
             this.handleComponentClicked(style);
             return true;
         }
+        if(this.activeTextField != null && !this.activeTextField.isMouseOver(mouseX, mouseY))
+        {
+            this.activeTextField.setFocused(false);
+        }
         return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    public static boolean isPlayingGame()
-    {
-        return Minecraft.getInstance().player != null;
     }
 
     protected class EntryList extends ContainerObjectSelectionList<Item> implements IBackgroundTexture
@@ -213,14 +224,6 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
 
         private void renderToolTips(PoseStack poseStack, int mouseX, int mouseY)
         {
-            if(this.isMouseOver(mouseX, mouseY) && mouseX < ListMenuScreen.this.list.getRowLeft() + ListMenuScreen.this.list.getRowWidth() - 67)
-            {
-                Item item = this.getEntryAtPosition(mouseX, mouseY);
-                if(item != null)
-                {
-                    ListMenuScreen.this.setActiveTooltip(item.tooltip);
-                }
-            }
             this.children().forEach(item ->
             {
                 item.children().forEach(o ->
@@ -234,9 +237,10 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
     }
 
-    protected abstract class Item extends ContainerObjectSelectionList.Entry<Item> implements ILabelProvider
+    protected abstract class Item extends ContainerObjectSelectionList.Entry<Item> implements ILabelProvider, Comparable<Item>
     {
         protected final Component label;
+        @Nullable
         protected List<FormattedCharSequence> tooltip;
 
         public Item(Component label)
@@ -252,10 +256,10 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         @Override
         public String getLabel()
         {
-            return this.label.getString(); //TODO test
+            return this.label.getString();
         }
 
-        public void setTooltip(Component text, int maxWidth)
+        public void setMouseTooltip(Component text, int maxWidth)
         {
             this.tooltip = ListMenuScreen.this.minecraft.font.split(text, maxWidth);
         }
@@ -280,9 +284,15 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
                 @Override
                 public void updateNarration(NarrationElementOutput output)
                 {
-                    output.add(NarratedElementType.TITLE, label);
+                    output.add(NarratedElementType.TITLE, Item.this.label);
                 }
             });
+        }
+
+        @Override
+        public int compareTo(ListMenuScreen.Item o)
+        {
+            return this.label.getString().compareTo(o.label.getString());
         }
     }
 
@@ -320,6 +330,44 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
+            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 6, 0xFFFFFF);
+        }
+    }
+
+    public class SubTitleItem extends Item implements IIgnoreSearch
+    {
+        public SubTitleItem(Component title)
+        {
+            super(title);
+        }
+
+        public SubTitleItem(String title)
+        {
+            super(new TextComponent(title).withStyle(ChatFormatting.GRAY));
+        }
+
+        @Override
+        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
+            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
+        }
+    }
+
+    public class SubTitleItem extends Item implements IIgnoreSearch
+    {
+        public SubTitleItem(Component title)
+        {
+            super(title);
+        }
+
+        public SubTitleItem(String title)
+        {
+            super(new TextComponent(title).withStyle(ChatFormatting.GRAY));
+        }
+
+        @Override
+        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        {
             Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
         }
     }
@@ -332,9 +380,9 @@ public abstract class ListMenuScreen extends Screen implements IBackgroundTextur
         }
 
         @Override
-        protected void onFocusedChanged(boolean focused)
+        protected void setFocused(boolean focused)
         {
-            super.onFocusedChanged(focused);
+            super.setFocused(focused);
             if(focused)
             {
                 if(ListMenuScreen.this.activeTextField != null && ListMenuScreen.this.activeTextField != this)

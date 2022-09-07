@@ -21,6 +21,7 @@ minecraft {
             mods {
                 configured {
                     source sourceSets.main
+                    source sourceSets.test
                 }
             }
         }
