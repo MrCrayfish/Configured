@@ -437,7 +437,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                         String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
                         int outline = gameRestart ? 0xFFDD873B : 0xFF194096;
                         int background = gameRestart ? 0xFFDE923A : 0xFF275EA7;
-                        ConfigScreen.this.setActiveTooltip(Component.translatable(translationKey), outline, background);
+                        ConfigScreen.this.setActiveTooltip(Component.translatable(translationKey).withStyle(ChatFormatting.GRAY), outline, background);
                     }
                 }
             }
@@ -534,13 +534,13 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     else
                     {
                         this.textField.setTextColor(16711680);
-                        this.setValidationHint(holder.getValidationHint());
+                        this.setValidationHint(holder.getValidationHint().copy().withStyle(ChatFormatting.DARK_RED));
                     }
                 }
                 catch(Exception ignored)
                 {
                     this.textField.setTextColor(16711680);
-                    this.setValidationHint(Component.translatable("configured.validator.not_a_number"));
+                    this.setValidationHint(Component.translatable("configured.validator.not_a_number").withStyle(ChatFormatting.DARK_RED));
                 }
             });
             this.textField.setValue(text);

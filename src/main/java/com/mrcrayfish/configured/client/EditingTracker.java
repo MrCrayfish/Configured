@@ -3,9 +3,7 @@ package com.mrcrayfish.configured.client;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.IEditing;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 
 /**
  * Author: MrCrayfish
@@ -27,32 +25,35 @@ public class EditingTracker
 
     private EditingTracker() {}
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onScreenOpen(ScreenEvent.Opening event)
+    public static void registerEvents()
     {
-        // Keeps track of the config currently being editing and runs events accordingly
-        if(event.getScreen() instanceof IEditing editing)
+        ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) ->
         {
-            if(this.editingConfig == null)
+            EditingTracker tracker = instance();
+            // Keeps track of the config currently being editing and runs events accordingly
+            if(screen instanceof IEditing editing)
             {
-                this.editingConfig = editing.getActiveConfig();
-                this.editingConfig.startEditing();
-                Configured.LOGGER.info("Started editing '" + this.editingConfig.getFileName() + "'");
+                if(tracker.editingConfig == null)
+                {
+                    tracker.editingConfig = editing.getActiveConfig();
+                    tracker.editingConfig.startEditing();
+                    Configured.LOGGER.info("Started editing '" + tracker.editingConfig.getFileName() + "'");
+                }
+                else if(editing.getActiveConfig() == null)
+                {
+                    throw new NullPointerException("A null config was returned when getting active config");
+                }
+                else if(tracker.editingConfig != editing.getActiveConfig())
+                {
+                    throw new IllegalStateException("Trying to edit a config while one is already loaded. This should not happen!");
+                }
             }
-            else if(editing.getActiveConfig() == null)
+            else if(tracker.editingConfig != null)
             {
-                throw new NullPointerException("A null config was returned when getting active config");
+                Configured.LOGGER.info("Stopped editing '" + tracker.editingConfig.getFileName() + "'");
+                tracker.editingConfig.stopEditing();
+                tracker.editingConfig = null;
             }
-            else if(this.editingConfig != editing.getActiveConfig())
-            {
-                throw new IllegalStateException("Trying to edit a config while one is already loaded. This should not happen!");
-            }
-        }
-        else if(this.editingConfig != null)
-        {
-            Configured.LOGGER.info("Stopped editing '" + this.editingConfig.getFileName() + "'");
-            this.editingConfig.stopEditing();
-            this.editingConfig = null;
-        }
+        });
     }
 }

@@ -1,6 +1,6 @@
 package com.mrcrayfish.configured.api;
 
-import net.minecraftforge.api.distmarker.Dist;
+import net.fabricmc.api.EnvType;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -19,7 +19,7 @@ public enum ConfigType
      *
      * This is a good config type for rendering properties since they will only ever be used on the client.
      */
-    CLIENT(Dist.CLIENT, false, false),
+    CLIENT(EnvType.CLIENT, false, false),
 
     /**
      * This type is the equivalent of the regular Forge common config type.
@@ -52,7 +52,7 @@ public enum ConfigType
     /**
      * A configuration that is only created and loaded on a dedicated server
      */
-    DEDICATED_SERVER(Dist.DEDICATED_SERVER, true, false),
+    DEDICATED_SERVER(EnvType.SERVER, true, false),
 
     /**
      * A configuration that is created and loaded from a world. This means that each world can have
@@ -85,27 +85,27 @@ public enum ConfigType
      */
     MEMORY(null, false, false);
 
-    private final Dist dist;
+    private final EnvType env;
     private final boolean server;
     private final boolean sync;
 
     /**
      * Default constructor for Storage Types
      *
-     * @param dist   the distribution the config can load on. A null dist means any.
+     * @param env    the distribution the config can load on. A null dist means any.
      * @param server if this config type is loaded when the server is starting
      * @param sync   if the config should sync to clients upon connecting
      */
-    ConfigType(@Nullable Dist dist, boolean server, boolean sync)
+    ConfigType(@Nullable EnvType env, boolean server, boolean sync)
     {
-        this.dist = dist;
+        this.env = env;
         this.server = server;
         this.sync = sync;
     }
 
-    public Optional<Dist> getDist()
+    public Optional<EnvType> getEnv()
     {
-        return Optional.ofNullable(this.dist);
+        return Optional.ofNullable(this.env);
     }
 
     public boolean isServer()

@@ -8,8 +8,6 @@ import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Author: MrCrayfish
@@ -48,7 +46,6 @@ public class CheckBoxButton extends Checkbox
         this.renderBg(poseStack, minecraft, mouseX, mouseY);
     }
 
-    @OnlyIn(Dist.CLIENT)
     public interface OnPress
     {
         void onPress(Checkbox button);

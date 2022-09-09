@@ -21,25 +21,17 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
-import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
+import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvents;
 import com.mrcrayfish.configured.network.HandshakeMessages;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.event.server.ServerAboutToStartEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.javafmlmod.FMLModContainer;
-import net.minecraftforge.fml.loading.FMLConfig;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.FileUtils;
-import net.minecraftforge.forgespi.language.ModFileScanData;
+import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.Type;
@@ -49,7 +41,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -66,7 +60,6 @@ public class SimpleConfigManager
 {
     private static final Predicate<String> NAME_PATTERN = Pattern.compile("^[a-z_]+$").asMatchPredicate();
     private static final LevelResource WORLD_CONFIG = new LevelResource("serverconfig");
-    private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
 
     private static SimpleConfigManager instance;
 
@@ -132,38 +125,39 @@ public class SimpleConfigManager
         }
     }
 
-    @SubscribeEvent
-    public void onServerStarting(ServerAboutToStartEvent event)
+    public static void registerEvents()
     {
-        Configured.LOGGER.info("Loading server configs...");
-
-        // Create the server config directory
-        Path serverConfig = event.getServer().getWorldPath(WORLD_CONFIG);
-        FileUtils.getOrCreateDirectory(serverConfig, "serverconfig");
-
-        // Handle loading server configs based on type
-        this.configs.values().forEach(entry ->
+        ServerLifecycleEvents.SERVER_STARTING.register(server ->
         {
-            switch(entry.configType)
+            Configured.LOGGER.info("Loading server configs...");
+
+            // Create the server config directory
+            Path serverConfig = server.getWorldPath(WORLD_CONFIG);
+            createPath(serverConfig);
+
+            // Handle loading server configs based on type
+            getInstance().configs.values().forEach(entry ->
             {
-                case WORLD, WORLD_SYNC -> entry.load(serverConfig);
-                case SERVER, SERVER_SYNC -> entry.load(FMLPaths.CONFIGDIR.get());
-                case DEDICATED_SERVER ->
+                switch(entry.configType)
                 {
-                    if(FMLEnvironment.dist.isDedicatedServer())
+                    case WORLD, WORLD_SYNC -> entry.load(serverConfig);
+                    case SERVER, SERVER_SYNC -> entry.load(FabricLoader.getInstance().getConfigDir());
+                    case DEDICATED_SERVER ->
                     {
-                        entry.load(FMLPaths.CONFIGDIR.get());
+                        if(FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER)
+                        {
+                            entry.load(FabricLoader.getInstance().getConfigDir());
+                        }
                     }
                 }
-            }
+            });
         });
-    }
 
-    @SubscribeEvent
-    public void onServerStopped(ServerStoppedEvent event)
-    {
-        Configured.LOGGER.info("Unloading server configs...");
-        this.configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(entry -> entry.unload(true));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server ->
+        {
+            Configured.LOGGER.info("Unloading server configs...");
+            getInstance().configs.values().stream().filter(entry -> entry.configType.isServer()).forEach(entry -> entry.unload(true));
+        });
     }
 
     public static final class SimpleConfigImpl implements IModConfig
@@ -178,13 +172,14 @@ public class SimpleConfigManager
         private final ConfigSpec spec;
         private final ClassLoader classLoader;
         private final CommentedConfig comments;
+
         @Nullable
         private UnmodifiableConfig config;
 
         private SimpleConfigImpl(ConfigScanData data)
         {
             Preconditions.checkArgument(!data.getConfig().id().trim().isEmpty(), "The 'id' of the config cannot be empty");
-            Preconditions.checkArgument(ModList.get().isLoaded(data.getConfig().id()), "The 'id' of the config must match a mod id");
+            Preconditions.checkArgument(FabricLoader.getInstance().isModLoaded(data.getConfig().id()), "The 'id' of the config must match a mod id");
             Preconditions.checkArgument(!data.getConfig().name().trim().isEmpty(), "The 'name' of the config cannot be empty");
             Preconditions.checkArgument(data.getConfig().name().length() <= 64, "The 'name' of the config must be 64 characters or less");
             Preconditions.checkArgument(NAME_PATTERN.test(data.getConfig().name()), "The 'name' of the config is invalid. It can only contain 'a-z' and '_'");
@@ -209,7 +204,7 @@ public class SimpleConfigManager
                 }
                 else
                 {
-                    this.load(FMLPaths.CONFIGDIR.get());
+                    this.load(FabricLoader.getInstance().getConfigDir());
                 }
             }
         }
@@ -222,8 +217,8 @@ public class SimpleConfigManager
          */
         private void load(@Nullable Path configDir)
         {
-            Optional<Dist> dist = this.getType().getDist();
-            if(dist.isPresent() && !FMLEnvironment.dist.equals(dist.get()))
+            Optional<EnvType> dist = this.getType().getEnv();
+            if(dist.isPresent() && !FabricLoader.getInstance().getEnvironmentType().equals(dist.get()))
                 return;
             Preconditions.checkState(this.config == null, "Config is already loaded. Unload before loading again.");
             UnmodifiableConfig config = this.createConfig(configDir);
@@ -232,7 +227,8 @@ public class SimpleConfigManager
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
             ConfigHelper.watchConfig(config, this::changeCallback);
-            this.sendEvent(new SimpleConfigEvent.Load(this.source));
+            SimpleConfigEvents.LOAD.invoker().call(this.source);
+            Configured.LOGGER.info("Loaded config: " + this.getFileName());
         }
 
         private void loadFromData(byte[] data)
@@ -242,7 +238,7 @@ public class SimpleConfigManager
             this.correct(config);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
-            this.sendEvent(new SimpleConfigEvent.Load(this.source));
+            SimpleConfigEvents.LOAD.invoker().call(this.source);
         }
 
         private UnmodifiableConfig createConfig(@Nullable Path configDir)
@@ -264,8 +260,8 @@ public class SimpleConfigManager
                 this.config = null;
                 if(sendEvent)
                 {
-                    Configured.LOGGER.info("Sending config unload event for {}", this.getFileName());
-                    this.sendEvent(new SimpleConfigEvent.Unload(this.source));
+                    Configured.LOGGER.info("Unloaded config: " + this.getFileName());
+                    SimpleConfigEvents.UNLOAD.invoker().call(this.source);
                 }
             }
         }
@@ -278,9 +274,7 @@ public class SimpleConfigManager
                 ConfigHelper.loadConfig(this.config);
                 this.correct(this.config);
                 this.allProperties.forEach(ConfigProperty::invalidateCache);
-                LogicalSidedProvider.WORKQUEUE.get(FMLEnvironment.dist.isClient() ? LogicalSide.CLIENT : LogicalSide.SERVER).submit(() -> {
-                    this.sendEvent(new SimpleConfigEvent.Reload(this.source));
-                });
+                SimpleConfigEvents.RELOAD.invoker().call(this.source);
             }
         }
 
@@ -341,7 +335,7 @@ public class SimpleConfigManager
             }
 
             Configured.LOGGER.info("Sending config reloading event for {}", this.getFileName());
-            this.sendEvent(new SimpleConfigEvent.Reload(this.source));
+            SimpleConfigEvents.RELOAD.invoker().call(this.source);
         }
 
         private ResourceLocation getName()
@@ -396,7 +390,7 @@ public class SimpleConfigManager
         {
             if(!ConfigHelper.isPlayingGame() && ConfigHelper.isServerConfig(this))
             {
-                this.load(FMLPaths.CONFIGDIR.get());
+                this.load(FabricLoader.getInstance().getConfigDir());
             }
         }
 
@@ -444,7 +438,7 @@ public class SimpleConfigManager
                 return this.allProperties.stream().anyMatch(property -> !property.isDefault());
 
             // Temporarily load config to test for changes. Unloads immediately after test.
-            CommentedFileConfig tempConfig = createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
+            CommentedFileConfig tempConfig = createTempConfig(FabricLoader.getInstance().getConfigDir(), this.id, this.name);
             ConfigHelper.loadConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
@@ -473,7 +467,7 @@ public class SimpleConfigManager
             }
 
             // Temporarily loads the config, restores the defaults then saves and closes.
-            CommentedFileConfig tempConfig = createTempConfig(FMLPaths.CONFIGDIR.get(), this.id, this.name);
+            CommentedFileConfig tempConfig = createTempConfig(FabricLoader.getInstance().getConfigDir(), this.id, this.name);
             ConfigHelper.loadConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
@@ -482,15 +476,15 @@ public class SimpleConfigManager
             tempConfig.close();
         }
 
-        private void sendEvent(SimpleConfigEvent event)
+        private void sendEvent(SimpleConfigEvents event)
         {
-            ModList.get().getModContainerById(this.id).ifPresent(container ->
+            /*ModList.get().getModContainerById(this.id).ifPresent(container ->
             {
                 if(container instanceof FMLModContainer modContainer)
                 {
                     modContainer.getEventBus().post(event);
                 }
-            });
+            });*/
         }
     }
 
@@ -505,7 +499,6 @@ public class SimpleConfigManager
         {
             this.config = config;
             this.path = path;
-            System.out.println(StringUtils.join(path, '.'));
         }
 
         private PropertyMap(SimpleConfigImpl config)
@@ -760,31 +753,54 @@ public class SimpleConfigManager
         }
     }
 
-    public static List<Pair<SimpleConfig, Object>> getAllSimpleConfigs()
+    private static List<Pair<SimpleConfig, Object>> getAllSimpleConfigs()
     {
-        List<ModFileScanData.AnnotationData> annotations = ModList.get().getAllScanData().stream().map(ModFileScanData::getAnnotations).flatMap(Collection::stream).filter(a -> SIMPLE_CONFIG.equals(a.annotationType())).toList();
+        //TODO clean this holy
         List<Pair<SimpleConfig, Object>> configs = new ArrayList<>();
-        annotations.forEach(data ->
+        FabricLoader.getInstance().getAllMods().forEach(container ->
         {
-            try
+            CustomValue value = container.getMetadata().getCustomValue("configured");
+            if(value != null && value.getType() == CustomValue.CvType.OBJECT)
             {
-                Class<?> configClass = Class.forName(data.clazz().getClassName());
-                Field field = configClass.getDeclaredField(data.memberName());
-                field.setAccessible(true);
-                Object object = field.get(null);
-                Optional.ofNullable(field.getDeclaredAnnotation(SimpleConfig.class)).ifPresent(simpleConfig -> {
-                    configs.add(Pair.of(simpleConfig, object));
-                });
-            }
-            catch(NoSuchFieldException | ClassNotFoundException | IllegalAccessException e)
-            {
-                throw new RuntimeException(e);
+                CustomValue.CvObject configuredObj = value.getAsObject();
+                CustomValue configsValue = configuredObj.get("configs");
+                if(configsValue != null && configsValue.getType() == CustomValue.CvType.ARRAY)
+                {
+                    CustomValue.CvArray configsArray = configsValue.getAsArray();
+                    configsArray.forEach(elementValue ->
+                    {
+                        if(elementValue.getType() == CustomValue.CvType.STRING)
+                        {
+                            try
+                            {
+                                String className = elementValue.getAsString();
+                                Class<?> configClass = Class.forName(className);
+                                for(Field field : configClass.getDeclaredFields())
+                                {
+                                    SimpleConfig config = field.getDeclaredAnnotation(SimpleConfig.class);
+                                    if(config != null)
+                                    {
+                                        field.setAccessible(true);
+                                        if(!Modifier.isStatic(field.getModifiers()))
+                                            throw new RuntimeException("Fields annotated with @SimpleConfig must be static");
+                                        Object object = field.get(null);
+                                        configs.add(Pair.of(config, object));
+                                    }
+                                }
+                            }
+                            catch(ClassNotFoundException | IllegalAccessException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+                }
             }
         });
         return configs;
     }
 
-    public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name)
+    private static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name)
     {
         if(folder != null)
         {
@@ -795,7 +811,7 @@ public class SimpleConfigManager
         return CommentedConfig.inMemory();
     }
 
-    public static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, String name, Consumer<Config> corrector)
+    private static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, String name, Consumer<Config> corrector)
     {
         CommentedFileConfig temp = createTempConfig(folder, id, name);
         ConfigHelper.loadConfig(temp);
@@ -806,7 +822,7 @@ public class SimpleConfigManager
         return config.unmodifiable();
     }
 
-    public static CommentedFileConfig createTempConfig(Path folder, String id, String name)
+    private static CommentedFileConfig createTempConfig(Path folder, String id, String name)
     {
         String fileName = String.format("%s.%s.toml", id, name);
         File file = new File(folder.toFile(), fileName);
@@ -816,7 +832,7 @@ public class SimpleConfigManager
     private static boolean initConfig(final Path file, final ConfigFormat<?> format, final String fileName) throws IOException
     {
         Files.createDirectories(file.getParent());
-        Path defaultConfigPath = FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
+        Path defaultConfigPath = FabricLoader.getInstance().getGameDir().resolve("defaultconfigs");
         Path defaultConfigFile = defaultConfigPath.resolve(fileName);
         if(Files.exists(defaultConfigFile))
         {
@@ -828,18 +844,34 @@ public class SimpleConfigManager
         return false;
     }
 
-    public static ConfigSpec createSpec(Set<ConfigProperty<?>> properties)
+    private static ConfigSpec createSpec(Set<ConfigProperty<?>> properties)
     {
         ConfigSpec spec = new ConfigSpec();
         properties.forEach(p -> p.defineSpec(spec));
         return spec;
     }
 
-    public static CommentedConfig createComments(ConfigSpec spec, Map<List<String>, String> comments)
+    private static CommentedConfig createComments(ConfigSpec spec, Map<List<String>, String> comments)
     {
         CommentedConfig config = CommentedConfig.inMemory();
         spec.correct(config);
         comments.forEach(config::setComment);
         return config;
+    }
+
+    private static void createPath(Path path)
+    {
+        try
+        {
+            PathUtils.createParentDirectories(path);
+            if(!Files.isDirectory(path))
+            {
+                Files.createDirectory(path);
+            }
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

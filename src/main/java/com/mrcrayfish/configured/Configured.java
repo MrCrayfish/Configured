@@ -1,61 +1,46 @@
 package com.mrcrayfish.configured;
 
-import com.mrcrayfish.configured.client.ClientHandler;
-import com.mrcrayfish.configured.client.EditingTracker;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
-import com.mrcrayfish.configured.network.PacketHandler;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.IExtensionPoint;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.network.NetworkConstants;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.mrcrayfish.configured.network.Channels;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
+import net.minecraft.network.FriendlyByteBuf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Author: MrCrayfish
  */
-@Mod(value = Reference.MOD_ID)
-public class Configured
+public class Configured implements ModInitializer
 {
-    public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
+    public static final Logger LOGGER = LoggerFactory.getLogger(Configured.class);
 
     public Configured()
     {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        bus.addListener(this::onCommonSetup);
-        bus.addListener(this::onLoadComplete);
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            bus.addListener(ClientHandler::onRegisterKeyMappings);
-            bus.addListener(ClientHandler::onRegisterTooltipComponentFactory);
-        });
-        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
-        MinecraftForge.EVENT_BUS.register(SimpleConfigManager.getInstance());
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> MinecraftForge.EVENT_BUS.register(EditingTracker.instance()));
+        SimpleConfigManager.getInstance();
     }
 
-    private void onCommonSetup(FMLCommonSetupEvent event)
+    @Override
+    public void onInitialize()
     {
-        event.enqueueWork(PacketHandler::registerMessages);
-    }
-
-    private void onLoadComplete(FMLLoadCompleteEvent event)
-    {
-        event.enqueueWork(() ->
+        ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, synchronizer) ->
         {
-            if(FMLLoader.getDist() == Dist.CLIENT)
+            synchronizer.waitFor(server.submit(() ->
             {
-                ClientHandler.init();
-            }
+                boolean local = handler.getConnection().isMemoryConnection();
+                SimpleConfigManager.getInstance().getMessagesForLogin(local).forEach(pair ->
+                {
+                    FriendlyByteBuf buf = PacketByteBufs.create();
+                    pair.getRight().encode(buf);
+                    sender.sendPacket(Channels.CONFIG_DATA, buf);
+                });
+            }));
         });
+
+        ServerLoginNetworking.registerGlobalReceiver(Channels.CONFIG_DATA, (server, handler, understood, buf, synchronizer, responseSender) -> {});
+
+        SimpleConfigManager.registerEvents();
     }
 }

@@ -10,14 +10,13 @@ import com.mrcrayfish.configured.api.simple.LongProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.StringProperty;
-import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
+import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvents;
+import net.fabricmc.api.ModInitializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -27,9 +26,10 @@ import java.util.regex.Pattern;
 /**
  * Author: MrCrayfish
  */
-@Mod(value = Constants.ID)
-public class SimpleConfigTest
+public class SimpleConfigTest implements ModInitializer
 {
+    public static final Logger LOGGER = LoggerFactory.getLogger(SimpleConfigTest.class);
+
     @SimpleConfig(id = Constants.ID, name = "client", type = ConfigType.CLIENT, readOnly = true)
     private static final MyConfig CLIENT = new MyConfig();
 
@@ -60,21 +60,43 @@ public class SimpleConfigTest
     @SimpleConfig(id = Constants.ID, name = "validator", type = ConfigType.UNIVERSAL)
     private static final Validator VALIDATOR_CONFIG = new Validator();
 
-    public SimpleConfigTest()
+    @Override
+    public void onInitialize()
     {
-        IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        eventBus.addListener(this::onCommonSetup);
-        eventBus.addListener(this::onConfigLoad);
-        eventBus.addListener(this::onConfigUnload);
-        eventBus.addListener(this::onConfigReload);
-    }
+        SimpleConfigEvents.LOAD.register(source ->
+        {
+            if(source.equals(CLIENT))
+            {
+                LOGGER.info("Loaded client config!");
+            }
+            else if(source.equals(SERVER))
+            {
+                LOGGER.info("Loaded server config!");
+            }
+        });
 
-    private void onCommonSetup(FMLCommonSetupEvent event)
-    {
-        event.enqueueWork(() -> {
-            //System.out.println("Test Double: " + CLIENT.testDouble.get());
-            //System.out.println("Test Integer: " + CLIENT.moreProperties.testInt.get());
-            //CLIENT.testDouble.set(0.1);
+        SimpleConfigEvents.UNLOAD.register(source ->
+        {
+            if(source.equals(CLIENT))
+            {
+                LOGGER.info("Unloaded client config!");
+            }
+            else if(source.equals(SERVER))
+            {
+                LOGGER.info("Unloaded server config!");
+            }
+        });
+
+        SimpleConfigEvents.RELOAD.register(source ->
+        {
+            if(source.equals(CLIENT))
+            {
+                LOGGER.info("Reloaded client config!");
+            }
+            else if(source.equals(SERVER))
+            {
+                LOGGER.info("Reloaded server config!");
+            }
         });
     }
 
@@ -247,20 +269,5 @@ public class SimpleConfigTest
                 }
             }
         }
-    }
-
-    public void onConfigLoad(SimpleConfigEvent.Load event)
-    {
-        System.out.println("Loaded config: " + event.getSource());
-    }
-
-    public void onConfigUnload(SimpleConfigEvent.Unload event)
-    {
-        System.out.println("Unloaded config: " + event.getSource());
-    }
-
-    public void onConfigReload(SimpleConfigEvent.Reload event)
-    {
-        System.out.println("Reloading config: " + event.getSource());
     }
 }

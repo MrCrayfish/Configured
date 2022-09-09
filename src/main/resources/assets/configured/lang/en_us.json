@@ -47,5 +47,6 @@
     "configured.config.client.changed_formatting": "Changed Formatting",
     "configured.config.client.changed_formatting.tooltip": "The formatting to apply to the label of a config property that has been changed",
     "key.configured.open_mod_list": "Open Mod List",
-    "key.categories.configured": "Configured"
+    "key.categories.configured": "Configured",
+    "simpleconfig.configured.client": "Client"
 }

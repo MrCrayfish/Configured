@@ -2,19 +2,9 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.datafixers.util.Either;
-import com.mrcrayfish.configured.Reference;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
-import net.minecraftforge.client.event.RenderTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -22,7 +12,6 @@ import java.util.List;
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
 public abstract class TooltipScreen extends Screen
 {
     private static final List<Component> DUMMY_TOOLTIP = ImmutableList.of(Component.empty());
@@ -91,11 +80,11 @@ public abstract class TooltipScreen extends Screen
         if(this.tooltipText != null)
         {
             // Yep, this is strange. See the forge events below!
-            this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, mouseX, mouseY);
+            this.renderTooltip(poseStack, this.tooltipText, mouseX, mouseY);
         }
     }
 
-    public static void registerTooltipFactory(RegisterClientTooltipComponentFactoriesEvent event)
+    /*public static void registerTooltipFactory(RegisterClientTooltipComponentFactoriesEvent event)
     {
         event.register(ListMenuTooltipComponent.class, ListMenuTooltipComponent::asClientTextTooltip);
     }
@@ -142,5 +131,5 @@ public abstract class TooltipScreen extends Screen
         event.setBorderStart(screen.tooltipOutlineColour);
         event.setBorderEnd(screen.tooltipOutlineColour);
         event.setBackground(screen.tooltipBackgroundColour);
-    }
+    }*/
 }

@@ -6,7 +6,6 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
 import com.mrcrayfish.configured.api.simple.EnumProperty;
 import com.mrcrayfish.configured.api.simple.ListProperty;
-import com.mrcrayfish.configured.impl.forge.ForgeValue;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 
@@ -78,7 +77,7 @@ public class SimpleFolderEntry implements IConfigEntry
     @Override
     public String getEntryName()
     {
-        return ForgeValue.lastValue(this.map.getPath(), "Root");
+        return lastValue(this.map.getPath(), "Root");
     }
 
     @Nullable
@@ -103,5 +102,22 @@ public class SimpleFolderEntry implements IConfigEntry
     public String getTranslationKey()
     {
         return this.map.getTranslationKey();
+    }
+
+    /**
+     * Gets the last element in a list
+     *
+     * @param list         the list of get the value from
+     * @param defaultValue if the list is empty, return this value instead
+     * @param <V>          the type of list
+     * @return the last element
+     */
+    public static <V> V lastValue(List<V> list, V defaultValue)
+    {
+        if(list.size() > 0)
+        {
+            return list.get(list.size() - 1);
+        }
+        return defaultValue;
     }
 }

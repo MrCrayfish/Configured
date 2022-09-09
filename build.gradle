@@ -1,105 +1,108 @@
 plugins {
-    id 'eclipse'
-    id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '5.+'
+	id 'fabric-loom' version '1.0-SNAPSHOT'
+	id 'maven-publish'
 }
 
-version = '1.5.8-1.19'
-group = 'com.mrcrayfish'
-archivesBaseName = 'configured'
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+archivesBaseName = "${project.mod_id}-fabric"
+version = "${project.mod_version}-${project.minecraft_version}"
+group = project.maven_group
 
-minecraft {
-    mappings channel: 'official', version: '1.19'
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'configured'
-            mods {
-                configured {
-                    source sourceSets.main
-                    source sourceSets.test
-                }
-            }
-        }
+loom {
+	accessWidenerPath = file("src/main/resources/configured.accesswidener")
 
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'configured'
-            mods {
-                configured {
-                    source sourceSets.main
-                }
-            }
-        }
+	runs {
+		client {
+			configName = "Client"
+			runDir = "run"
+			source = sourceSets.main
+			ideConfigGenerated = true
+			client()
+		}
 
-        gameTestServer {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'configured'
-            mods {
-                configured {
-                    source sourceSets.main
-                }
-            }
-        }
+		testClient {
+			inherit client
+			configName = "Test Client"
+			source = sourceSets.test
+		}
 
-        data {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', 'configured', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            mods {
-                configured {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
+		server {
+			configName = "Server"
+			runDir = "run"
+			source = sourceSets.main
+			ideConfigGenerated = true
+			server()
+		}
+
+		testServer {
+			inherit server
+			configName = "Test Server"
+			source = sourceSets.test
+		}
+	}
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+repositories {
+	maven {
+		url "https://maven.terraformersmc.com/"
+	}
+}
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19-41.1.0'
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+	mappings loom.officialMojangMappings()
+
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "com.google.code.findbugs:annotations:3.0.1"
+	modImplementation "com.terraformersmc:modmenu:4.0.6"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	// Add night config toml
+	implementation include('com.electronwill.night-config:core:3.6.0')
+	implementation include('com.electronwill.night-config:toml:3.6.0')
+
 }
 
-jar {
-    manifest {
-        attributes([
-            "Specification-Title": "Configured",
-            "Specification-Vendor": "MrCrayfish",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"MrCrayfish",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-}
+processResources {
+	inputs.property "version", project.mod_version
 
-jar.finalizedBy('reobfJar') 
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
-        }
-    }
+	filesMatching("fabric.mod.json") {
+		expand "version": project.mod_version
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+	it.options.release = 17
 }
 
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${project.mod_id}"}
+	}
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}

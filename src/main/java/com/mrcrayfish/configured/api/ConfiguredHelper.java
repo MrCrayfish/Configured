@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.ModContainer;
 
 import java.util.Map;
 import java.util.Set;
@@ -19,35 +18,6 @@ import java.util.Set;
  */
 public class ConfiguredHelper
 {
-    /**
-     * Multi Config Screen that automatically loads configs out of a mod if present
-     * Automatically picks the previous screen
-     *
-     * @param title      of the ConfigScreen that should be applied.
-     * @param mod        the mod the configs should be loaded from
-     * @param background of the config screen
-     * @return a new screen with config selection included
-     */
-    public static Screen createForgeConfigSelectionScreen(Component title, ModContainer mod, ResourceLocation background)
-    {
-        return createForgeConfigSelectionScreen(Minecraft.getInstance().screen, title, mod, background);
-    }
-
-    /**
-     * Multi Config Screen that automatically loads configs out of a mod if present
-     *
-     * @param parent     screen that should be returned to after this new gui was closed
-     * @param title      of the ConfigScreen that should be applied.
-     * @param mod        the mod the configs should be loaded from
-     * @param background of the config screen
-     * @return a new screen with config selection included
-     */
-    public static Screen createForgeConfigSelectionScreen(Screen parent, Component title, ModContainer mod, ResourceLocation background)
-    {
-        Map<ConfigType, Set<IModConfig>> configs = ClientHandler.createConfigMap(mod);
-        return createSelectionScreen(parent, title, configs, background);
-    }
-
     /**
      * Multi Config Screen that allows you to sleect multiple configs at once.
      *

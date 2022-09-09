@@ -8,6 +8,8 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -19,9 +21,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.annotation.Nullable;
@@ -94,7 +93,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     {
         return this.configMap.entrySet().stream().filter(entry -> {
             ConfigType type = entry.getKey();
-            return type.isServer() && type.getDist().orElse(null) != Dist.DEDICATED_SERVER;
+            return type.isServer() && type.getEnv().orElse(null) != EnvType.SERVER;
         }).flatMap(entry -> entry.getValue().stream()).collect(Collectors.toSet());
     }
 
@@ -174,11 +173,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 }
                 else
                 {
-                    ModList.get().getModContainerById(config.getModId()).ifPresent(container ->
-                    {
-                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
-                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
-                    });
+                    Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                    Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                 }
             });
         }
@@ -329,7 +325,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     {
         return switch(config.getType())
         {
-            case CLIENT -> FMLEnvironment.dist.isClient();
+            case CLIENT -> FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
             case UNIVERSAL, MEMORY -> true;
             case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame();
             case DEDICATED_SERVER -> false;

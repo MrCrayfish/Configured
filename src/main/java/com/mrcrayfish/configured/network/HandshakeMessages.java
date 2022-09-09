@@ -10,38 +10,7 @@ import java.util.function.IntSupplier;
  */
 public class HandshakeMessages
 {
-    static class LoginIndexedMessage implements IntSupplier
-    {
-        private int loginIndex;
-
-        void setLoginIndex(final int loginIndex)
-        {
-            this.loginIndex = loginIndex;
-        }
-
-        int getLoginIndex()
-        {
-            return this.loginIndex;
-        }
-
-        @Override
-        public int getAsInt()
-        {
-            return this.getLoginIndex();
-        }
-    }
-
-    static class C2SAcknowledge extends LoginIndexedMessage
-    {
-        void encode(FriendlyByteBuf buf) {}
-
-        static C2SAcknowledge decode(FriendlyByteBuf buf)
-        {
-            return new C2SAcknowledge();
-        }
-    }
-
-    public static class S2CConfigData extends LoginIndexedMessage
+    public static class S2CConfigData
     {
         private final ResourceLocation key;
         private final byte[] data;
@@ -52,13 +21,13 @@ public class HandshakeMessages
             this.data = data;
         }
 
-        void encode(FriendlyByteBuf buffer)
+        public void encode(FriendlyByteBuf buffer)
         {
             buffer.writeResourceLocation(this.key);
             buffer.writeByteArray(this.data);
         }
 
-        static S2CConfigData decode(FriendlyByteBuf buffer)
+        public static S2CConfigData decode(FriendlyByteBuf buffer)
         {
             ResourceLocation key = buffer.readResourceLocation();
             byte[] data = buffer.readByteArray();

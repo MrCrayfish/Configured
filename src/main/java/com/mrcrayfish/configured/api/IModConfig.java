@@ -1,7 +1,5 @@
 package com.mrcrayfish.configured.api;
 
-import com.mrcrayfish.configured.impl.forge.ForgeConfig;
-
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -17,7 +15,8 @@ public interface IModConfig
 {
     /**
      * This function expects you to do everything necessary to save the config.
-     * If you want a example Lookup {@link ForgeConfig} for how it should be done.
+     * If you want a example Lookup {@link com.mrcrayfish.configured.impl.simple.SimpleConfigManager.SimpleConfigImpl}
+     * for how it should be done.
      *
      * @param entry the entry that is used or should be checked for updates.
      *              Also make sure to check children if children of said entry have been changed too.

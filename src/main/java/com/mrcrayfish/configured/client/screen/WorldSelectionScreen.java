@@ -21,8 +21,6 @@ import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageException;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FileUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +33,7 @@ import java.util.List;
  */
 public class WorldSelectionScreen extends ListMenuScreen
 {
-    private static final LevelResource SERVER_CONFIG_FOLDER = new LevelResource("serverconfig");
+    //private static final LevelResource SERVER_CONFIG_FOLDER = new LevelResource("serverconfig");
     private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
 
     private final IModConfig config;
@@ -174,13 +172,15 @@ public class WorldSelectionScreen extends ListMenuScreen
         {
             try(LevelStorageSource.LevelStorageAccess storageAccess = Minecraft.getInstance().getLevelSource().createAccess(worldFileName))
             {
-                Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
-                FileUtils.getOrCreateDirectory(worldConfigPath, "serverconfig");
-                WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
+                //Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
+                //Files.createDirectory(worldConfigPath);
+                //TODO finish this
+                //FileUtils.getOrCreateDirectory(worldConfigPath, "serverconfig");
+                /*WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
                     ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
                         WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, Component.literal(worldName), T, WorldSelectionScreen.this.background));
                     });
-                });
+                });*/
             }
             catch(IOException e)
             {

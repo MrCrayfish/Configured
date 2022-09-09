@@ -1,7 +1,5 @@
 package com.mrcrayfish.configured.util;
 
-import com.electronwill.nightconfig.core.AbstractConfig;
-import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
@@ -11,33 +9,22 @@ import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.IConfigEvent;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
@@ -45,8 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConfigHelper
 {
     private static final Set<Path> WATCHED_PATHS = new HashSet<>();
-    private static final Method MOD_CONFIG_SET_CONFIG_DATA = ObfuscationReflectionHelper.findMethod(ModConfig.class, "setConfigData", CommentedConfig.class);
-    private static final Method MOD_CONFIG_FIRE_EVENT = ObfuscationReflectionHelper.findMethod(ModConfig.class, "fireEvent", IConfigEvent.class);
 
     /**
      * Gathers all the config entries with a deep search. Used for deep searches
@@ -103,98 +88,6 @@ public class ConfigHelper
     	}
     }
 
-    /**
-     * Gathers all the Forge config values with a deep search. Used for resetting defaults
-     */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(UnmodifiableConfig config, ForgeConfigSpec spec)
-    {
-        List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values = new ArrayList<>();
-        gatherValuesFromForgeConfig(config, spec, values);
-        return ImmutableList.copyOf(values);
-    }
-
-    /**
-     * Gathers all the config values from the given Forge config and adds it's to the provided list.
-     * This will search deeper if it finds another config and recursively call itself.
-     */
-    private static void gatherValuesFromForgeConfig(UnmodifiableConfig config, ForgeConfigSpec spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
-    {
-        config.valueMap().forEach((s, o) ->
-        {
-            if(o instanceof AbstractConfig)
-            {
-                gatherValuesFromForgeConfig((UnmodifiableConfig) o, spec, values);
-            }
-            else if(o instanceof ForgeConfigSpec.ConfigValue<?> configValue)
-            {
-                ForgeConfigSpec.ValueSpec valueSpec = spec.getRaw(configValue.getPath());
-                values.add(Pair.of(configValue, valueSpec));
-            }
-        });
-    }
-
-    /**
-     * Since ModConfig#setConfigData is not visible, this is a helper method to reflectively call the method
-     *
-     * @param config     the config to update
-     * @param configData the new data for the config
-     */
-    public static void setForgeConfigData(ModConfig config, @Nullable CommentedConfig configData)
-    {
-        try
-        {
-            MOD_CONFIG_SET_CONFIG_DATA.invoke(config, configData);
-            if(configData instanceof FileConfig)
-            {
-                config.save();
-            }
-        }
-        catch(InvocationTargetException | IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Gets the mod config for the given file name. Uses reflection to obtain the config map.
-     *
-     * @param fileName the file name of the config
-     * @return the mod config instance for the file name or null if it doesn't exist
-     */
-    @Nullable
-    public static ModConfig getForgeConfig(String fileName)
-    {
-        ConcurrentHashMap<String, ModConfig> configMap = ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "fileMap");
-        return configMap != null ? configMap.get(fileName) : null;
-    }
-
-    /**
-     * Gathers all the config values with a deep search. Used for resetting defaults
-     */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(ModConfig config)
-    {
-        return gatherAllForgeConfigValues(((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec());
-    }
-
-    /**
-     * A helper method to fire config event. Since Forge has hidden these calls (which is fine), the
-     * only way to call them is to call them is by using reflection.
-     *
-     * @param config the config to fire the event for
-     * @param event  the event
-     */
-    public static void fireForgeConfigEvent(ModConfig config, ModConfigEvent event)
-    {
-        try
-        {
-            MOD_CONFIG_FIRE_EVENT.invoke(config, event);
-        }
-        catch(InvocationTargetException | IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     public static boolean isWorldConfig(IModConfig config)
     {
         return config.getType() == ConfigType.WORLD || config.getType() == ConfigType.WORLD_SYNC;
@@ -234,10 +127,18 @@ public class ConfigHelper
         return changed;
     }
 
-    // Client only
+    private static <T> T callOnEnv(EnvType type, Supplier<Supplier<T>> callable)
+    {
+        if(FabricLoader.getInstance().getEnvironmentType() == type)
+        {
+            return callable.get().get();
+        }
+        throw new RuntimeException("Tried to run code on the wrong environment");
+    }
+
     public static boolean isPlayingGame()
     {
-        return FMLEnvironment.dist.isDedicatedServer() || DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().level != null);
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER || callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().level != null);
     }
 
     public static boolean isServerOwnedByPlayer(Player player)
@@ -252,7 +153,7 @@ public class ConfigHelper
 
     public static boolean isRunningLocalServer()
     {
-        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().hasSingleplayerServer());
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT && callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().hasSingleplayerServer());
     }
 
     public static void createBackup(UnmodifiableConfig config)
