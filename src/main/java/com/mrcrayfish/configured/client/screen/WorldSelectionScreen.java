@@ -7,6 +7,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -33,7 +35,7 @@ import java.util.List;
  */
 public class WorldSelectionScreen extends ListMenuScreen
 {
-    //private static final LevelResource SERVER_CONFIG_FOLDER = new LevelResource("serverconfig");
+    private static final LevelResource SERVER_CONFIG_FOLDER = new LevelResource("serverconfig");
     private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
 
     private final IModConfig config;
@@ -172,15 +174,13 @@ public class WorldSelectionScreen extends ListMenuScreen
         {
             try(LevelStorageSource.LevelStorageAccess storageAccess = Minecraft.getInstance().getLevelSource().createAccess(worldFileName))
             {
-                //Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
-                //Files.createDirectory(worldConfigPath);
-                //TODO finish this
-                //FileUtils.getOrCreateDirectory(worldConfigPath, "serverconfig");
-                /*WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
-                    ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
+                Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
+                SimpleConfigManager.createPath(worldConfigPath);
+                WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
+                    FabricLoader.getInstance().getModContainer(T.getModId()).ifPresent(container -> {
                         WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, Component.literal(worldName), T, WorldSelectionScreen.this.background));
                     });
-                });*/
+                });
             }
             catch(IOException e)
             {

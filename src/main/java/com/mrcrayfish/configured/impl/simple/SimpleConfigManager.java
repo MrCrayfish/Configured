@@ -410,7 +410,7 @@ public class SimpleConfigManager
         @Override
         public void loadWorldConfig(Path configDir, Consumer<IModConfig> result)
         {
-            if(!ConfigHelper.isServerConfig(this))
+            if(!ConfigHelper.isWorldConfig(this))
                 return;
             Preconditions.checkState(this.config == null, "Something went wrong and tried to load the server config again!");
             CommentedConfig config = createSimpleConfig(configDir, this.id, this.name);
@@ -859,7 +859,7 @@ public class SimpleConfigManager
         return config;
     }
 
-    private static void createPath(Path path)
+    public static void createPath(Path path)
     {
         try
         {
