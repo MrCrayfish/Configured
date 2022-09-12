@@ -111,7 +111,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             super(createLabelFromModConfig(config));
             this.config = config;
             this.title = this.createTrimmedFileName(createLabelFromModConfig(config));
-            this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.GRAY);
+            this.fileName = this.createTrimmedFileName(config.getFileName()).withStyle(ChatFormatting.DARK_GRAY);
             this.modifyButton = this.createModifyButton(config);
             this.modifyButton.active = canEditConfig(Minecraft.getInstance().player, config);
             this.restoreButton = this.createRestoreButton(config);
