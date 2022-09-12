@@ -296,7 +296,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             Screen.blit(poseStack, this.width - 30, 14, 20, 20, 0, 33, 10, 10, 64, 64);
             if(ScreenUtil.isMouseWithin(this.width - 30, 14, 20, 20, mouseX, mouseY))
             {
-                this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config").withStyle(ChatFormatting.BLUE));
+                this.setActiveTooltip(new TranslatableComponent("configured.gui.read_only_config"), 0xFF1E6566);
             }
         }
 
