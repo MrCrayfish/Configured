@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -64,7 +65,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(!remoteConfigs.isEmpty())
         {
             entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.server_configuration").getString()));
-            if(ConfigHelper.isPlayingGame())
+            ClientPacketListener listener = Minecraft.getInstance().getConnection();
+            if(listener != null && !listener.getConnection().isMemoryConnection())
             {
                 entries.add(new SubTitleItem(new TranslatableComponent("configured.gui.server_config_main_menu")));
             }
@@ -191,14 +193,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 return 0;
             }
-            else if(ConfigHelper.isPlayingGame())
+            else if(ConfigHelper.isPlayingGame() && !ConfigHelper.isPlayingLocally())
             {
                 if(config.getType().isServer() && !config.getType().isSync())
                 {
                     return 22;
                 }
             }
-            else if(ConfigHelper.isWorldConfig(config))
+            else if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
             {
                 return 11;
             }
@@ -224,10 +226,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 return new TranslatableComponent("configured.gui.select_world");
             }
-            if(ConfigHelper.isPlayingGame() && config.getType().isServer() && !config.getType().isSync())
+            /*if(ConfigHelper.isPlayingGame() && config.getType().isServer() && !config.getType().isSync())
             {
-                return new TranslatableComponent("configured.gui.request");
-            }
+                return Component.translatable("configured.gui.request");
+            }*/
             return new TranslatableComponent("configured.gui.modify");
         }
 
@@ -333,7 +335,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             case CLIENT -> FMLEnvironment.dist.isClient();
             case UNIVERSAL, MEMORY -> true;
-            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame();
+            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isPlayingLocally();
             case DEDICATED_SERVER -> false;
         };
     }
@@ -343,8 +345,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         return switch(config.getType())
         {
             case CLIENT, UNIVERSAL, MEMORY -> true;
-            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame();
-            case WORLD, WORLD_SYNC -> false;
+            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isPlayingLocally();
+            case WORLD, WORLD_SYNC -> ConfigHelper.isPlayingLocally();
             case DEDICATED_SERVER -> false;
         };
     }
