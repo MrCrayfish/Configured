@@ -20,8 +20,6 @@ public abstract class TooltipScreen extends Screen
     protected List<FormattedCharSequence> tooltipText;
     @Nullable
     private Integer tooltipOutlineColour;
-    @Nullable
-    private Integer tooltipBackgroundColour;
 
     protected TooltipScreen(Component title)
     {
@@ -31,7 +29,6 @@ public abstract class TooltipScreen extends Screen
     protected void resetTooltip()
     {
         this.tooltipText = null;
-        this.tooltipBackgroundColour = null;
         this.tooltipOutlineColour = null;
     }
 
@@ -67,11 +64,10 @@ public abstract class TooltipScreen extends Screen
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(Component text, int outlineColour, int backgroundColour)
+    public void setActiveTooltip(Component text, int outlineColour)
     {
         this.resetTooltip();
         this.tooltipText = this.minecraft.font.split(text, 200);
-        this.tooltipBackgroundColour = backgroundColour;
         this.tooltipOutlineColour = outlineColour;
     }
 
@@ -125,11 +121,10 @@ public abstract class TooltipScreen extends Screen
         if(screen.tooltipText == null)
             return;
 
-        if(screen.tooltipBackgroundColour == null || screen.tooltipOutlineColour == null)
+        if(screen.tooltipOutlineColour == null)
             return;
 
         event.setBorderStart(screen.tooltipOutlineColour);
         event.setBorderEnd(screen.tooltipOutlineColour);
-        event.setBackground(screen.tooltipBackgroundColour);
     }*/
 }
