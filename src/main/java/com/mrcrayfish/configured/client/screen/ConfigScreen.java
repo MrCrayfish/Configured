@@ -435,8 +435,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     if(ScreenUtil.isMouseWithin(left - 18, top + 5, 11, 11, mouseX, mouseY))
                     {
                         String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
-                        int outline = gameRestart ? 0xFFDD873B : 0xFF194096;
-                        int background = gameRestart ? 0xFFDE923A : 0xFF275EA7;
+                        int outline = gameRestart ? 0xFF194096 : 0xFF078A02;
+                        int background = gameRestart ? 0xFF275EA7 : 0xFF0F9603;
                         ConfigScreen.this.setActiveTooltip(Component.translatable(translationKey), outline, background);
                     }
                 }
