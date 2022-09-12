@@ -255,6 +255,11 @@ public class ConfigHelper
         return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().hasSingleplayerServer());
     }
 
+    public static boolean isPlayingLocally()
+    {
+        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null && !Minecraft.getInstance().getSingleplayerServer().isPublished());
+    }
+
     public static void createBackup(UnmodifiableConfig config)
     {
         if(config instanceof FileConfig fileConfig)
