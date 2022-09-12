@@ -56,9 +56,10 @@ dependencies {
 	mappings loom.officialMojangMappings()
 
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "com.google.code.findbugs:annotations:3.0.1"
-	modImplementation "com.terraformersmc:modmenu:4.0.6"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modImplementation "com.terraformersmc:modmenu:4.0.6"
+
+	compileOnly "com.google.code.findbugs:annotations:3.0.1"
 
 	// Add night config toml
 	implementation include('com.electronwill.night-config:core:3.6.0')
@@ -94,15 +95,14 @@ jar {
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
+			artifactId = "${project.mod_id}-fabric"
 			from components.java
 		}
 	}
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+		maven {
+			url "file:///X:/localmaven/mcmods"
+		}
 	}
 }
