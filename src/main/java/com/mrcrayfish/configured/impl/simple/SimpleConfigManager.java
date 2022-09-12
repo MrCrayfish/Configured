@@ -34,7 +34,6 @@ import net.minecraft.world.level.storage.LevelResource;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
@@ -43,9 +42,16 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -109,8 +115,7 @@ public class SimpleConfigManager
         SimpleConfigImpl entry = this.configs.get(message.getKey());
         if(entry != null && entry.getType().isSync())
         {
-            entry.loadFromData(message.getData());
-            return true;
+            return entry.loadFromData(message.getData());
         }
         return false;
     }
@@ -231,14 +236,27 @@ public class SimpleConfigManager
             Configured.LOGGER.info("Loaded config: " + this.getFileName());
         }
 
-        private void loadFromData(byte[] data)
+        private boolean loadFromData(byte[] data)
         {
             this.unload(false);
-            CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
-            this.correct(config);
-            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
-            this.config = config;
-            SimpleConfigEvents.LOAD.invoker().call(this.source);
+            try
+            {
+                Preconditions.checkState(this.configType.isSync(), "Only sync configs can be loaded from data");
+                CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
+                if(!this.isCorrect(config)) // The server should be sending correct configs
+                    return false;
+                this.correct(config);
+                this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
+                this.config = config;
+                SimpleConfigEvents.LOAD.invoker().call(this.source);
+                return true;
+            }
+            catch(Exception e)
+            {
+                Configured.LOGGER.info("Failed to load config from data: {}", e.toString());
+                this.unload(false);
+                return false;
+            }
         }
 
         private UnmodifiableConfig createConfig(@Nullable Path configDir)
@@ -278,10 +296,19 @@ public class SimpleConfigManager
             }
         }
 
+        private boolean isCorrect(UnmodifiableConfig config)
+        {
+            if(config instanceof Config)
+            {
+                return this.spec.isCorrect((Config) config);
+            }
+            return true;
+        }
+
         private void correct(UnmodifiableConfig config)
         {
             //TODO correct comments even if config is correct
-            if(config instanceof Config && !this.spec.isCorrect((Config) config))
+            if(config instanceof Config && !this.isCorrect(config))
             {
                 ConfigHelper.createBackup(config);
                 this.spec.correct((Config) config);
