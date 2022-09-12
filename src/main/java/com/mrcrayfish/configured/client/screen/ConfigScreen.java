@@ -296,7 +296,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             Screen.blit(poseStack, this.width - 30, 14, 20, 20, 0, 33, 10, 10, 64, 64);
             if(ScreenUtil.isMouseWithin(this.width - 30, 14, 20, 20, mouseX, mouseY))
             {
-                this.setActiveTooltip(Component.translatable("configured.gui.read_only_config"), 0xFF1E6566);
+                this.setActiveTooltip(Component.translatable("configured.gui.read_only_config").withStyle(ChatFormatting.BLUE));
             }
         }
 
@@ -435,9 +435,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     if(ScreenUtil.isMouseWithin(left - 18, top + 5, 11, 11, mouseX, mouseY))
                     {
                         String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
-                        int outline = gameRestart ? 0xFF194096 : 0xFF078A02;
-                        int background = gameRestart ? 0xFF275EA7 : 0xFF0F9603;
-                        ConfigScreen.this.setActiveTooltip(Component.translatable(translationKey), outline, background);
+                        int outline = gameRestart ? 0xAA487CC0 : 0xAA56B252;
+                        ConfigScreen.this.setActiveTooltip(Component.translatable(translationKey), outline);
                     }
                 }
             }
