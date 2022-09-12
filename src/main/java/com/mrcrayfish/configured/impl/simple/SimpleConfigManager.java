@@ -8,6 +8,7 @@ import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -116,8 +117,7 @@ public class SimpleConfigManager
         SimpleConfigImpl entry = this.configs.get(message.getKey());
         if(entry != null && entry.getType().isSync())
         {
-            entry.loadFromData(message.getData());
-            return true;
+            return entry.loadFromData(message.getData());
         }
         return false;
     }
@@ -235,14 +235,27 @@ public class SimpleConfigManager
             this.sendEvent(new SimpleConfigEvent.Load(this.source));
         }
 
-        private void loadFromData(byte[] data)
+        private boolean loadFromData(byte[] data)
         {
             this.unload(false);
-            CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
-            this.correct(config);
-            this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
-            this.config = config;
-            this.sendEvent(new SimpleConfigEvent.Load(this.source));
+            try
+            {
+                Preconditions.checkState(this.configType.isSync(), "Only sync configs can be loaded from data");
+                CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
+                if(!this.isCorrect(config)) // The server should be sending correct configs
+                    return false;
+                this.correct(config);
+                this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
+                this.config = config;
+                this.sendEvent(new SimpleConfigEvent.Load(this.source));
+                return true;
+            }
+            catch(Exception e)
+            {
+                Configured.LOGGER.info("Failed to load config from data: {}", e.toString());
+                this.unload(false);
+                return false;
+            }
         }
 
         private UnmodifiableConfig createConfig(@Nullable Path configDir)
@@ -284,10 +297,19 @@ public class SimpleConfigManager
             }
         }
 
+        private boolean isCorrect(UnmodifiableConfig config)
+        {
+            if(config instanceof Config)
+            {
+                return this.spec.isCorrect((Config) config);
+            }
+            return true;
+        }
+
         private void correct(UnmodifiableConfig config)
         {
             //TODO correct comments even if config is correct
-            if(config instanceof Config && !this.spec.isCorrect((Config) config))
+            if(config instanceof Config && !this.isCorrect(config))
             {
                 ConfigHelper.createBackup(config);
                 this.spec.correct((Config) config);
