@@ -246,10 +246,11 @@ public class SimpleConfigManager
             try
             {
                 Preconditions.checkState(this.configType.isSync(), "Only sync configs can be loaded from data");
-                CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
-                if(!this.isCorrect(config)) // The server should be sending correct configs
+                CommentedConfig commentedConfig = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
+                if(!this.isCorrect(commentedConfig)) // The server should be sending correct configs
                     return false;
-                this.correct(config);
+                this.correct(commentedConfig);
+                UnmodifiableConfig config = this.isReadOnly() ? commentedConfig.unmodifiable() : commentedConfig;
                 this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
                 this.config = config;
                 SimpleConfigEvents.LOAD.invoker().call(this.source);
