@@ -50,4 +50,14 @@ public @interface SimpleConfig
      * @return the config type of this config
      */
     ConfigType type() default ConfigType.UNIVERSAL;
+
+    /**
+     * The character to use in the file name to separate the id of the config from the name of the
+     * config. This is only used to allow Forge configs to be converted into Simple Configs.
+     *
+     * The only accepted characters are . or -
+     *
+     * @return the char to use to separate the id from the name
+     */
+    char separator() default '.';
 }
