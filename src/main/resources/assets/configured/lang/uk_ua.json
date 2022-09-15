@@ -22,7 +22,7 @@
     "configured.gui.title.client_configuration": "Конфігурації клієнта",
     "configured.gui.title.common_configuration": "Загальні конфігурації",
     "configured.gui.title.server_configuration": "Конфігурації сервера",
-    "configured.config.client.force_configured_menu": "Обов'язкове меню Configured",
+    "simpleconfig.configured.client.force_configured_menu": "Обов'язкове меню Configured",
     "key.configured.open_mod_list": "Відкрити список модів",
     "key.categories.configured": "Configured"
 }

@@ -30,7 +30,6 @@ public class Configured
 
     public Configured()
     {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(this::onCommonSetup);
         bus.addListener(this::onLoadComplete);

@@ -22,7 +22,7 @@
     "configured.gui.title.client_configuration": "Configurazioni client",
     "configured.gui.title.common_configuration": "Configurazioni comuni",
     "configured.gui.title.server_configuration": "Configurazioni server",
-    "configured.config.client.force_configured_menu": "Forza menu Configured",
+    "simpleconfig.configured.client.force_configured_menu": "Forza menu Configured",
     "key.configured.open_mod_list": "Apri lista delle mod",
     "key.categories.configured": "Configured"
 }
