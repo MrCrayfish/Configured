@@ -842,7 +842,7 @@ public class SimpleConfigManager
         return configs;
     }
 
-    private static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, char separator, String name)
+    public static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, char separator, String name)
     {
         if(folder != null)
         {
@@ -853,7 +853,7 @@ public class SimpleConfigManager
         return CommentedConfig.inMemory();
     }
 
-    private static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, char separator, String name, Consumer<Config> corrector)
+    public static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, char separator, String name, Consumer<Config> corrector)
     {
         CommentedFileConfig temp = createTempConfig(folder, id, separator, name);
         ConfigHelper.loadConfig(temp);
@@ -864,7 +864,7 @@ public class SimpleConfigManager
         return config.unmodifiable();
     }
 
-    private static CommentedFileConfig createTempConfig(Path folder, String id, char separator, String name)
+    public static CommentedFileConfig createTempConfig(Path folder, String id, char separator, String name)
     {
         String fileName = String.format("%s%s%s.toml", id, separator, name);
         File file = new File(folder.toFile(), fileName);
