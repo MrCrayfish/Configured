@@ -8,6 +8,7 @@ import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -171,6 +172,7 @@ public class SimpleConfigManager
         private final String id;
         private final String name;
         private final boolean readOnly;
+        private final char separator;
         private final ConfigType configType;
         private final Set<ConfigProperty<?>> allProperties;
         private final PropertyMap propertyMap;
@@ -188,12 +190,14 @@ public class SimpleConfigManager
             Preconditions.checkArgument(!data.getConfig().name().trim().isEmpty(), "The 'name' of the config cannot be empty");
             Preconditions.checkArgument(data.getConfig().name().length() <= 64, "The 'name' of the config must be 64 characters or less");
             Preconditions.checkArgument(NAME_PATTERN.test(data.getConfig().name()), "The 'name' of the config is invalid. It can only contain 'a-z' and '_'");
+            Preconditions.checkArgument(isValidSeparator(data.getConfig().separator()), "The 'separator' of the config is invalid. It can only be '.' or '-'");
 
             this.source = data.getSource();
             this.id = data.getConfig().id();
             this.name = data.getConfig().name();
             this.readOnly = data.getConfig().readOnly();
             this.configType = data.getConfig().type();
+            this.separator = data.getConfig().separator();
             this.allProperties = ImmutableSet.copyOf(data.getProperties());
             this.propertyMap = new PropertyMap(this);
             this.spec = createSpec(this.allProperties);
@@ -270,9 +274,9 @@ public class SimpleConfigManager
             if(this.readOnly)
             {
                 Preconditions.checkArgument(configDir != null, "Config dir must not be null for read only configs");
-                return createReadOnlyConfig(configDir, this.id, this.name, this::correct);
+                return createReadOnlyConfig(configDir, this.id, this.separator, this.name, this::correct);
             }
-            return createSimpleConfig(configDir, this.id, this.name);
+            return createSimpleConfig(configDir, this.id, this.separator, this.name);
         }
 
         private void unload(boolean sendEvent)
@@ -397,7 +401,7 @@ public class SimpleConfigManager
         @Override
         public String getFileName()
         {
-            return String.format("%s.%s.toml", this.id, this.name);
+            return String.format("%s%s%s.toml", this.id, this.separator, this.name);
         }
 
         @Override
@@ -446,7 +450,7 @@ public class SimpleConfigManager
             if(!ConfigHelper.isWorldConfig(this))
                 return;
             Preconditions.checkState(this.config == null, "Something went wrong and tried to load the server config again!");
-            CommentedConfig config = createSimpleConfig(configDir, this.id, this.name);
+            CommentedConfig config = createSimpleConfig(configDir, this.id, this.separator, this.name);
             ConfigHelper.loadConfig(config);
             this.correct(config);
             config.putAllComments(this.comments);
@@ -471,7 +475,7 @@ public class SimpleConfigManager
                 return this.allProperties.stream().anyMatch(property -> !property.isDefault());
 
             // Temporarily load config to test for changes. Unloads immediately after test.
-            CommentedFileConfig tempConfig = createTempConfig(FabricLoader.getInstance().getConfigDir(), this.id, this.name);
+            CommentedFileConfig tempConfig = createTempConfig(FabricLoader.getInstance().getConfigDir(), this.id, this.separator, this.name);
             ConfigHelper.loadConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
@@ -500,7 +504,7 @@ public class SimpleConfigManager
             }
 
             // Temporarily loads the config, restores the defaults then saves and closes.
-            CommentedFileConfig tempConfig = createTempConfig(FabricLoader.getInstance().getConfigDir(), this.id, this.name);
+            CommentedFileConfig tempConfig = createTempConfig(FabricLoader.getInstance().getConfigDir(), this.id, this.separator, this.name);
             ConfigHelper.loadConfig(tempConfig);
             this.correct(tempConfig);
             tempConfig.putAllComments(this.comments);
@@ -786,6 +790,11 @@ public class SimpleConfigManager
         }
     }
 
+    private static boolean isValidSeparator(char c)
+    {
+        return c == '.' || c == '-';
+    }
+
     private static List<Pair<SimpleConfig, Object>> getAllSimpleConfigs()
     {
         //TODO clean this holy
@@ -833,20 +842,20 @@ public class SimpleConfigManager
         return configs;
     }
 
-    private static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, String name)
+    private static CommentedConfig createSimpleConfig(@Nullable Path folder, String id, char separator, String name)
     {
         if(folder != null)
         {
-            String fileName = String.format("%s.%s.toml", id, name);
+            String fileName = String.format("%s%s%s.toml", id, separator, name);
             File file = new File(folder.toFile(), fileName);
             return CommentedFileConfig.builder(file).autosave().sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
         }
         return CommentedConfig.inMemory();
     }
 
-    private static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, String name, Consumer<Config> corrector)
+    private static UnmodifiableCommentedConfig createReadOnlyConfig(Path folder, String id, char separator, String name, Consumer<Config> corrector)
     {
-        CommentedFileConfig temp = createTempConfig(folder, id, name);
+        CommentedFileConfig temp = createTempConfig(folder, id, separator, name);
         ConfigHelper.loadConfig(temp);
         corrector.accept(temp);
         CommentedConfig config = CommentedConfig.inMemory();
@@ -855,9 +864,9 @@ public class SimpleConfigManager
         return config.unmodifiable();
     }
 
-    private static CommentedFileConfig createTempConfig(Path folder, String id, String name)
+    private static CommentedFileConfig createTempConfig(Path folder, String id, char separator, String name)
     {
-        String fileName = String.format("%s.%s.toml", id, name);
+        String fileName = String.format("%s%s%s.toml", id, separator, name);
         File file = new File(folder.toFile(), fileName);
         return CommentedFileConfig.builder(file).sync().onFileNotFound((file1, configFormat) -> initConfig(file1, configFormat, fileName)).build();
     }
