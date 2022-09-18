@@ -35,6 +35,8 @@
     "configured.gui.title.client_configuration": "Client Configurations",
     "configured.gui.title.common_configuration": "Common Configurations",
     "configured.gui.title.server_configuration": "Server Configurations",
+    "configured.gui.title.recently_played": "Recently Played",
+    "configured.gui.title.other_worlds": "Other Worlds",
     "configured.validator.range_hint": "Value must be between %s and %s (inclusive)",
     "configured.validator.not_a_number": "The entered value is not a valid number",
     "configured.parser.not_a_number": "The entered text is not a valid number",
