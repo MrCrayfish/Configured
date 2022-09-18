@@ -158,7 +158,7 @@ public class ConfigHelper
 
     public static boolean isPlayingLocally()
     {
-        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null && !Minecraft.getInstance().getSingleplayerServer().isPublished());
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT && callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null && !Minecraft.getInstance().getSingleplayerServer().isPublished());
     }
 
     public static void createBackup(UnmodifiableConfig config)
