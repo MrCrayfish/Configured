@@ -23,14 +23,20 @@ import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvents;
+import com.mrcrayfish.configured.client.SessionData;
 import com.mrcrayfish.configured.network.HandshakeMessages;
+import com.mrcrayfish.configured.network.ServerMessages;
+import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.LevelResource;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +44,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -98,6 +105,12 @@ public class SimpleConfigManager
         return ImmutableList.copyOf(this.configs.values());
     }
 
+    @Nullable
+    public SimpleConfigImpl getConfig(ResourceLocation id)
+    {
+        return this.configs.get(id);
+    }
+
     public List<Pair<String, HandshakeMessages.S2CConfigData>> getMessagesForLogin(boolean local)
     {
         if(local) return Collections.emptyList();
@@ -117,6 +130,75 @@ public class SimpleConfigManager
         if(entry != null && entry.getType().isSync())
         {
             return entry.loadFromData(message.getData());
+        }
+        return false;
+    }
+
+    public boolean processSyncData(ResourceLocation id, byte[] data, boolean server)
+    {
+        SimpleConfigImpl simpleConfig = this.configs.get(id);
+        if(simpleConfig == null)
+        {
+            Configured.LOGGER.error("No simple config exists for the id: {}", id);
+            return false;
+        }
+
+        if(server)
+        {
+            if(!simpleConfig.getType().isServer())
+            {
+                Configured.LOGGER.error("Received sync update for incorrect config: {}", id);
+                return false;
+            }
+        }
+        else if(!simpleConfig.getType().isSync())
+        {
+            Configured.LOGGER.error("Received sync update for a non-sync config: {}", id);
+            return false;
+        }
+
+        if(simpleConfig.isReadOnly() || !simpleConfig.isLoaded())
+        {
+            Configured.LOGGER.error("Received sync update for incorrect config: {}", id);
+            return false;
+        }
+
+        try
+        {
+            CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
+            if(!simpleConfig.isCorrect(config))
+            {
+                Configured.LOGGER.error("Received incorrect config data");
+                return false;
+            }
+
+            if(simpleConfig.config instanceof Config c)
+            {
+                c.putAll(config);
+                simpleConfig.allProperties.forEach(ConfigProperty::invalidateCache);
+                SimpleConfigEvents.RELOAD.invoker().call(simpleConfig.source);
+                Configured.LOGGER.debug("Successfully processed sync update for config: {}", id);
+                return true;
+            }
+        }
+        catch(ParsingException e)
+        {
+            Configured.LOGGER.error("Received malformed config data");
+        }
+        catch(Exception e)
+        {
+            Configured.LOGGER.error("An exception was thrown when processing config data: {}", e.toString());
+        }
+        return false;
+    }
+
+    public boolean processResponseData(ResourceLocation id, byte[] data)
+    {
+        Configured.LOGGER.debug("Processing Loading config from server: " + id);
+        SimpleConfigImpl entry = this.configs.get(id);
+        if(entry != null && entry.getType().isServer() && entry.getType() != ConfigType.DEDICATED_SERVER)
+        {
+            return entry.loadFromData(data);
         }
         return false;
     }
@@ -245,7 +327,7 @@ public class SimpleConfigManager
             this.unload(false);
             try
             {
-                Preconditions.checkState(this.configType.isSync(), "Only sync configs can be loaded from data");
+                Preconditions.checkState(this.configType.isServer(), "Only server configs can be loaded from data");
                 CommentedConfig commentedConfig = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
                 if(!this.isCorrect(commentedConfig)) // The server should be sending correct configs
                     return false;
@@ -364,7 +446,10 @@ public class SimpleConfigManager
                     this.unload(false);
                     return;
                 }
-                else if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
+
+                this.syncToServer();
+
+                if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
                 {
                     this.unload(false);
                     return;
@@ -375,13 +460,13 @@ public class SimpleConfigManager
             SimpleConfigEvents.RELOAD.invoker().call(this.source);
         }
 
-        private ResourceLocation getName()
+        public ResourceLocation getName()
         {
             return new ResourceLocation(this.id, this.name);
         }
 
         @Nullable
-        private Path getFilePath()
+        public Path getFilePath()
         {
             return this.config instanceof FileConfig ? ((FileConfig) this.config).getNioPath() : null;
         }
@@ -420,6 +505,11 @@ public class SimpleConfigManager
         public boolean isReadOnly()
         {
             return this.readOnly;
+        }
+
+        public boolean isLoaded()
+        {
+            return this.config != null;
         }
 
         @Override
@@ -513,15 +603,42 @@ public class SimpleConfigManager
             tempConfig.close();
         }
 
-        private void sendEvent(SimpleConfigEvents event)
+        private void syncToServer()
         {
-            /*ModList.get().getModContainerById(this.id).ifPresent(container ->
-            {
-                if(container instanceof FMLModContainer modContainer)
-                {
-                    modContainer.getEventBus().post(event);
-                }
-            });*/
+            if(this.config == null)
+                return;
+
+            if(!ConfigHelper.isPlayingGame())
+                return;
+
+            if(!ConfigHelper.isConfiguredInstalledOnServer())
+                return;
+
+            if(!this.getType().isServer() || this.getType() == ConfigType.DEDICATED_SERVER)
+                return;
+
+            Player player = ConfigHelper.getClientPlayer();
+            if(!ConfigHelper.isOperator(player) || !SessionData.isDeveloper(player))
+                return;
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            TomlFormat.instance().createWriter().write(this.config, stream);
+            ClientPlayNetworking.send(MessageSyncSimpleConfig.ID, MessageSyncSimpleConfig.create(this.getName(), stream.toByteArray()));
+        }
+
+        @Override
+        public void requestFromServer()
+        {
+            if(!this.getType().isServer())
+                return;
+
+            if(!ConfigHelper.isPlayingGame())
+                return;
+
+            if(!ConfigHelper.isConfiguredInstalledOnServer())
+                return;
+
+            ClientPlayNetworking.send(MessageRequestSimpleConfig.ID, MessageRequestSimpleConfig.create(this.getName()));
         }
     }
 

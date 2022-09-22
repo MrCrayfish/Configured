@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.SessionData;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
@@ -15,11 +16,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import org.apache.commons.io.FilenameUtils;
@@ -56,24 +58,41 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             localConfigs.forEach(config -> localEntries.add(new FileItem(config)));
             Collections.sort(localEntries);
             entries.addAll(localEntries);
-
         }
+
         Set<IModConfig> remoteConfigs = this.getRemoteConfigs();
-        if(!remoteConfigs.isEmpty())
+        if(!remoteConfigs.isEmpty() && (!ConfigHelper.isPlayingGame() || ConfigHelper.isConfiguredInstalledOnServer()))
         {
+            Player player = Minecraft.getInstance().player;
+            if(ConfigHelper.isPlayingGame() && ConfigHelper.isPlayingRemotely())
+            {
+                if(SessionData.isLan())
+                {
+                    entries.add(new TitleItem(Component.translatable("configured.gui.title.server_configuration").getString()));
+                    entries.add(new TitleItem(Component.translatable("configured.gui.lan_server")));
+                    return;
+                }
+
+                if(!ConfigHelper.isOperator(player))
+                    return;
+
+                if(!SessionData.isDeveloper(player))
+                {
+                    entries.add(new TitleItem(Component.translatable("configured.gui.title.server_configuration").getString()));
+                    entries.add(new MultiTextItem(
+                            Component.translatable("configured.gui.no_developer_status"),
+                            Component.translatable("configured.gui.developer_details", Component.literal("configured.developer.toml").withStyle(ChatFormatting.GOLD).withStyle(Style.EMPTY.withUnderlined(true))).withStyle(ChatFormatting.GRAY).withStyle(style -> {
+                                return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("configured.gui.developer_file")));
+                            })));
+                    return;
+                }
+            }
+
             entries.add(new TitleItem(Component.translatable("configured.gui.title.server_configuration").getString()));
-            ClientPacketListener listener = Minecraft.getInstance().getConnection();
-            if(listener != null && !listener.getConnection().isMemoryConnection())
-            {
-                entries.add(new SubTitleItem(Component.translatable("configured.gui.server_config_main_menu")));
-            }
-            else
-            {
-                List<Item> remoteEntries = new ArrayList<>();
-                remoteConfigs.forEach(config -> remoteEntries.add(new FileItem(config)));
-                Collections.sort(remoteEntries);
-                entries.addAll(remoteEntries);
-            }
+            List<Item> remoteEntries = new ArrayList<>();
+            remoteConfigs.forEach(config -> remoteEntries.add(new FileItem(config)));
+            Collections.sort(remoteEntries);
+            entries.addAll(remoteEntries);
         }
     }
 
@@ -173,6 +192,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     }
                 }
+                else if(ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
+                {
+                    FabricLoader.getInstance().getModContainer(config.getModId()).ifPresent(container ->
+                    {
+                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                        Minecraft.getInstance().setScreen(new RequestScreen(ModConfigSelectionScreen.this, newTitle, ModConfigSelectionScreen.this.background, config));
+                    });
+                }
                 else
                 {
                     Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
@@ -187,7 +214,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 return 0;
             }
-            else if(ConfigHelper.isPlayingGame() && !ConfigHelper.isPlayingLocally())
+            else if(ConfigHelper.isPlayingGame() && !ConfigHelper.isRunningLocalServer())
             {
                 if(config.getType().isServer() && !config.getType().isSync())
                 {
@@ -220,10 +247,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 return Component.translatable("configured.gui.select_world");
             }
-            /*if(ConfigHelper.isPlayingGame() && config.getType().isServer() && !config.getType().isSync())
+            if(ConfigHelper.isPlayingGame() && ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync() && config.getType() != ConfigType.DEDICATED_SERVER)
             {
                 return Component.translatable("configured.gui.request");
-            }*/
+            }
             return Component.translatable("configured.gui.modify");
         }
 
@@ -329,7 +356,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             case CLIENT -> FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
             case UNIVERSAL, MEMORY -> true;
-            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isPlayingLocally();
+            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isRunningLocalServer() || ConfigHelper.isOperator(player) && SessionData.isDeveloper(player);
             case DEDICATED_SERVER -> false;
         };
     }
@@ -339,8 +366,8 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         return switch(config.getType())
         {
             case CLIENT, UNIVERSAL, MEMORY -> true;
-            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isPlayingLocally();
-            case WORLD, WORLD_SYNC -> ConfigHelper.isPlayingLocally();
+            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isRunningLocalServer();
+            case WORLD, WORLD_SYNC -> ConfigHelper.isRunningLocalServer();
             case DEDICATED_SERVER -> false;
         };
     }

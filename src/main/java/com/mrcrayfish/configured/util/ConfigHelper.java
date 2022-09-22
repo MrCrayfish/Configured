@@ -8,10 +8,15 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.network.ServerMessages;
+import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
@@ -98,6 +103,12 @@ public class ConfigHelper
         return config.getType().isServer() && !isWorldConfig(config);
     }
 
+    /* Client only */
+    public static boolean isConfiguredInstalledOnServer()
+    {
+        return ClientPlayNetworking.canSend(MessageRequestSimpleConfig.ID);
+    }
+
     /**
      * Performs a deep search of a config entry and returns all the config values that have changed.
      *
@@ -141,14 +152,19 @@ public class ConfigHelper
         return FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER || callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().level != null);
     }
 
-    public static boolean isServerOwnedByPlayer(Player player)
+    public static boolean isServerOwnedByPlayer(@Nullable Player player)
     {
-        return player.getServer() != null && !player.getServer().isDedicatedServer() && player.getServer().isSingleplayerOwner(player.getGameProfile());
+        return player != null && player.getServer() != null && !player.getServer().isDedicatedServer() && player.getServer().isSingleplayerOwner(player.getGameProfile());
     }
 
     public static boolean hasPermissionToEdit(@Nullable Player player, IModConfig config)
     {
         return !config.getType().isServer() || player != null && (player.hasPermissions(4) || isServerOwnedByPlayer(player));
+    }
+
+    public static boolean isOperator(@Nullable Player player)
+    {
+        return player != null && player.hasPermissions(4);
     }
 
     public static boolean isRunningLocalServer()
@@ -158,12 +174,21 @@ public class ConfigHelper
 
     public static boolean isPlayingLocally()
     {
-        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT && callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null && !Minecraft.getInstance().getSingleplayerServer().isPublished());
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT && callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null);
     }
 
-    public static boolean isPlayingLocally()
+    public static boolean isPlayingRemotely()
     {
-        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null && !Minecraft.getInstance().getSingleplayerServer().isPublished());
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT && callOnEnv(EnvType.CLIENT, () -> () -> {
+            ClientPacketListener listener = Minecraft.getInstance().getConnection();
+            return listener != null && !listener.getConnection().isMemoryConnection();
+        });
+    }
+
+    @Nullable
+    public static Player getClientPlayer()
+    {
+        return FabricLoader.getInstance().getEnvironmentType() != EnvType.CLIENT ? null : callOnEnv(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
     }
 
     public static void createBackup(UnmodifiableConfig config)
