@@ -23,10 +23,16 @@ import com.mrcrayfish.configured.api.simple.ConfigProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
 import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
+import com.mrcrayfish.configured.client.SessionData;
 import com.mrcrayfish.configured.network.HandshakeMessages;
+import com.mrcrayfish.configured.network.PacketHandler;
+import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageResponseSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.util.LogicalSidedProvider;
@@ -40,6 +46,7 @@ import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -47,6 +54,7 @@ import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -99,6 +107,12 @@ public class SimpleConfigManager
         return ImmutableList.copyOf(this.configs.values());
     }
 
+    @Nullable
+    public SimpleConfigImpl getConfig(ResourceLocation id)
+    {
+        return this.configs.get(id);
+    }
+
     public List<Pair<String, HandshakeMessages.S2CConfigData>> getMessagesForLogin(boolean local)
     {
         if(local) return Collections.emptyList();
@@ -118,6 +132,75 @@ public class SimpleConfigManager
         if(entry != null && entry.getType().isSync())
         {
             return entry.loadFromData(message.getData());
+        }
+        return false;
+    }
+
+    public boolean processSyncData(MessageSyncSimpleConfig message, boolean server)
+    {
+        SimpleConfigImpl simpleConfig = this.configs.get(message.id());
+        if(simpleConfig == null)
+        {
+            Configured.LOGGER.error("No simple config exists for the id: {}", message.id());
+            return false;
+        }
+
+        if(server)
+        {
+            if(!simpleConfig.getType().isServer())
+            {
+                Configured.LOGGER.error("Received sync update for incorrect config: {}", message.id());
+                return false;
+            }
+        }
+        else if(!simpleConfig.getType().isSync())
+        {
+            Configured.LOGGER.error("Received sync update for a non-sync config: {}", message.id());
+            return false;
+        }
+
+        if(simpleConfig.isReadOnly() || !simpleConfig.isLoaded())
+        {
+            Configured.LOGGER.error("Received sync update for incorrect config: {}", message.id());
+            return false;
+        }
+
+        try
+        {
+            CommentedConfig config = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.data()));
+            if(!simpleConfig.isCorrect(config))
+            {
+                Configured.LOGGER.error("Received incorrect config data");
+                return false;
+            }
+
+            if(simpleConfig.config instanceof Config c)
+            {
+                c.putAll(config);
+                simpleConfig.allProperties.forEach(ConfigProperty::invalidateCache);
+                simpleConfig.sendEvent(new SimpleConfigEvent.Reload(simpleConfig.source));
+                Configured.LOGGER.debug("Successfully processed sync update for config: {}", message.id());
+                return true;
+            }
+        }
+        catch(ParsingException e)
+        {
+            Configured.LOGGER.error("Received malformed config data");
+        }
+        catch(Exception e)
+        {
+            Configured.LOGGER.error("An exception was thrown when processing config data: {}", e.toString());
+        }
+        return false;
+    }
+
+    public boolean processResponseData(MessageResponseSimpleConfig message)
+    {
+        Configured.LOGGER.debug("Processing Loading config from server: " + message.id());
+        SimpleConfigImpl entry = this.configs.get(message.id());
+        if(entry != null && entry.getType().isServer() && entry.getType() != ConfigType.DEDICATED_SERVER)
+        {
+            return entry.loadFromData(message.data());
         }
         return false;
     }
@@ -243,7 +326,7 @@ public class SimpleConfigManager
             this.unload(false);
             try
             {
-                Preconditions.checkState(this.configType.isSync(), "Only sync configs can be loaded from data");
+                Preconditions.checkState(this.configType.isServer(), "Only server configs can be loaded from data");
                 CommentedConfig commentedConfig = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(data));
                 if(!this.isCorrect(commentedConfig)) // The server should be sending correct configs
                     return false;
@@ -364,7 +447,10 @@ public class SimpleConfigManager
                     this.unload(false);
                     return;
                 }
-                else if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
+
+                this.syncToServer();
+
+                if(!ConfigHelper.isRunningLocalServer() && !this.getType().isSync())
                 {
                     this.unload(false);
                     return;
@@ -375,13 +461,13 @@ public class SimpleConfigManager
             this.sendEvent(new SimpleConfigEvent.Reload(this.source));
         }
 
-        private ResourceLocation getName()
+        public ResourceLocation getName()
         {
             return new ResourceLocation(this.id, this.name);
         }
 
         @Nullable
-        private Path getFilePath()
+        public Path getFilePath()
         {
             return this.config instanceof FileConfig ? ((FileConfig) this.config).getNioPath() : null;
         }
@@ -420,6 +506,11 @@ public class SimpleConfigManager
         public boolean isReadOnly()
         {
             return this.readOnly;
+        }
+
+        public boolean isLoaded()
+        {
+            return this.config != null;
         }
 
         @Override
@@ -511,6 +602,47 @@ public class SimpleConfigManager
             this.allProperties.forEach(property -> tempConfig.set(property.getPath(), property.getDefaultValue()));
             ConfigHelper.saveConfig(tempConfig);
             tempConfig.close();
+        }
+
+        private void syncToServer()
+        {
+            if(!EffectiveSide.get().isClient())
+                return;
+
+            if(this.config == null)
+                return;
+
+            if(!ConfigHelper.isPlayingGame())
+                return;
+
+            if(!ConfigHelper.isConfiguredInstalledOnServer())
+                return;
+
+            if(!this.getType().isServer() || this.getType() == ConfigType.DEDICATED_SERVER)
+                return;
+
+            Player player = ConfigHelper.getClientPlayer();
+            if(!ConfigHelper.isOperator(player) || !SessionData.isDeveloper(player))
+                return;
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            TomlFormat.instance().createWriter().write(this.config, stream);
+            PacketHandler.getPlayChannel().sendToServer(new MessageSyncSimpleConfig(this.getName(), stream.toByteArray()));
+        }
+
+        @Override
+        public void requestFromServer()
+        {
+            if(!this.getType().isServer())
+                return;
+
+            if(!ConfigHelper.isPlayingGame())
+                return;
+
+            if(!ConfigHelper.isConfiguredInstalledOnServer())
+                return;
+
+            PacketHandler.getPlayChannel().sendToServer(new MessageRequestSimpleConfig(this.getName()));
         }
 
         private void sendEvent(SimpleConfigEvent event)

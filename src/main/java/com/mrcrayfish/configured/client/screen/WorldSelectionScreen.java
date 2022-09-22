@@ -138,6 +138,7 @@ public class WorldSelectionScreen extends ListMenuScreen
                 this.iconFile = null;
             }
             this.texture = this.loadWorldIcon();
+            //TODO fix icon for and label for read-only
             this.modifyButton = new IconButton(0, 0, 0, 22, 60, Component.translatable("configured.gui.select"), onPress -> {
                 this.loadWorldConfig(summary.getLevelId(), summary.getLevelName());
             });
