@@ -27,7 +27,7 @@ loom {
 			inherit client
 			name = "Test Client"
 			programArg "--username=Dev"
-			programArg "--uuid=380df991-f603-344c-a090-369bad2a924a"
+			programArg "--uuid=380df991f603344ca090369bad2a924a"
 			ideConfigGenerated = true
 			source = sourceSets.testMods
 		}
