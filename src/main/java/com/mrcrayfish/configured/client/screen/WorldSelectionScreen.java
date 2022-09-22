@@ -134,9 +134,27 @@ public class WorldSelectionScreen extends ListMenuScreen
             this.iconId = new ResourceLocation("minecraft", "worlds/" + Util.sanitizeName(summary.getLevelId(), ResourceLocation::validPathChar) + "/" + Hashing.sha1().hashUnencodedChars(summary.getLevelId()) + "/icon");
             this.iconFile = summary.getIcon().isFile() ? summary.getIcon() : null;
             this.texture = this.loadWorldIcon();
-            this.modifyButton = new IconButton(0, 0, 0, 22, 60, new TranslatableComponent("configured.gui.select"), onPress -> {
+            this.modifyButton = new IconButton(0, 0, 0, this.getIconV(), 60, this.getButtonLabel(), onPress -> {
                 this.loadWorldConfig(summary.getLevelId(), summary.getLevelName());
             });
+        }
+
+        private Component getButtonLabel()
+        {
+            if(WorldSelectionScreen.this.config.isReadOnly())
+            {
+                return new TranslatableComponent("configured.gui.view");
+            }
+            return new TranslatableComponent("configured.gui.select");
+        }
+
+        private int getIconV()
+        {
+            if(WorldSelectionScreen.this.config.isReadOnly())
+            {
+                return 33;
+            }
+            return 22;
         }
 
         @Override

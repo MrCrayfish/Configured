@@ -216,39 +216,48 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
         private int getModifyIconU(IModConfig config)
         {
-            if(config.isReadOnly())
+            if(ConfigHelper.isPlayingGame())
             {
-                return 0;
-            }
-            else if(ConfigHelper.isPlayingGame() && !ConfigHelper.isRunningLocalServer())
-            {
-                if(config.getType().isServer() && !config.getType().isSync())
+                if(ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
                 {
                     return 22;
                 }
             }
-            else if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
+            else
             {
-                return 11;
+                if(ConfigHelper.isWorldConfig(config))
+                {
+                    return 11;
+                }
             }
             return 0;
         }
 
         private int getModifyIconV(IModConfig config)
         {
-            if(config.isReadOnly())
+            if(ConfigHelper.isPlayingGame())
             {
-                return 33;
+                if(ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
+                {
+                    return 22;
+                }
+                if(config.isReadOnly())
+                {
+                    return 33;
+                }
+            }
+            else
+            {
+                if(config.isReadOnly() && !ConfigHelper.isWorldConfig(config))
+                {
+                    return 33;
+                }
             }
             return 22;
         }
 
         private Component getModifyLabel(IModConfig config)
         {
-            if(config.isReadOnly())
-            {
-                return new TranslatableComponent("configured.gui.view");
-            }
             if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
             {
                 return new TranslatableComponent("configured.gui.select_world");
@@ -256,6 +265,10 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             if(ConfigHelper.isPlayingGame() && ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync() && config.getType() != ConfigType.DEDICATED_SERVER)
             {
                 return new TranslatableComponent("configured.gui.request");
+            }
+            if(config.isReadOnly())
+            {
+                return new TranslatableComponent("configured.gui.view");
             }
             return new TranslatableComponent("configured.gui.modify");
         }
