@@ -10,36 +10,32 @@ archivesBaseName = "${project.mod_id}-fabric"
 version = "${project.mod_version}-${project.minecraft_version}"
 group = project.maven_group
 
+sourceSets {
+	testMods {
+		compileClasspath += test.compileClasspath
+		runtimeClasspath += test.runtimeClasspath
+	}
+	main {
+	}
+}
+
 loom {
 	accessWidenerPath = file("src/main/resources/configured.accesswidener")
 
 	runs {
-		client {
-			configName = "Client"
-			runDir = "run"
-			source = sourceSets.main
-			ideConfigGenerated = true
-			client()
-		}
-
 		testClient {
 			inherit client
-			configName = "Test Client"
-			source = sourceSets.test
-		}
-
-		server {
-			configName = "Server"
-			runDir = "run"
-			source = sourceSets.main
+			name = "Test Client"
+			programArg "--username=Dev"
+			programArg "--uuid=380df991-f603-344c-a090-369bad2a924a"
 			ideConfigGenerated = true
-			server()
+			source = sourceSets.testMods
 		}
-
 		testServer {
 			inherit server
-			configName = "Test Server"
-			source = sourceSets.test
+			name = "Test Server"
+			ideConfigGenerated = true
+			source = sourceSets.testMods
 		}
 	}
 }
@@ -65,6 +61,7 @@ dependencies {
 	implementation include('com.electronwill.night-config:core:3.6.0')
 	implementation include('com.electronwill.night-config:toml:3.6.0')
 
+	testModsImplementation sourceSets.main.output
 }
 
 processResources {
