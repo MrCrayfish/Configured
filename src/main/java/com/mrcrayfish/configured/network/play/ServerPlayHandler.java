@@ -178,7 +178,7 @@ public class ServerPlayHandler
             return;
         }
 
-        if(!config.getType().isServer() || config.getType() == ConfigType.DEDICATED_SERVER || config.isReadOnly())
+        if(!config.getType().isServer() || config.getType() == ConfigType.DEDICATED_SERVER)
         {
             Configured.LOGGER.warn("{} tried to request an invalid config from the server", player.getName().getString());
             player.connection.disconnect(new TranslatableComponent("configured.multiplayer.disconnect.no_permission"));
@@ -188,7 +188,7 @@ public class ServerPlayHandler
         try
         {
             ResourceLocation key = config.getName();
-            byte[] data = ConfigHelper.readBytes(config.getFilePath());
+            byte[] data = config.getData();
             PacketHandler.getPlayChannel().reply(new MessageResponseSimpleConfig(key, data), context);
             Configured.LOGGER.debug("Sending request reply back to player");
         }

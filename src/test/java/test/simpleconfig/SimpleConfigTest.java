@@ -55,6 +55,12 @@ public class SimpleConfigTest
     @SimpleConfig(id = Constants.ID, name = "world_sync", type = ConfigType.WORLD_SYNC)
     private static final MyConfig WORLD_SYNC = new MyConfig();
 
+    @SimpleConfig(id = Constants.ID, name = "world_read_only", type = ConfigType.WORLD, readOnly = true)
+    private static final MyConfig WORLD_READ_ONLY = new MyConfig();
+
+    @SimpleConfig(id = Constants.ID, name = "world_sync_read_only", type = ConfigType.WORLD_SYNC, readOnly = true)
+    private static final MyConfig WORLD_SYNC_READ_ONLY = new MyConfig();
+
     @SimpleConfig(id = Constants.ID, name = "memory", type = ConfigType.MEMORY)
     private static final MyConfig MEMORY = new MyConfig();
 

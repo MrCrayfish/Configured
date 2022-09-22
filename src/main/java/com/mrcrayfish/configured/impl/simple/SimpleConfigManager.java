@@ -655,6 +655,12 @@ public class SimpleConfigManager
                 }
             });
         }
+
+        @Nullable
+        public byte[] getData()
+        {
+            return this.config != null ? ConfigHelper.getBytes(this.config) : null;
+        }
     }
 
     public static class PropertyMap implements IMapEntry
