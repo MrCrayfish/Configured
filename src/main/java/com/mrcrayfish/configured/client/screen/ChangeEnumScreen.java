@@ -62,7 +62,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         this.list.setSelected(this.list.children().stream().filter(entry -> entry.getEnumValue() == this.selectedValue).findFirst().orElse(null));
         this.addWidget(this.list);
 
-        this.searchTextField = new EditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.literal("Search"));
+        this.searchTextField = new EditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.translatable("configured.gui.search"));
         this.searchTextField.setResponder(s ->
         {
             ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, s, this.entries);

@@ -38,6 +38,7 @@
     "configured.gui.game_restart_needed": "The game will need to be restarted for all changes to take effect",
     "configured.gui.request.invalid_config": "The server sent data for the wrong config",
     "configured.gui.request.process_error": "Failed to process config data from server",
+    "configured.gui.handshake_process_failed": "Failed to process config data from server",
     "configured.gui.title.client_configuration": "Client Configurations",
     "configured.gui.title.common_configuration": "Common Configurations",
     "configured.gui.title.server_configuration": "Server Configurations",

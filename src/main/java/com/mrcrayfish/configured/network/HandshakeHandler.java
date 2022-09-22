@@ -25,7 +25,7 @@ class HandshakeHandler
         CountDownLatch block = new CountDownLatch(1);
         supplier.get().enqueueWork(() -> {
             if(!SimpleConfigManager.getInstance().processConfigData(message)) {
-                supplier.get().getNetworkManager().disconnect(Component.literal("Received invalid config data from server"));
+                supplier.get().getNetworkManager().disconnect(Component.translatable("configured.gui.handshake_process_failed"));
             }
             block.countDown();
         });
