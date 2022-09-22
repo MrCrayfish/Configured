@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -31,7 +32,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public class WorldSelectionScreen extends ListMenuScreen
 
     public WorldSelectionScreen(Screen parent, ResourceLocation background, IModConfig config, Component title)
     {
-        super(parent, new TranslatableComponent("configured.gui.edit_world_config", title.plainCopy().withStyle(ChatFormatting.YELLOW)), background, 30);
+        super(parent, new TranslatableComponent("configured.gui.edit_world_config", title.plainCopy().withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD)), background, 30);
         this.config = config;
     }
 
@@ -56,9 +57,18 @@ public class WorldSelectionScreen extends ListMenuScreen
         try
         {
             LevelStorageSource source = Minecraft.getInstance().getLevelSource();
-            List<LevelSummary> levelList = source.getLevelList();
-            Collections.sort(levelList);
-            levelList.forEach(worldSummary -> entries.add(new WorldItem(worldSummary)));
+            List<LevelSummary> levels = source.getLevelList();
+            if(levels.size() > 6)
+            {
+                entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.recently_played").withStyle(ChatFormatting.BOLD, ChatFormatting.YELLOW)));
+                List<LevelSummary> recent = levels.stream().sorted(Comparator.comparing(s -> -s.getLastPlayed())).limit(3).toList();
+                recent.forEach(summary -> entries.add(new WorldItem(summary)));
+                levels.removeAll(recent);
+                entries.add(new TitleItem(new TranslatableComponent("configured.gui.title.other_worlds").withStyle(ChatFormatting.BOLD, ChatFormatting.YELLOW)));
+            }
+            levels.stream().sorted(Comparator.comparing(LevelSummary::getLevelName)).forEach(summary -> {
+                entries.add(new WorldItem(summary));
+            });
         }
         catch(LevelStorageException e)
         {
@@ -120,11 +130,11 @@ public class WorldSelectionScreen extends ListMenuScreen
         {
             super(summary.getLevelName());
             this.worldName = new TextComponent(summary.getLevelName());
-            this.folderName = new TextComponent(summary.getLevelId()).withStyle(ChatFormatting.GRAY);
+            this.folderName = new TextComponent(summary.getLevelId()).withStyle(ChatFormatting.DARK_GRAY);
             this.iconId = new ResourceLocation("minecraft", "worlds/" + Util.sanitizeName(summary.getLevelId(), ResourceLocation::validPathChar) + "/" + Hashing.sha1().hashUnencodedChars(summary.getLevelId()) + "/icon");
             this.iconFile = summary.getIcon().isFile() ? summary.getIcon() : null;
             this.texture = this.loadWorldIcon();
-            this.modifyButton = new Button(0, 0, 50, 20, new TranslatableComponent("configured.gui.select"), onPress -> {
+            this.modifyButton = new IconButton(0, 0, 0, 22, 60, new TranslatableComponent("configured.gui.select"), onPress -> {
                 this.loadWorldConfig(summary.getLevelId(), summary.getLevelName());
             });
         }
@@ -138,13 +148,15 @@ public class WorldSelectionScreen extends ListMenuScreen
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
+            if(x % 2 != 0) Screen.fill(poseStack, left, top, left + width, top + 24, 0x55000000);
+            if(this.modifyButton.isMouseOver(mouseX, mouseY)) Screen.fill(poseStack, left - 1, top - 1, left + 25, top + 25, 0xFFFFFFFF);
             RenderSystem.setShaderTexture(0, this.texture != null ? this.iconId : MISSING_ICON);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            blit(poseStack, left + 4, top, 22, 22, 0, 0, 64, 64, 64, 64);
-            Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.worldName, left + 32, top + 2, 0xFFFFFF);
-            Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.folderName, left + 32, top + 12, 0xFFFFFF);
-            this.modifyButton.x = left + width - 51;
-            this.modifyButton.y = top;
+            blit(poseStack, left, top, 24, 24, 0, 0, 64, 64, 64, 64);
+            Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFF);
+            Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFF);
+            this.modifyButton.x = left + width - 61;
+            this.modifyButton.y = top + 2;
             this.modifyButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
@@ -180,7 +192,9 @@ public class WorldSelectionScreen extends ListMenuScreen
                 FileUtils.getOrCreateDirectory(worldConfigPath, "serverconfig");
                 WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
                     ModList.get().getModContainerById(T.getModId()).ifPresent(container -> {
-                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, new TextComponent(worldName), T, WorldSelectionScreen.this.background));
+                        Component configName = new TextComponent(ModConfigSelectionScreen.createLabelFromModConfig(WorldSelectionScreen.this.config));
+                        Component newTitle = new TextComponent(worldName).copy().append(new TextComponent(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(configName);
+                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, newTitle, T, WorldSelectionScreen.this.background));
                     });
                 });
             }

@@ -48,7 +48,6 @@ public enum ConfigType
      */
     SERVER_SYNC(null, true, true),
 
-    //TODO should this be editable?
     /**
      * A configuration that is only created and loaded on a dedicated server
      */
@@ -59,7 +58,7 @@ public enum ConfigType
      * a different configuration. This configuration is stored in the serverconfig directory, located
      * from the directory of the world. The config properties are only accessible when a world is
      * loaded and is only available on the server (integrated and dedicated). Properties should only
-     * be accessed in server only code.
+     * be accessed in server logical code.
      *
      * This is a good config type to use if you want to the config to be customisable per world and
      * the properties only need to be accessible for the server.

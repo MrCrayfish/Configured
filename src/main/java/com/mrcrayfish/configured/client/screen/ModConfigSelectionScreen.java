@@ -312,7 +312,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
      * @param config
      * @return
      */
-    private static String createLabelFromModConfig(IModConfig config)
+    public static String createLabelFromModConfig(IModConfig config)
     {
         if(config.getTranslationKey() != null) {
             return I18n.get(config.getTranslationKey());
