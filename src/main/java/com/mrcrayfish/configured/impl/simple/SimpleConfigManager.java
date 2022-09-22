@@ -640,6 +640,12 @@ public class SimpleConfigManager
 
             ClientPlayNetworking.send(MessageRequestSimpleConfig.ID, MessageRequestSimpleConfig.create(this.getName()));
         }
+
+        @Nullable
+        public byte[] getData()
+        {
+            return this.config != null ? ConfigHelper.getBytes(this.config) : null;
+        }
     }
 
     public static class PropertyMap implements IMapEntry
