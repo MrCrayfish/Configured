@@ -19,6 +19,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -46,7 +47,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
     protected EntryList list;
     protected List<Item> entries;
     protected FocusedEditBox activeTextField;
-    protected FocusedEditBox searchTextField;
+    protected FocusedEditBox searchTextField; //TODO right click to clear
 
     protected ListMenuScreen(Screen parent, Component title, ResourceLocation background, int itemHeight)
     {
@@ -336,22 +337,31 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
     }
 
-    public class SubTitleItem extends Item implements IIgnoreSearch
+    public class MultiTextItem extends Item implements IIgnoreSearch
     {
-        public SubTitleItem(Component title)
-        {
-            super(title);
-        }
+        private final Component bottomText;
 
-        public SubTitleItem(String title)
+        public MultiTextItem(Component topText, Component bottomText)
         {
-            super(new TextComponent(title).withStyle(ChatFormatting.GRAY));
+            super(topText);
+            this.bottomText = bottomText;
         }
 
         @Override
         public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
+            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top, 0xFFFFFFFF);
+            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.bottomText, left + width / 2, top + 12, 0xFFFFFFFF);
+
+            if(this.isMouseOver(mouseX, mouseY))
+            {
+                Style style = this.bottomText.getStyle();
+                HoverEvent event = style.getHoverEvent();
+                if(event != null && event.getAction() == HoverEvent.Action.SHOW_TEXT)
+                {
+                    ListMenuScreen.this.setActiveTooltip(event.getValue(HoverEvent.Action.SHOW_TEXT), 0xFFFCA800);
+                }
+            }
         }
     }
 

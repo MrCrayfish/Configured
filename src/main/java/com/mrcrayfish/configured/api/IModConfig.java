@@ -107,4 +107,11 @@ public interface IModConfig
      * in-game menu. This is only fired once after the player has exited the menu.
      */
     default void stopEditing() {}
+
+    /**
+     * Sends a request to the server to download the data for this config. This is only applicable
+     * to configs that are only loaded on the server side. The data must be returned to request
+     * screen.
+     */
+    default void requestFromServer() {}
 }

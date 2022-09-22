@@ -10,8 +10,11 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.SessionData;
+import com.mrcrayfish.configured.network.PacketHandler;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -205,6 +208,13 @@ public class ConfigHelper
         return config.getType().isServer() && !isWorldConfig(config);
     }
 
+    /* Client only */
+    public static boolean isConfiguredInstalledOnServer()
+    {
+        ClientPacketListener listener = Minecraft.getInstance().getConnection();
+        return listener != null && PacketHandler.getPlayChannel().isRemotePresent(listener.getConnection());
+    }
+
     /**
      * Performs a deep search of a config entry and returns all the config values that have changed.
      *
@@ -240,14 +250,19 @@ public class ConfigHelper
         return FMLEnvironment.dist.isDedicatedServer() || DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().level != null);
     }
 
-    public static boolean isServerOwnedByPlayer(Player player)
+    public static boolean isServerOwnedByPlayer(@Nullable Player player)
     {
-        return player.getServer() != null && !player.getServer().isDedicatedServer() && player.getServer().isSingleplayerOwner(player.getGameProfile());
+        return player != null && player.getServer() != null && !player.getServer().isDedicatedServer() && player.getServer().isSingleplayerOwner(player.getGameProfile());
     }
 
     public static boolean hasPermissionToEdit(@Nullable Player player, IModConfig config)
     {
         return !config.getType().isServer() || player != null && (player.hasPermissions(4) || isServerOwnedByPlayer(player));
+    }
+
+    public static boolean isOperator(@Nullable Player player)
+    {
+        return player != null && player.hasPermissions(4);
     }
 
     public static boolean isRunningLocalServer()
@@ -257,7 +272,21 @@ public class ConfigHelper
 
     public static boolean isPlayingLocally()
     {
-        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null && !Minecraft.getInstance().getSingleplayerServer().isPublished());
+        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null);
+    }
+
+    public static boolean isPlayingRemotely()
+    {
+        return FMLEnvironment.dist.isClient() && DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> {
+            ClientPacketListener listener = Minecraft.getInstance().getConnection();
+            return listener != null && !listener.getConnection().isMemoryConnection();
+        });
+    }
+
+    @Nullable
+    public static Player getClientPlayer()
+    {
+        return !FMLEnvironment.dist.isClient() ? null : DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().player);
     }
 
     public static void createBackup(UnmodifiableConfig config)

@@ -3,11 +3,16 @@ package com.mrcrayfish.configured;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.simple.BoolProperty;
 import com.mrcrayfish.configured.api.simple.EnumProperty;
+import com.mrcrayfish.configured.api.simple.ListProperty;
 import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.api.simple.SimpleProperty;
+import com.mrcrayfish.configured.api.simple.validate.Validator;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Author: MrCrayfish
@@ -27,5 +32,46 @@ public class Config
 
         @SimpleProperty(name = "changed_formatting", comment = "The formatting to apply to the label of a config property that has been changed")
         public final EnumProperty<ChatFormatting> changedFormatting = EnumProperty.create(ChatFormatting.ITALIC, Set.of(ChatFormatting.values()));
+    }
+
+    @SimpleConfig(id = Reference.MOD_ID, name = "developer", type = ConfigType.DEDICATED_SERVER, readOnly = true)
+    public static final Developer DEVELOPER = new Developer();
+
+    public static class Developer
+    {
+        @SimpleProperty(name = "enabled", comment = """
+                Developer mode. This enables the ability to edit server configs on dedicated servers.
+                You will have to restart your server for developer mode to be updated.
+                ############ READ ME ################################################################
+                You should only enable this mode only if you are developing the server. It is       #
+                recommended that this mode is turned off if your server is public or have players on#
+                your server you don't trust, as leaving this mode enabled is considered insecure in #
+                those scenarios.                                                                    #
+                #####################################################################################""")
+        public final BoolProperty enabled = BoolProperty.create(false);
+
+        @SimpleProperty(name = "developers", comment = """
+                A list of UUIDs of players who are developers for this server. The players will
+                additionally need to have operator permissions. Developers will have the ability to
+                edit server configs on your dedicated server. Only add players you trust.""")
+        public final ListProperty<String> developers = ListProperty.create(ListProperty.STRING, new Validator<>()
+        {
+            private static final Pattern UUID_PATTERN = Pattern.compile("^[\\da-fA-F]{8}\\b-[\\da-fA-F]{4}\\b-[\\da-fA-F]{4}\\b-[\\da-fA-F]{4}\\b-[\\da-fA-F]{12}$");
+
+            @Override
+            public boolean test(String value)
+            {
+                return value != null && UUID_PATTERN.matcher(value).matches();
+            }
+
+            @Override
+            public Component getHint()
+            {
+                return new TextComponent("Invalid UUID");
+            }
+        });
+
+        @SimpleProperty(name = "broadcastLogs", comment = "Broadcasts messages to all developers about changes applied to server configs")
+        public final BoolProperty broadcastLogs = BoolProperty.create(true);
     }
 }
