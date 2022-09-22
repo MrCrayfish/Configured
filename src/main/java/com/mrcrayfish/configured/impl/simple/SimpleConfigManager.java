@@ -117,10 +117,10 @@ public class SimpleConfigManager
     {
         if(local) return Collections.emptyList();
         return this.configs.values().stream()
-            .filter(entry -> entry.getType().isSync() && entry.getFilePath() != null)
+            .filter(entry -> entry.getType().isSync())
             .map(entry -> {
                 ResourceLocation key = entry.getName();
-                byte[] data = ConfigHelper.readBytes(entry.getFilePath());
+                byte[] data = ConfigHelper.getBytes(entry.config);
                 return Pair.of("SimpleConfig " + key, new HandshakeMessages.S2CConfigData(key, data));
             }).collect(Collectors.toList());
     }

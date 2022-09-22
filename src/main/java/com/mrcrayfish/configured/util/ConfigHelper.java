@@ -5,6 +5,7 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
+import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
@@ -28,6 +29,7 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -375,5 +377,16 @@ public class ConfigHelper
         {
             throw new RuntimeException(e);
         }
+    }
+
+    public static byte[] getBytes(UnmodifiableConfig config)
+    {
+        if(config instanceof FileConfig fc)
+        {
+            return readBytes(fc.getNioPath());
+        }
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        TomlFormat.instance().createWriter().write(config, stream);
+        return stream.toByteArray();
     }
 }
