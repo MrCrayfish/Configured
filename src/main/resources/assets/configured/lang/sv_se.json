@@ -22,7 +22,7 @@
     "configured.gui.title.client_configuration": "Klientkonfigurationer",
     "configured.gui.title.common_configuration": "Vanliga konfigurationer",
     "configured.gui.title.server_configuration": "Serverkonfigurationer",
-    "configured.config.client.force_configured_menu": "Tvinga att Configured används",
+    "simpleconfig.configured.client.force_configured_menu": "Tvinga att Configured används",
     "key.configured.open_mod_list": "Öppna modlista",
     "key.categories.configured": "Configured"
 }

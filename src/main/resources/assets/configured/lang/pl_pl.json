@@ -22,7 +22,8 @@
     "configured.gui.title.client_configuration": "Konfiguracje klienta",
     "configured.gui.title.common_configuration": "Konfiguracje wspólne",
     "configured.gui.title.server_configuration": "Konfiguracje serwera",
-    "configured.config.client.force_configured_menu": "Wymuszanie menu z moda Configured",
+    "simpleconfig.configured.client.force_configured_menu": "Wymuszanie menu z moda Configured",
+    "simpleconfig.configured.client.force_configured_menu.tooltip": "Wymusza zastępowanie i generowanie wszystkich menu konfiguracyjnych przez moda Configured. Wymagane jest ponowne uruchomienie gry, aby zmiany zostały zastosowane.",
     "key.configured.open_mod_list": "Otwórz listę modów",
     "key.categories.configured": "Configured"
 }
