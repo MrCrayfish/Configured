@@ -534,17 +534,17 @@ public class SimpleConfigManager
             }
         }
 
-        //TODO change how this works.
         @Override
         public void loadWorldConfig(Path configDir, Consumer<IModConfig> result)
         {
             if(!ConfigHelper.isWorldConfig(this))
                 return;
             Preconditions.checkState(this.config == null, "Something went wrong and tried to load the server config again!");
-            CommentedConfig config = createSimpleConfig(configDir, this.id, this.separator, this.name);
+            UnmodifiableConfig config = this.createConfig(configDir);
             ConfigHelper.loadConfig(config);
             this.correct(config);
-            config.putAllComments(this.comments);
+            if(config instanceof CommentedConfig c)
+                c.putAllComments(this.comments);
             this.allProperties.forEach(p -> p.updateProxy(new ValueProxy(config, p.getPath(), this.readOnly)));
             this.config = config;
             result.accept(this);
