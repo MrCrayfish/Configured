@@ -79,7 +79,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         this.addWidget(this.list);
 
         // Adds a search text field to the top of the screen
-        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TextComponent("Search"));
+        this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, new TranslatableComponent("configured.gui.search"));
         this.searchTextField.setClearable(true);
         this.searchTextField.setResponder(s -> this.updateSearchResults());
         this.addWidget(this.searchTextField);

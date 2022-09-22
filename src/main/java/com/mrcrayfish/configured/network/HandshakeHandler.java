@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.network;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.concurrent.CountDownLatch;
@@ -25,7 +26,7 @@ class HandshakeHandler
         CountDownLatch block = new CountDownLatch(1);
         supplier.get().enqueueWork(() -> {
             if(!SimpleConfigManager.getInstance().processConfigData(message)) {
-                supplier.get().getNetworkManager().disconnect(new TextComponent("Received invalid config data from server"));
+                supplier.get().getNetworkManager().disconnect(new TranslatableComponent("configured.gui.handshake_process_failed"));
             }
             block.countDown();
         });
