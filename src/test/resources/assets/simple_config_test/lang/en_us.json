@@ -6,6 +6,8 @@
     "simpleconfig.simple_config_test.dedicated_server": "Example Dedicated Server",
     "simpleconfig.simple_config_test.world": "Example World",
     "simpleconfig.simple_config_test.world_sync": "Example World (Sync)",
+    "simpleconfig.simple_config_test.world_read_only": "Example World (Read Only)",
+    "simpleconfig.simple_config_test.world_sync_read_only": "Example World (Sync, Read Only)",
     "simpleconfig.simple_config_test.memory": "Example Memory",
     "simpleconfig.simple_config_test.memory.test_double": "Test Double and this is a really longer translated name!",
     "simpleconfig.simple_config_test.memory.test_double.tooltip": "This is a translated tooltip!"
