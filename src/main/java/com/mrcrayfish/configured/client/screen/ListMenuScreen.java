@@ -17,12 +17,14 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -45,7 +47,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
     protected EntryList list;
     protected List<Item> entries;
     protected FocusedEditBox activeTextField;
-    protected FocusedEditBox searchTextField; //TODO right click to clear
+    protected FocusedEditBox searchTextField;
 
     protected ListMenuScreen(Screen parent, Component title, ResourceLocation background, int itemHeight)
     {
@@ -76,6 +78,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
 
         // Adds a search text field to the top of the screen
         this.searchTextField = new FocusedEditBox(this.font, this.width / 2 - 110, 22, 220, 20, Component.literal("Search"));
+        this.searchTextField.setClearable(true);
         this.searchTextField.setResponder(s -> this.updateSearchResults());
         this.addWidget(this.searchTextField);
         ScreenUtil.updateSearchTextFieldSuggestion(this.searchTextField, "", this.entries);
@@ -350,9 +353,17 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
 
     protected class FocusedEditBox extends EditBox
     {
+        private boolean clearable = false;
+
         public FocusedEditBox(Font font, int x, int y, int width, int height, Component label)
         {
             super(font, x, y, width, height, label);
+        }
+
+        public FocusedEditBox setClearable(boolean clearable)
+        {
+            this.clearable = clearable;
+            return this;
         }
 
         @Override
@@ -367,6 +378,32 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
                 }
                 ListMenuScreen.this.activeTextField = this;
             }
+        }
+
+        @Override
+        public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick)
+        {
+            super.render(poseStack, mouseX, mouseY, partialTick);
+            if(this.clearable && !this.getValue().isEmpty())
+            {
+                RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+                RenderSystem.setShaderTexture(0, IconButton.ICONS);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+                boolean hovered = ScreenUtil.isMouseWithin(this.x + this.width - 15, this.y + 5, 9, 9, mouseX, mouseY);
+                blit(poseStack, this.x + this.width - 15, this.y + 5, 9, 9, hovered ? 9 : 0, 55, 9, 9, 64, 64);
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button)
+        {
+            if(this.clearable && !this.getValue().isEmpty() && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && ScreenUtil.isMouseWithin(this.x + this.width - 15, this.y + 5, 9, 9, (int) mouseX, (int) mouseY))
+            {
+                this.playDownSound(ListMenuScreen.this.minecraft.getSoundManager());
+                this.setValue("");
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
         }
     }
 
