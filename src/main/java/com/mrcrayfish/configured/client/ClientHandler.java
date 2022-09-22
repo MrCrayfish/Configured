@@ -37,7 +37,7 @@ public class ClientHandler implements ClientModInitializer
         ClientLoginNetworking.registerGlobalReceiver(Channels.CONFIG_DATA, (client, handler, buf, listenerAdder) -> CompletableFuture.supplyAsync(() -> {
             HandshakeMessages.S2CConfigData message = HandshakeMessages.S2CConfigData.decode(buf);
             if(!SimpleConfigManager.getInstance().processConfigData(message)) {
-                handler.getConnection().disconnect(Component.literal("Received invalid config data from server"));
+                handler.getConnection().disconnect(Component.translatable("configured.gui.handshake_process_failed"));
             }
             return PacketByteBufs.create();
         }, client));
