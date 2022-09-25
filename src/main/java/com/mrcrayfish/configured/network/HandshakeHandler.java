@@ -2,7 +2,6 @@ package com.mrcrayfish.configured.network;
 
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.network.NetworkEvent;
 
