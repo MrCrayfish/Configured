@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 public class ForgeListValue extends ForgeValue<List<?>>
 {
-    private final Function<List<?>, List<?>> converter;
+    protected final Function<List<?>, List<?>> converter;
 
     public ForgeListValue(ConfigValue<List<?>> configValue, ValueSpec valueSpec)
     {

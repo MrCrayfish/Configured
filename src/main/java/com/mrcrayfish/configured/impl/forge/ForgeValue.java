@@ -18,8 +18,8 @@ public class ForgeValue<T> implements IConfigValue<T>
     public final ForgeConfigSpec.ValueSpec valueSpec;
     protected final T initialValue;
     protected T value;
-    private Pair<T, T> range;
-    private Component validationHint;
+    protected Pair<T, T> range;
+    protected Component validationHint;
 
     public ForgeValue(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
     {

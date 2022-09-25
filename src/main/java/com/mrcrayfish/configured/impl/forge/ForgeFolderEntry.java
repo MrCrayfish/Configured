@@ -15,10 +15,10 @@ import java.util.List;
 
 public class ForgeFolderEntry implements IConfigEntry
 {
-    private final List<String> path;
-    private final UnmodifiableConfig config;
-    private final ForgeConfigSpec spec;
-    private List<IConfigEntry> entries;
+    protected final List<String> path;
+    protected final UnmodifiableConfig config;
+    protected final ForgeConfigSpec spec;
+    protected List<IConfigEntry> entries;
 
     public ForgeFolderEntry(UnmodifiableConfig config, ForgeConfigSpec spec)
     {
