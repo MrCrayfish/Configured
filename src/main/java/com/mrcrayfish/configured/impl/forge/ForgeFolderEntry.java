@@ -11,11 +11,11 @@ import java.util.List;
 
 public class ForgeFolderEntry implements IConfigEntry
 {
-    private final String label;
-    private final UnmodifiableConfig config;
-    private final ForgeConfigSpec spec;
-    private final boolean root;
-    private List<IConfigEntry> entries;
+    protected final String label;
+    protected final UnmodifiableConfig config;
+    protected final ForgeConfigSpec spec;
+    protected final boolean root;
+    protected List<IConfigEntry> entries;
 
     public ForgeFolderEntry(String label, UnmodifiableConfig config, ForgeConfigSpec spec, boolean root)
     {

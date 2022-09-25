@@ -23,14 +23,14 @@ import java.util.function.Function;
 
 public class ForgeConfig implements IModConfig
 {
-    private static final EnumMap<ModConfig.Type, ConfigType> TYPE_RESOLVER = Util.make(new EnumMap<>(ModConfig.Type.class), (map) -> {
+    protected static final EnumMap<ModConfig.Type, ConfigType> TYPE_RESOLVER = Util.make(new EnumMap<>(ModConfig.Type.class), (map) -> {
         map.put(ModConfig.Type.CLIENT, ConfigType.CLIENT);
         map.put(ModConfig.Type.COMMON, ConfigType.UNIVERSAL);
         map.put(ModConfig.Type.SERVER, ConfigType.WORLD_SYNC);
     });
 
-    private final ModConfig config;
-    private final List<ForgeValueEntry> allConfigValues;
+    protected final ModConfig config;
+    protected final List<ForgeValueEntry> allConfigValues;
 
     public ForgeConfig(ModConfig config)
     {
