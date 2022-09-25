@@ -5,12 +5,11 @@ import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Configured;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.api.ConfigType;
-import com.mrcrayfish.configured.api.ConfiguredHelper;
+import com.mrcrayfish.configured.api.IConfigProvider;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.api.util.ConfigScreenHelper;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
-import com.mrcrayfish.configured.client.util.OptiFineHelper;
-import com.mrcrayfish.configured.impl.forge.ForgeConfig;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -25,22 +24,20 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.gui.ModListScreen;
-import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -53,6 +50,7 @@ import java.util.stream.Collectors;
 public class ClientHandler
 {
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
+    private static final Set<IConfigProvider> PROVIDERS = new HashSet<>();
 
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event)
     {
@@ -66,7 +64,50 @@ public class ClientHandler
 
     public static void init()
     {
+        loadProviders();
         generateConfigFactories();
+    }
+
+    private static void loadProviders()
+    {
+        ModList.get().forEachModContainer((id, container) ->
+        {
+            Object raw = container.getModInfo().getModProperties().get("configuredProviders");
+            if(raw instanceof String)
+            {
+                PROVIDERS.add(createProviderInstance(container, raw.toString()));
+                Configured.LOGGER.info("Successfully loaded config provider: {}", raw.toString());
+            }
+            else if(raw instanceof List<?> providers)
+            {
+                for(Object provider : providers)
+                {
+                    PROVIDERS.add(createProviderInstance(container, provider.toString()));
+                    Configured.LOGGER.info("Successfully loaded config provider: {}", provider.toString());
+                }
+            }
+            else if(raw != null)
+            {
+                throw new RuntimeException("Config provider definition must be either a String or Array of Strings");
+            }
+        });
+    }
+
+    private static IConfigProvider createProviderInstance(ModContainer container, String classPath)
+    {
+        try
+        {
+            Class<?> providerClass = Class.forName(classPath);
+            Object obj = providerClass.getDeclaredConstructor().newInstance();
+            if(!(obj instanceof IConfigProvider provider))
+                throw new RuntimeException("Config providers must implement IConfigProvider");
+            return provider;
+        }
+        catch(Exception e)
+        {
+            Configured.LOGGER.error("Failed to load config provider from mod: {}", container.getModId());
+            throw new RuntimeException("Failed to load config provider", e);
+        }
     }
 
     // This is where the magic happens
@@ -86,52 +127,18 @@ public class ClientHandler
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
                 container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> {
-                    return ConfiguredHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
+                    return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
                 }));
             }
         });
     }
 
-    private static EnumMap<ModConfig.Type, Set<ModConfig>> getConfigSets()
-    {
-        return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
-    }
-
     public static Map<ConfigType, Set<IModConfig>> createConfigMap(ModContainer container)
     {
         Map<ConfigType, Set<IModConfig>> modConfigMap = new HashMap<>();
-
-        // Add Forge configurations
-        addForgeConfigSetToMap(container, ModConfig.Type.CLIENT, ConfigType.CLIENT, modConfigMap);
-        addForgeConfigSetToMap(container, ModConfig.Type.COMMON, ConfigType.UNIVERSAL, modConfigMap);
-        addForgeConfigSetToMap(container, ModConfig.Type.SERVER, ConfigType.WORLD_SYNC, modConfigMap);
-
-        // Add SimpleConfig configurations
-        SimpleConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getModId())).forEach(entry -> {
-            modConfigMap.computeIfAbsent(entry.getType(), type -> new LinkedHashSet<>()).add(entry);
-        });
-
+        Set<IModConfig> configs = PROVIDERS.stream().flatMap(p -> p.getConfigurationsForMod(container).stream()).collect(Collectors.toSet());
+        configs.forEach(config -> modConfigMap.computeIfAbsent(config.getType(), type -> new LinkedHashSet<>()).add(config));
         return modConfigMap;
-    }
-
-    private static void addForgeConfigSetToMap(ModContainer container, ModConfig.Type type, ConfigType configType, Map<ConfigType, Set<IModConfig>> configMap)
-    {
-        /* Optifine basically breaks Forge's client config, so it's simply not added */
-        if(type == ModConfig.Type.CLIENT && OptiFineHelper.isLoaded() && container.getModId().equals("forge"))
-        {
-            Configured.LOGGER.info("Ignoring Forge's client config since OptiFine was detected");
-            return;
-        }
-
-        Set<ModConfig> configSet = getConfigSets().get(type);
-        Set<IModConfig> filteredConfigSets = configSet.stream()
-                .filter(config -> config.getModId().equals(container.getModId()) && config.getSpec() instanceof ForgeConfigSpec)
-                .map(ForgeConfig::new)
-                .collect(Collectors.toSet());
-        if(!filteredConfigSets.isEmpty())
-        {
-            configMap.put(configType, filteredConfigSets);
-        }
     }
 
     private static ResourceLocation getBackgroundTexture(IModInfo info)

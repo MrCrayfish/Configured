@@ -15,6 +15,14 @@ logoBlur=false
 updateJSONURL="https://mrcrayfish.com/modupdatejson?id=configured"
 displayURL="https://mrcrayfish.com/mods?id=configured"
 
+[modproperties.configured]
+    catalogueImageIcon="configured_icon.png"
+    configuredBackground="minecraft:textures/block/stone.png"
+    configuredProviders=[
+        "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
+    ]
+
 [[mods]]
 modId="config_test"
 version="1.0.0"
