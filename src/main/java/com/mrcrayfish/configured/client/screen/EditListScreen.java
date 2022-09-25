@@ -311,9 +311,9 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
     @SuppressWarnings("unchecked")
     protected static ListType getType(IConfigValue<?> holder)
     {
-        if(holder instanceof SimpleListValue<?> listValue)
+        if(holder instanceof ListTypeProvider provider)
         {
-            return listValue.getListType();
+            return provider.getListType();
         }
         return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder((IConfigValue<List<?>>) holder));
     }
@@ -412,5 +412,10 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                 return INTEGER;
             return UNKNOWN;
         }
+    }
+
+    public interface ListTypeProvider
+    {
+        ListType getListType();
     }
 }
