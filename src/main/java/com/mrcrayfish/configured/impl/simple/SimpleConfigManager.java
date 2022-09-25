@@ -674,7 +674,6 @@ public class SimpleConfigManager
         {
             this.config = config;
             this.path = path;
-            System.out.println(StringUtils.join(path, '.'));
         }
 
         private PropertyMap(SimpleConfigImpl config)
