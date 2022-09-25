@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Author: MrCrayfish
  */
-public class SimpleListValue<T> extends SimpleValue<List<T>>
+public class SimpleListValue<T> extends SimpleValue<List<T>> implements EditListScreen.ListTypeProvider
 {
     private static final Map<ListProperty.Type<?>, EditListScreen.ListType> LIST_TYPE_RESOLVER = Util.make(new HashMap<>(), map -> {
         map.put(ListProperty.INT, EditListScreen.ListType.INTEGER);
@@ -29,6 +29,7 @@ public class SimpleListValue<T> extends SimpleValue<List<T>>
         this.property = property;
     }
 
+    @Override
     public EditListScreen.ListType getListType()
     {
         return LIST_TYPE_RESOLVER.getOrDefault(this.property.getType(), EditListScreen.ListType.UNKNOWN);
