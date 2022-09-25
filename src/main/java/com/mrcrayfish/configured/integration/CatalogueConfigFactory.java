@@ -1,10 +1,11 @@
-package com.mrcrayfish.configured.impl.simple;
+package com.mrcrayfish.configured.integration;
 
 import com.google.common.collect.ImmutableMap;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.ConfiguredHelper;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.ResourceLocationException;
@@ -23,7 +24,7 @@ import java.util.function.BiFunction;
  *
  * Author: MrCrayfish
  */
-public final class SimpleFactory
+public final class CatalogueConfigFactory
 {
     public static Screen createConfigScreen(Screen currentScreen, ModContainer container)
     {
@@ -39,7 +40,7 @@ public final class SimpleFactory
     {
         Map<String, BiFunction<Screen, ModContainer, Screen>> providers = new HashMap<>();
         SimpleConfigManager.getInstance().getConfigs().stream().map(SimpleConfigManager.SimpleConfigImpl::getModId).distinct().forEach(s -> {
-            if(!s.equals(Reference.MOD_ID)) providers.put(s, SimpleFactory::createConfigScreen);
+            if(!s.equals(Reference.MOD_ID)) providers.put(s, CatalogueConfigFactory::createConfigScreen);
         });
         return ImmutableMap.copyOf(providers);
     }

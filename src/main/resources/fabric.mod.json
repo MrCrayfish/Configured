@@ -45,7 +45,7 @@
   "accessWidener": "configured.accesswidener",
   "custom": {
     "catalogue": {
-      "configFactory": "com.mrcrayfish.configured.impl.simple.SimpleFactory"
+      "configFactory": "com.mrcrayfish.configured.integration.CatalogueConfigFactory"
     },
     "configured": {
       "configs": [

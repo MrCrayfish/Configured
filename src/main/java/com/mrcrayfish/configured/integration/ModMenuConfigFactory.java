@@ -1,7 +1,6 @@
 package com.mrcrayfish.configured.integration;
 
 import com.mrcrayfish.configured.Reference;
-import com.mrcrayfish.configured.impl.simple.SimpleFactory;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -21,7 +20,7 @@ public final class ModMenuConfigFactory implements ModMenuApi
     public ConfigScreenFactory<?> getModConfigScreenFactory()
     {
         return screen -> {
-            return FabricLoader.getInstance().getModContainer(Reference.MOD_ID).map(container -> SimpleFactory.createConfigScreen(screen, container)).orElse(null);
+            return FabricLoader.getInstance().getModContainer(Reference.MOD_ID).map(container -> CatalogueConfigFactory.createConfigScreen(screen, container)).orElse(null);
         };
     }
 
@@ -34,7 +33,7 @@ public final class ModMenuConfigFactory implements ModMenuApi
         mods.removeIf(s -> s.equals(Reference.MOD_ID));
         mods.forEach(id -> {
             FabricLoader.getInstance().getModContainer(id).ifPresent(container -> {
-                modConfigFactories.put(id, screen -> SimpleFactory.createConfigScreen(screen, container));
+                modConfigFactories.put(id, screen -> CatalogueConfigFactory.createConfigScreen(screen, container));
             });
         });
         return modConfigFactories;
