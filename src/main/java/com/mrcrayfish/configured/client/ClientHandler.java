@@ -100,7 +100,9 @@ public class ClientHandler
             Class<?> providerClass = Class.forName(classPath);
             Object obj = providerClass.getDeclaredConstructor().newInstance();
             if(!(obj instanceof IConfigProvider provider))
+            {
                 throw new RuntimeException("Config providers must implement IConfigProvider");
+            }
             return provider;
         }
         catch(Exception e)
@@ -123,7 +125,8 @@ public class ClientHandler
             Map<ConfigType, Set<IModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
-                Configured.LOGGER.info("Registering config factory for mod {}. Found {} client config(s) and {} common config(s)", modId, modConfigMap.getOrDefault(ModConfig.Type.CLIENT, Collections.emptySet()).size(), modConfigMap.getOrDefault(ModConfig.Type.COMMON, Collections.emptySet()).size());
+                long count = modConfigMap.values().stream().mapToLong(Set::size).sum();
+                Configured.LOGGER.info("Registering config factory for mod {}. Found {} config(s)", modId, count);
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
                 container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> {
