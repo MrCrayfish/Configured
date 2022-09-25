@@ -51,6 +51,9 @@
       "configs": [
         "com.mrcrayfish.configured.Config"
       ],
+      "providers": [
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
+      ],
       "background": "minecraft:textures/block/stone.png"
     }
   }

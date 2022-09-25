@@ -3,8 +3,9 @@ package com.mrcrayfish.configured.integration;
 import com.google.common.collect.ImmutableMap;
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.api.ConfigType;
-import com.mrcrayfish.configured.api.ConfiguredHelper;
+import com.mrcrayfish.configured.api.util.ConfigScreenHelper;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
@@ -18,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * Provides a config screen factory and provider to Catalogue (Fabric)
@@ -29,11 +31,10 @@ public final class CatalogueConfigFactory
     public static Screen createConfigScreen(Screen currentScreen, ModContainer container)
     {
         Map<ConfigType, Set<IModConfig>> modConfigMap = new HashMap<>();
-        SimpleConfigManager.getInstance().getConfigs().stream().filter(entry -> entry.getModId().equals(container.getMetadata().getId())).forEach(entry -> {
-            modConfigMap.computeIfAbsent(entry.getType(), type -> new LinkedHashSet<>()).add(entry);
-        });
+        Set<IModConfig> configs = ClientHandler.getProviders().stream().flatMap(provider -> provider.getConfigurationsForMod(container).stream()).collect(Collectors.toSet());
+        configs.forEach(entry -> modConfigMap.computeIfAbsent(entry.getType(), type -> new LinkedHashSet<>()).add(entry));
         ResourceLocation backgroundTexture = getBackgroundTexture(container);
-        return ConfiguredHelper.createSelectionScreen(currentScreen, Component.literal(container.getMetadata().getName()), modConfigMap, backgroundTexture);
+        return ConfigScreenHelper.createSelectionScreen(currentScreen, Component.literal(container.getMetadata().getName()), modConfigMap, backgroundTexture);
     }
 
     public static Map<String, BiFunction<Screen, ModContainer, Screen>> createConfigProvider()

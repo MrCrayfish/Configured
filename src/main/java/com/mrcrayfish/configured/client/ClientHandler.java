@@ -1,5 +1,7 @@
 package com.mrcrayfish.configured.client;
 
+import com.mrcrayfish.configured.Configured;
+import com.mrcrayfish.configured.api.IConfigProvider;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.mrcrayfish.configured.network.Channels;
 import com.mrcrayfish.configured.network.ClientMessages;
@@ -17,6 +19,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,6 +28,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -31,6 +38,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public class ClientHandler implements ClientModInitializer
 {
+    private static final Set<IConfigProvider> PROVIDERS = new HashSet<>();
+
     @Override
     public void onInitializeClient()
     {
@@ -62,6 +71,8 @@ public class ClientHandler implements ClientModInitializer
         });
 
         ClientMessages.register();
+
+        this.loadProviders();
     }
 
     private boolean isModListInstalled()
@@ -100,5 +111,69 @@ public class ClientHandler implements ClientModInitializer
         {
             return null;
         }
+    }
+
+    private void loadProviders()
+    {
+        FabricLoader.getInstance().getAllMods().forEach(container ->
+        {
+            CustomValue value = container.getMetadata().getCustomValue("configured");
+            if(value != null && value.getType() == CustomValue.CvType.OBJECT)
+            {
+                CustomValue.CvObject configuredObj = value.getAsObject();
+                CustomValue providersValue = configuredObj.get("providers");
+                if(providersValue != null)
+                {
+                    if(providersValue.getType() == CustomValue.CvType.ARRAY)
+                    {
+                        CustomValue.CvArray array = providersValue.getAsArray();
+                        array.forEach(providerValue -> {
+                            if(providerValue.getType() == CustomValue.CvType.STRING)
+                            {
+                                String providerClass = providerValue.getAsString();
+                                PROVIDERS.add(createProviderInstance(container, providerClass));
+                                Configured.LOGGER.info("Successfully loaded config provider: {}", providerClass);
+                            }
+                            else
+                            {
+                                throw new RuntimeException("Config provider definition must be a String");
+                            }
+                        });
+                    }
+                    else if(providersValue.getType() == CustomValue.CvType.STRING)
+                    {
+                        String providerClass = providersValue.getAsString();
+                        PROVIDERS.add(createProviderInstance(container, providerClass));
+                        Configured.LOGGER.info("Successfully loaded config provider: {}", providerClass);
+                    }
+                    else
+                    {
+                        throw new RuntimeException("Config provider definition must be either a String or Array of Strings");
+                    }
+                }
+            }
+        });
+    }
+
+    private static IConfigProvider createProviderInstance(ModContainer container, String classPath)
+    {
+        try
+        {
+            Class<?> providerClass = Class.forName(classPath);
+            Object obj = providerClass.getDeclaredConstructor().newInstance();
+            if(!(obj instanceof IConfigProvider provider))
+                throw new RuntimeException("Config providers must implement IConfigProvider");
+            return provider;
+        }
+        catch(Exception e)
+        {
+            Configured.LOGGER.error("Failed to load config provider from mod: {}", container.getMetadata().getId());
+            throw new RuntimeException("Failed to load config provider", e);
+        }
+    }
+
+    public static Set<IConfigProvider> getProviders()
+    {
+        return PROVIDERS;
     }
 }

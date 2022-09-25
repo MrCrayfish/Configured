@@ -1,6 +1,7 @@
-package com.mrcrayfish.configured.api;
+package com.mrcrayfish.configured.api.util;
 
-import com.mrcrayfish.configured.client.ClientHandler;
+import com.mrcrayfish.configured.api.ConfigType;
+import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.ConfigScreen;
 import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import net.minecraft.client.Minecraft;
@@ -16,7 +17,7 @@ import java.util.Set;
  * <p>
  * Simple Helper class that allows you to easier find the starting point of how to add your own configured screen.
  */
-public class ConfiguredHelper
+public class ConfigScreenHelper
 {
     /**
      * Multi Config Screen that allows you to sleect multiple configs at once.

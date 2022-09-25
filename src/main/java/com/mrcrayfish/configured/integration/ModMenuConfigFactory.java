@@ -1,6 +1,8 @@
 package com.mrcrayfish.configured.integration;
 
 import com.mrcrayfish.configured.Reference;
+import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -10,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
@@ -29,7 +32,11 @@ public final class ModMenuConfigFactory implements ModMenuApi
     {
         Map<String, ConfigScreenFactory<?>> modConfigFactories = new HashMap<>();
         Set<String> mods = new HashSet<>();
-        SimpleConfigManager.getInstance().getConfigs().forEach(config -> mods.add(config.getModId()));
+        FabricLoader.getInstance().getAllMods().forEach(container -> {
+            ClientHandler.getProviders().stream().flatMap(provider -> provider.getConfigurationsForMod(container).stream()).forEach(config -> {
+                mods.add(config.getModId());
+            });
+        });
         mods.removeIf(s -> s.equals(Reference.MOD_ID));
         mods.forEach(id -> {
             FabricLoader.getInstance().getModContainer(id).ifPresent(container -> {
