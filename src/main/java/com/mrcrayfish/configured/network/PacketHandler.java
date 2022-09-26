@@ -2,9 +2,9 @@ package com.mrcrayfish.configured.network;
 
 import com.mrcrayfish.configured.Reference;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
-import com.mrcrayfish.configured.network.message.MessageSessionData;
 import com.mrcrayfish.configured.network.message.MessageRequestSimpleConfig;
 import com.mrcrayfish.configured.network.message.MessageResponseSimpleConfig;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
 import com.mrcrayfish.configured.network.message.MessageSyncForgeConfig;
 import com.mrcrayfish.configured.network.message.MessageSyncSimpleConfig;
 import net.minecraft.network.FriendlyByteBuf;
