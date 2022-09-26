@@ -38,6 +38,12 @@ public class ForgeConfig implements IModConfig
         this.allConfigValues = getAllConfigValues(config);
     }
 
+    protected ForgeConfig(ModConfig config, List<ForgeValueEntry> allConfigValues)
+    {
+        this.config = config;
+        this.allConfigValues = allConfigValues;
+    }
+
     @Override
     public void update(IConfigEntry entry)
     {
@@ -157,10 +163,10 @@ public class ForgeConfig implements IModConfig
         this.allConfigValues.forEach(pair -> pair.value.clearCache());
     }
 
-    private static List<ForgeValueEntry> getAllConfigValues(ModConfig config)
+    protected List<ForgeValueEntry> getAllConfigValues(ModConfig config)
     {
         return ConfigHelper.gatherAllForgeConfigValues(config).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
     }
 
-    private record ForgeValueEntry(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec) {}
+    protected record ForgeValueEntry(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec) {}
 }
