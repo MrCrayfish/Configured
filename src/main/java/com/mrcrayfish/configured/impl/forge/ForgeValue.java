@@ -73,6 +73,7 @@ public class ForgeValue<T> implements IConfigValue<T>
     }
 
     @Override
+    @Nullable
     public Component getComment()
     {
         String rawComment = this.valueSpec.getComment();
@@ -80,15 +81,18 @@ public class ForgeValue<T> implements IConfigValue<T>
         if(I18n.exists(key))
         {
             MutableComponent comment = Component.translatable(key);
-            int rangeIndex = rawComment.indexOf("Range: ");
-            int allowedValIndex = rawComment.indexOf("Allowed Values: ");
-            if(rangeIndex >= 0 || allowedValIndex >= 0)
+            if(rawComment != null)
             {
-                comment.append(Component.literal(rawComment.substring(Math.max(rangeIndex, allowedValIndex) - 1))); // - 1 to include new line char
+                int rangeIndex = rawComment.indexOf("Range: ");
+                int allowedValIndex = rawComment.indexOf("Allowed Values: ");
+                if(rangeIndex >= 0 || allowedValIndex >= 0)
+                {
+                    comment.append(Component.literal(rawComment.substring(Math.max(rangeIndex, allowedValIndex) - 1))); // - 1 to include new line char
+                }
             }
             return comment;
         }
-        return Component.literal(rawComment);
+        return rawComment != null ? Component.literal(rawComment) : null;
     }
 
     @Override
