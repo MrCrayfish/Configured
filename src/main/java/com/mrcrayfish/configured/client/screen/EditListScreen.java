@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +43,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
     private final List<StringHolder> values = new ArrayList<>();
     private final ResourceLocation background;
     private final IConfigValue<List<?>> holder;
-    private final ListType listType;
+    private final IListType listType;
     private ObjectList list;
 
     public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
@@ -81,7 +82,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                         }
                         return Pair.of(false, this.holder.getValidationHint());
                     }
-                    return Pair.of(false, Component.translatable(this.listType.getHintKey()));
+                    return Pair.of(false, this.listType.getHint());
                 }, s -> {
                     StringHolder holder = new StringHolder(s);
                     this.values.add(holder);
@@ -229,7 +230,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                         }
                         return Pair.of(false, EditListScreen.this.holder.getValidationHint());
                     }
-                    return Pair.of(false, Component.translatable(EditListScreen.this.listType.getHintKey()));
+                    return Pair.of(false, EditListScreen.this.listType.getHint());
                 }, this.holder::setValue));
             }, (button, matrixStack, mouseX, mouseY) -> {
                 if(button.active && button.isHoveredOrFocused()) {
@@ -308,16 +309,29 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
     }
 
     @SuppressWarnings("unchecked")
-    protected static ListType getType(IConfigValue<?> holder)
+    protected static IListType getType(IConfigValue<?> holder)
     {
         if(holder instanceof ListTypeProvider provider)
         {
-            return provider.getListType();
+            IListType type = provider.getListType();
+            if(type != null)
+            {
+                return type;
+            }
         }
         return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder((IConfigValue<List<?>>) holder));
     }
 
-    public enum ListType
+    public interface IListType
+    {
+        Function<Object, String> getStringParser();
+
+        Function<String, ?> getValueParser();
+
+        Component getHint();
+    }
+
+    public enum ListType implements IListType
     {
         BOOLEAN(Object::toString, Boolean::valueOf, "configured.parser.not_a_boolean"),
         INTEGER(Object::toString, Ints::tryParse, "configured.parser.not_a_number"),
@@ -337,22 +351,25 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
             this.hintKey = hintKey;
         }
 
+        @Override
         public Function<Object, String> getStringParser()
         {
             return this.stringParser;
         }
 
+        @Override
         public Function<String, ?> getValueParser()
         {
             return this.valueParser;
         }
 
-        public String getHintKey()
+        @Override
+        public Component getHint()
         {
-            return this.hintKey;
+            return Component.translatable(this.hintKey);
         }
 
-        private static ListType fromHolder(IConfigValue<List<?>> holder)
+        public static ListType fromHolder(IConfigValue<List<?>> holder)
         {
             ListType type = UNKNOWN;
             List<?> defaultList = holder.getDefault();
@@ -415,6 +432,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
 
     public interface ListTypeProvider
     {
-        ListType getListType();
+        @Nullable
+        IListType getListType();
     }
 }

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.mrcrayfish.configured.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.8",
+  "refmap": "configured.refmap.json",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "client.jei.JEIClientConfigsMixin"
+  ]
+}

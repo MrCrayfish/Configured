@@ -32,6 +32,7 @@ import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -73,15 +74,21 @@ public class ClientHandler
             Object raw = container.getModInfo().getModProperties().get("configuredProviders");
             if(raw instanceof String)
             {
-                PROVIDERS.add(createProviderInstance(container, raw.toString()));
+                IConfigProvider provider = createProviderInstance(container, raw.toString());
+                if(provider == null)
+                    return;
+                PROVIDERS.add(provider);
                 Configured.LOGGER.info("Successfully loaded config provider: {}", raw.toString());
             }
             else if(raw instanceof List<?> providers)
             {
-                for(Object provider : providers)
+                for(Object obj : providers)
                 {
-                    PROVIDERS.add(createProviderInstance(container, provider.toString()));
-                    Configured.LOGGER.info("Successfully loaded config provider: {}", provider.toString());
+                    IConfigProvider provider = createProviderInstance(container, obj.toString());
+                    if(provider == null)
+                        continue;
+                    PROVIDERS.add(provider);
+                    Configured.LOGGER.info("Successfully loaded config provider: {}", obj.toString());
                 }
             }
             else if(raw != null)
@@ -91,6 +98,7 @@ public class ClientHandler
         });
     }
 
+    @Nullable
     private static IConfigProvider createProviderInstance(ModContainer container, String classPath)
     {
         try
@@ -106,7 +114,7 @@ public class ClientHandler
         catch(Exception e)
         {
             Configured.LOGGER.error("Failed to load config provider from mod: {}", container.getModId());
-            throw new RuntimeException("Failed to load config provider", e);
+            return null;
         }
     }
 

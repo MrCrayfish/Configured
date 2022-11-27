@@ -33,11 +33,18 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
     versionRange="[1.2.0,)"
     ordering="NONE"
     side="CLIENT"
+[[dependencies.configured]]
+    modId="jei"
+    mandatory=false
+    versionRange="[11.4.0.286,)"
+    ordering="NONE"
+    side="BOTH"
 
 [modproperties.configured]
     catalogueImageIcon="configured_icon.png"
     configuredBackground="minecraft:textures/block/stone.png"
     configuredProviders=[
         "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
+        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
     ]
