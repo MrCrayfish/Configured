@@ -10,7 +10,6 @@ import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.AbstractSelectionList;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -77,7 +76,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
 
         if(!this.config.isReadOnly())
         {
-            this.addRenderableWidget(new Button(this.width / 2 - 155, this.height - 29, 150, 20, CommonComponents.GUI_DONE, button ->
+            this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 155, this.height - 29, 150, 20, CommonComponents.GUI_DONE, btn ->
             {
                 if(this.list.getSelected() != null)
                 {
@@ -89,7 +88,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
 
         int cancelOffset = this.config.isReadOnly() ? -75 : -155 + 160;
         Component cancelLabel = this.config.isReadOnly() ? CommonComponents.GUI_BACK : CommonComponents.GUI_CANCEL;
-        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, 150, 20, cancelLabel, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 + cancelOffset, this.height - 29, 150, 20, cancelLabel, button -> this.minecraft.setScreen(this.parent)));
     }
 
     private void constructEntries()

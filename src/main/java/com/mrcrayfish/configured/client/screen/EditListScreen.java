@@ -7,10 +7,13 @@ import com.google.common.primitives.Longs;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -94,7 +97,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         int cancelWidth = readOnly ? 150 : 90;
         int cancelOffset = readOnly ? -75 : 50;
         Component cancelLabel = readOnly ? Component.translatable("configured.gui.close") : CommonComponents.GUI_CANCEL;
-        this.addRenderableWidget(new Button(this.width / 2 + cancelOffset, this.height - 29, cancelWidth, 20, cancelLabel, (button) ->
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 + cancelOffset, this.height - 29, cancelWidth, 20, cancelLabel, (button) ->
         {
             if(this.isModified())
             {
@@ -195,7 +198,8 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                 {
                     if(o instanceof Button)
                     {
-                        ((Button) o).renderToolTip(poseStack, mouseX, mouseY);
+                        //TODO invesigate new tooltip system
+                        //((Button) o).renderToolTip(poseStack, mouseX, mouseY);
                     }
                 });
             });
@@ -212,13 +216,14 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
     {
         private final StringHolder holder;
         private final ObjectList list;
-        private final Button editButton;
-        private final Button deleteButton;
+        private final ConfiguredButton editButton;
+        private final ConfiguredButton deleteButton;
 
         public StringEntry(ObjectList list, StringHolder holder)
         {
             this.list = list;
             this.holder = holder;
+
             this.editButton = new IconButton(0, 0, 1, 22, 20, CommonComponents.EMPTY, onPress -> {
                 EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, EditListScreen.this.background, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     Object value = EditListScreen.this.listType.getValueParser().apply(s);
@@ -232,20 +237,15 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
                     }
                     return Pair.of(false, EditListScreen.this.listType.getHint());
                 }, this.holder::setValue));
-            }, (button, matrixStack, mouseX, mouseY) -> {
-                if(button.active && button.isHoveredOrFocused()) {
-                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(Component.translatable("configured.gui.edit"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                }
             });
+            this.editButton.setTooltip(Tooltip.create(Component.translatable("configured.gui.edit")), btn -> btn.isActive() && btn.isHoveredOrFocused());
             this.editButton.active = !EditListScreen.this.config.isReadOnly();
+
             this.deleteButton = new IconButton(0, 0, 11, 0, onPress -> {
                 EditListScreen.this.values.remove(this.holder);
                 this.list.removeEntry(this);
-            }, (button, matrixStack, mouseX, mouseY) -> {
-                if(button.active && button.isHoveredOrFocused()) {
-                    EditListScreen.this.renderTooltip(matrixStack, EditListScreen.this.minecraft.font.split(Component.translatable("configured.gui.remove"), Math.max(EditListScreen.this.width / 2 - 43, 170)), mouseX, mouseY);
-                }
             });
+            this.deleteButton.setTooltip(Tooltip.create(Component.translatable("configured.gui.remove")), btn -> btn.isActive() && btn.isHoveredOrFocused());
             this.deleteButton.active = !EditListScreen.this.config.isReadOnly();
         }
 
@@ -255,12 +255,12 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
             if(x % 2 != 0) Screen.fill(poseStack, left, top, left + width, top + 24, 0x55000000);
             EditListScreen.this.minecraft.font.draw(poseStack, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
             this.editButton.visible = true;
-            this.editButton.x = left + width - 44;
-            this.editButton.y = top + 2;
+            this.editButton.setX(left + width - 44);
+            this.editButton.setY(top + 2);
             this.editButton.render(poseStack, mouseX, mouseY, partialTicks);
             this.deleteButton.visible = true;
-            this.deleteButton.x = left + width - 22;
-            this.deleteButton.y = top + 2;
+            this.deleteButton.setX(left + width - 22);
+            this.deleteButton.setY(top + 2);
             this.deleteButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 

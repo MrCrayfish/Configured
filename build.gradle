@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
-version = '2.0.1-1.19.2'
+version = '2.0.1-1.19.3'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
@@ -16,7 +16,7 @@ mixin {
 }
 
 minecraft {
-    mappings channel: 'official', version: '1.19.2'
+    mappings channel: 'official', version: '1.19.3'
     runs {
         client {
             workingDirectory project.file('run')
@@ -85,8 +85,8 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.2-43.1.25'
-    implementation fg.deobf("mezz.jei:jei-1.19.2-forge:11.4.0.286")
+    minecraft 'net.minecraftforge:forge:1.19.3-44.0.6'
+    compileOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.4.0.286")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 

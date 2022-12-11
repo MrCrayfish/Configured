@@ -2,8 +2,8 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.Util;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -51,7 +51,7 @@ public class RequestScreen extends ListMenuScreen implements IEditing
             this.config.requestFromServer();
             this.requested = true;
         }
-        this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_CANCEL, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_CANCEL, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override

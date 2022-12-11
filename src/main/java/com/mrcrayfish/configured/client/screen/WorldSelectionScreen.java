@@ -78,7 +78,7 @@ public class WorldSelectionScreen extends ListMenuScreen
     protected void init()
     {
         super.init();
-        this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override
@@ -174,8 +174,8 @@ public class WorldSelectionScreen extends ListMenuScreen
             blit(poseStack, left, top, 24, 24, 0, 0, 64, 64, 64, 64);
             Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFF);
             Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFF);
-            this.modifyButton.x = left + width - 61;
-            this.modifyButton.y = top + 2;
+            this.modifyButton.setX(left + width - 61);
+            this.modifyButton.setY(top + 2);
             this.modifyButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 

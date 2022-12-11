@@ -18,13 +18,13 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
 [[dependencies.configured]]
     modId="forge"
     mandatory=true
-    versionRange="[43.1.1,)"
+    versionRange="[44,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.configured]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.2,1.20)"
+    versionRange="[1.19.3,1.20)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.configured]]
@@ -45,6 +45,5 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
     configuredBackground="minecraft:textures/block/stone.png"
     configuredProviders=[
         "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
-        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
     ]
