@@ -8,8 +8,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
+import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
@@ -58,7 +58,7 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         this.endY = this.startY + lines.size() * (this.font.lineHeight + 2) + MESSAGE_PADDING * 2;
 
         int offset = this.negativeText != null ? 105 : 50;
-        this.addRenderableWidget(new Button(this.width / 2 - offset, this.endY + 10, 100, 20, this.positiveText, button ->
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - offset, this.endY + 10, 100, 20, this.positiveText, button ->
         {
             if(this.handler.apply(true))
             {
@@ -67,7 +67,7 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         }));
         if(this.negativeText != null)
         {
-            this.addRenderableWidget(new Button(this.width / 2 + 5, this.endY + 10, 100, 20, this.negativeText, button ->
+            this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 5, this.endY + 10, 100, 20, this.negativeText, button ->
             {
                 if(this.handler.apply(false))
                 {

@@ -10,6 +10,7 @@ import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.CheckBoxButton;
+import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
@@ -19,6 +20,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -196,7 +198,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     this.showRestoreScreen();
                 }
             }));
-            this.addRenderableWidget(new Button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) ->
+            this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 50, this.height - 29, 90, 20, CommonComponents.GUI_CANCEL, (button) ->
             {
                 if(this.isChanged(this.folderEntry))
                 {
@@ -228,7 +230,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 }
                 this.minecraft.setScreen(target);
             }));
-            this.addRenderableWidget(new Button(this.width / 2 + 2, this.height - 29, 128, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 2, this.height - 29, 128, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
         }
 
         this.deepSearchCheckBox = new CheckBoxButton(this.width / 2 + 115, 25, button -> this.updateSearchResults());
@@ -358,8 +360,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public void render(PoseStack poseStack, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, height, mouseX, mouseY, selected, partialTicks);
-            this.button.x = left - 1;
-            this.button.y = top;
+            this.button.setX(left - 1);
+            this.button.setY(top);
             this.button.setWidth(width);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
@@ -379,7 +381,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     {
         protected final IConfigValue<T> holder;
         protected final List<GuiEventListener> eventListeners = new ArrayList<>();
-        protected final Button resetButton;
+        protected final ConfiguredButton resetButton;
         protected Component validationHint;
 
         public ConfigItem(IConfigValue<T> holder)
@@ -387,13 +389,14 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             super(createLabelFromHolder(holder));
             this.holder = holder;
             this.tooltip = this.createToolTip(holder);
+            //TODO I need custom widths!
             int maxTooltipWidth = Math.max(ConfigScreen.this.width / 2 - 43, 170);
-            Button.OnTooltip tooltip = ScreenUtil.createButtonTooltip(ConfigScreen.this, Component.translatable("configured.gui.reset"), maxTooltipWidth);
             this.resetButton = new IconButton(0, 0, 0, 0, onPress -> {
                 this.holder.restore();
                 this.onResetValue();
                 ConfigScreen.this.updateButtons();
-            }, tooltip);
+            });
+            this.resetButton.setTooltip(Tooltip.create(Component.translatable("configured.gui.reset")), btn -> btn.isActive() && btn.isHoveredOrFocused());
             this.resetButton.active = !ConfigScreen.this.config.isReadOnly();
             this.eventListeners.add(this.resetButton);
         }
@@ -454,8 +457,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             }
 
             this.resetButton.active = !this.holder.isDefault() && !ConfigScreen.this.config.isReadOnly();
-            this.resetButton.x = left + width - 21;
-            this.resetButton.y = top;
+            this.resetButton.setX(left + width - 21);
+            this.resetButton.setY(top);
             this.resetButton.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
@@ -557,8 +560,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 this.textField.tick();
                 this.lastTick = time;
             }
-            this.textField.x = left + width - 68;
-            this.textField.y = top + 1;
+            this.textField.setX(left + width - 68);
+            this.textField.setY(top + 1);
             this.textField.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
@@ -600,7 +603,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public BooleanItem(IConfigValue<Boolean> holder)
         {
             super(holder);
-            this.button = new Button(10, 5, 46, 20, CommonComponents.optionStatus(holder.get()), button -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, CommonComponents.optionStatus(holder.get()), button -> {
                 holder.set(!holder.get());
                 button.setMessage(CommonComponents.optionStatus(holder.get()));
                 ConfigScreen.this.updateButtons();
@@ -613,8 +616,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 69;
-            this.button.y = top;
+            this.button.setX(left + width - 69);
+            this.button.setY(top);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
 
@@ -633,7 +636,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
-            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), s -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), s -> {
                 return holder.isValid(s) ? Pair.of(true, CommonComponents.EMPTY) : Pair.of(false, holder.getValidationHint());
             }, s -> {
                 holder.set(s);
@@ -646,8 +649,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 69;
-            this.button.y = top;
+            this.button.setX(left + width - 69);
+            this.button.setY(top);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
     }
@@ -660,7 +663,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
-            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
             this.eventListeners.add(this.button);
         }
 
@@ -668,8 +671,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 69;
-            this.button.y = top;
+            this.button.setX(left + width - 69);
+            this.button.setY(top);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
     }
@@ -682,7 +685,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.change");
-            this.button = new Button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), holder, e -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), holder, e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));
@@ -693,8 +696,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.x = left + width - 69;
-            this.button.y = top;
+            this.button.setX(left + width - 69);
+            this.button.setY(top);
             this.button.render(poseStack, mouseX, mouseY, partialTicks);
         }
     }

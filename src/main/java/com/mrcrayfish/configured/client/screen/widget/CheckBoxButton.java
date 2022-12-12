@@ -42,7 +42,7 @@ public class CheckBoxButton extends Checkbox
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        blit(poseStack, this.x, this.y, this.isHoveredOrFocused() ? 50 : 36, this.selected() ? 49 : 35, 14, 14, 64, 64);
+        blit(poseStack, this.getX(), this.getY(), this.isHoveredOrFocused() ? 50 : 36, this.selected() ? 49 : 35, 14, 14, 64, 64);
         this.renderBg(poseStack, minecraft, mouseX, mouseY);
     }
 

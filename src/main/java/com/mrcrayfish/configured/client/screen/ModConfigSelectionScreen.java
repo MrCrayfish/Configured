@@ -100,7 +100,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     protected void init()
     {
         super.init();
-        this.addRenderableWidget(new Button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
     }
 
     private Set<IModConfig> getLocalConfigs()
@@ -271,7 +271,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(canRestoreConfig(Minecraft.getInstance().player, config))
             {
-                IconButton restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen(), (button, poseStack, mouseX, mouseY) -> {});
+                IconButton restoreButton = new IconButton(0, 0, 0, 0, onPress -> this.showRestoreScreen());
                 restoreButton.active = !config.isReadOnly() && ConfigHelper.hasPermissionToEdit(Minecraft.getInstance().player, config);
                 return restoreButton;
             }
@@ -292,14 +292,14 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 blit(poseStack, left + 1, top + 15, 11, 11, 0, 33, 11, 11, 64, 64);
             }
 
-            this.modifyButton.x = left + width - 83;
-            this.modifyButton.y = top;
+            this.modifyButton.setX(left + width - 83);
+            this.modifyButton.setY(top);
             this.modifyButton.render(poseStack, mouseX, mouseY, partialTicks);
 
             if(this.restoreButton != null)
             {
-                this.restoreButton.x = left + width - 21;
-                this.restoreButton.y = top;
+                this.restoreButton.setX(left + width - 21);
+                this.restoreButton.setY(top);
                 this.restoreButton.render(poseStack, mouseX, mouseY, partialTicks);
             }
 

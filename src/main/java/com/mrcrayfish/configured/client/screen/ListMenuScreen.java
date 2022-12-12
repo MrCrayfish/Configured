@@ -161,7 +161,8 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
             {
                 if(widget instanceof Button && ((Button) widget).isHoveredOrFocused())
                 {
-                    ((Button) widget).renderToolTip(poseStack, mouseX, mouseY);
+                    //TODO check
+                    //((Button) widget).renderToolTip(poseStack, mouseX, mouseY);
                     break;
                 }
             }
@@ -234,7 +235,8 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
                 {
                     if(o instanceof Button)
                     {
-                        ((Button) o).renderToolTip(poseStack, mouseX, mouseY);
+                        //TODO figure this out
+                        //((Button) o).renderToolTip(poseStack, mouseX, mouseY);
                     }
                 });
             });
@@ -389,15 +391,15 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
                 RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
                 RenderSystem.setShaderTexture(0, IconButton.ICONS);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-                boolean hovered = ScreenUtil.isMouseWithin(this.x + this.width - 15, this.y + 5, 9, 9, mouseX, mouseY);
-                blit(poseStack, this.x + this.width - 15, this.y + 5, 9, 9, hovered ? 9 : 0, 55, 9, 9, 64, 64);
+                boolean hovered = ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, mouseX, mouseY);
+                blit(poseStack, this.getX() + this.width - 15, this.getY() + 5, 9, 9, hovered ? 9 : 0, 55, 9, 9, 64, 64);
             }
         }
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button)
         {
-            if(this.clearable && !this.getValue().isEmpty() && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && ScreenUtil.isMouseWithin(this.x + this.width - 15, this.y + 5, 9, 9, (int) mouseX, (int) mouseY))
+            if(this.clearable && !this.getValue().isEmpty() && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, (int) mouseX, (int) mouseY))
             {
                 this.playDownSound(ListMenuScreen.this.minecraft.getSoundManager());
                 this.setValue("");

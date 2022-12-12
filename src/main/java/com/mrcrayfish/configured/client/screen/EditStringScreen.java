@@ -64,7 +64,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
                 this.minecraft.setScreen(this.parent);
             }
         }));
-        this.addRenderableWidget(new Button(this.width / 2 + 3, this.height / 2 + 13, 128, 20, CommonComponents.GUI_CANCEL, (button) -> {
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 3, this.height / 2 + 13, 128, 20, CommonComponents.GUI_CANCEL, (button) -> {
             this.minecraft.setScreen(this.parent);
         }));
 
@@ -87,7 +87,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
         this.resetTooltip();
 
         this.renderBackground(poseStack);
-        ConfirmationScreen.drawListBackground(0.0, this.width, this.textField.y - 10, this.textField.y + 20 + 10);
+        ConfirmationScreen.drawListBackground(0.0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
         this.textField.render(poseStack, mouseX, mouseY, partialTicks);
         drawCenteredString(poseStack, this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFF);
 
@@ -96,9 +96,9 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
         {
             RenderSystem.setShaderTexture(0, IconButton.ICONS);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            Screen.blit(poseStack, this.textField.x - 20, this.textField.y + 3, 16, 16, 11, 11, 11, 11, 64, 64);
+            Screen.blit(poseStack, this.textField.getX() - 20, this.textField.getY() + 3, 16, 16, 11, 11, 11, 11, 64, 64);
 
-            if(ScreenUtil.isMouseWithin(this.textField.x - 20, this.textField.y + 3, 16, 16, mouseX, mouseY))
+            if(ScreenUtil.isMouseWithin(this.textField.getX() - 20, this.textField.getY() + 3, 16, 16, mouseX, mouseY))
             {
                 this.setActiveTooltip(this.validationHint, 0xAADD0000);
             }

@@ -38,7 +38,7 @@ public abstract class TooltipScreen extends Screen
      *
      * @param tooltip a tooltip list to show
      */
-    public void setActiveTooltip(List<FormattedCharSequence> tooltip)
+    public void setActiveTooltip(@Nullable List<FormattedCharSequence> tooltip)
     {
         this.resetTooltip();
         this.tooltipText = tooltip;
@@ -75,8 +75,11 @@ public abstract class TooltipScreen extends Screen
     {
         if(this.tooltipText != null)
         {
+            // Use new tooltip system instead
+            this.setTooltipForNextRenderPass(this.tooltipText);
+
             // Yep, this is strange. See the forge events below!
-            this.renderTooltip(poseStack, this.tooltipText, mouseX, mouseY);
+            //this.renderTooltip(poseStack, this.tooltipText, mouseX, mouseY);
         }
     }
 
