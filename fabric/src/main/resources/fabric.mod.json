@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "configured",
+  "version": "${version}",
+  "name": "Configured",
+  "description": "An easy to use config library with an automatic config screen",
+  "authors": [
+    "MrCrayfish"
+  ],
+  "contributors": [
+    "Hatsondogs",
+    "LizterZapZap"
+  ],
+  "contact": {
+    "homepage": "https://mrcrayfish.com/mods?id=configured",
+    "sources": "https://github.com/MrCrayfish/Configured",
+    "issues": "https://github.com/MrCrayfish/Configured/issues"
+  },
+  "license": "GPLv3",
+  "icon": "assets/configured/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.mrcrayfish.configured.fabric.ConfiguredImpl"
+    ],
+    "client": [
+      "com.mrcrayfish.configured.client.fabric.ClientHandlerImpl"
+    ],
+    "modmenu": [
+      "com.mrcrayfish.configured.fabric.integration.ModMenuConfigFactory"
+    ]
+  },
+  "mixins": [
+    "configured.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.9",
+    "fabric-api": "*",
+    "minecraft": "~1.19",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  },
+  "custom": {
+    "catalogue": {
+      "configFactory": "com.mrcrayfish.configured.fabric.integration.CatalogueConfigFactory"
+    },
+    "configured": {
+      "configs": [
+        "com.mrcrayfish.configured.Config"
+      ],
+      "providers": [
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
+      ],
+      "background": "minecraft:textures/block/stone.png"
+    }
+  }
+}
