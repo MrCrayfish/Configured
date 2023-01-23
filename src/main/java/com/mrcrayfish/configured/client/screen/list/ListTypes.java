@@ -4,19 +4,23 @@ import com.google.common.collect.Streams;
 import com.mrcrayfish.configured.api.IConfigValue;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class ListTypes
 {
+    private static final Map<IConfigValue<?>, IListType<?>> TYPE_CACHE = new HashMap<>();
+    private static final IListType<?> UNKNOWN = new ListType<>(Object::toString, o -> o, "configured.parser.not_a_value");
+
     public static final IListType<Boolean> BOOLEAN = new ListType<>(Object::toString, Boolean::valueOf, "configured.parser.not_a_boolean");
     public static final IListType<Integer> INTEGER = new ListType<>(Object::toString, Integer::parseInt, "configured.parser.not_a_number");
     public static final IListType<Long> LONG = new ListType<>(Object::toString, Long::parseLong, "configured.parser.not_a_number");
     public static final IListType<Double> DOUBLE = new ListType<>(Object::toString, Double::parseDouble, "configured.parser.not_a_number");
     public static final IListType<String> STRING = new ListType<>(Function.identity(), Function.identity(), "configured.parser.not_a_value");
-    private static final IListType<?> UNKNOWN = new ListType<>(Object::toString, o -> o, "configured.parser.not_a_value");
 
     @SuppressWarnings("unchecked")
     public static <T> IListType<T> getUnknown()
@@ -24,7 +28,21 @@ public class ListTypes
         return (IListType<T>) UNKNOWN;
     }
 
-    public static <T> IListType<T> fromHolder(IConfigValue<List<T>> holder)
+    @SuppressWarnings("unchecked")
+    public static <T> IListType<T> getType(IConfigValue<List<T>> holder)
+    {
+        if(holder instanceof IListConfigValue<T> provider)
+        {
+            IListType<T> type = provider.getListType();
+            if(type != null)
+            {
+                return type;
+            }
+        }
+        return (IListType<T>) TYPE_CACHE.computeIfAbsent(holder, value -> fromHolder(holder));
+    }
+
+    private static <T> IListType<T> fromHolder(IConfigValue<List<T>> holder)
     {
         return getListValues(holder)
                 .map(ListTypes::fromObject)

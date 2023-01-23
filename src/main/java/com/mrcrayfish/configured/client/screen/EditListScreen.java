@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.client.screen.list.IListConfigValue;
 import com.mrcrayfish.configured.client.screen.list.IListType;
 import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
@@ -26,9 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -36,8 +33,6 @@ import java.util.stream.Collectors;
  */
 public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEditing
 {
-    private static final Map<IConfigValue<?>, IListType<?>> TYPE_CACHE = new HashMap<>();
-
     private final Screen parent;
     private final IModConfig config;
     private final List<StringHolder> initialValues = new ArrayList<>();
@@ -53,7 +48,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         this.parent = parent;
         this.config = config;
         this.holder = holder;
-        this.listType = getType(holder);
+        this.listType = ListTypes.getType(holder);
         this.initialValues.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
         this.values.addAll(this.initialValues);
         this.background = background;
@@ -304,19 +299,5 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         {
             this.value = value;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected static <T> IListType<T> getType(IConfigValue<List<T>> holder)
-    {
-        if(holder instanceof IListConfigValue<T> provider)
-        {
-            IListType<T> type = provider.getListType();
-            if(type != null)
-            {
-                return type;
-            }
-        }
-        return (IListType<T>) TYPE_CACHE.computeIfAbsent(holder, value -> ListTypes.fromHolder(holder));
     }
 }

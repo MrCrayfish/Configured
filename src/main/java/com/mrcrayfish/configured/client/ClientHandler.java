@@ -126,9 +126,7 @@ public class ClientHandler
         {
             // Ignore mods that already implement their own custom factory
             if(container.getCustomExtension(ConfigScreenHandler.ConfigScreenFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
-            {
                 return;
-            }
 
             generateConfigFactory(modId, container);
         });
