@@ -134,11 +134,9 @@ public class ClientHandler
 
     public static void generateConfigFactory(String modId)
     {
-        ModList.get().getModContainerById(modId)
-                .ifPresentOrElse(
-                        modContainer -> ClientHandler.generateConfigFactory(modId, modContainer),
-                        () -> Configured.LOGGER.info("No mod container found for ModId: {}.", modId)
-                );
+        ModList.get().getModContainerById(modId).ifPresentOrElse(modContainer -> {
+            ClientHandler.generateConfigFactory(modId, modContainer);
+        }, () -> Configured.LOGGER.info("No mod container found for ModId: {}.", modId));
     }
 
     public static void generateConfigFactory(String modId, ModContainer container)

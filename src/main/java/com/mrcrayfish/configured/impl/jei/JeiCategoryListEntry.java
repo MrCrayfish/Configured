@@ -19,10 +19,7 @@ public class JeiCategoryListEntry implements IConfigEntry
     public JeiCategoryListEntry(String name, List<? extends IJeiConfigCategory> categories)
     {
         this.name = name;
-        this.entries = categories
-                .stream()
-                .<IConfigEntry>map(JeiCategoryEntry::new)
-                .toList();
+        this.entries = categories.stream().<IConfigEntry>map(JeiCategoryEntry::new).toList();
     }
 
     @Override

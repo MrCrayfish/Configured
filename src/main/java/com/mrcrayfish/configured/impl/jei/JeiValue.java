@@ -44,8 +44,7 @@ public class JeiValue<T> implements IConfigValue<T>
     @Override
     public boolean isValid(T value)
     {
-        return this.value.getClass().isInstance(value) &&
-                this.configValue.isValid(value);
+        return this.value.getClass().isInstance(value) && this.configValue.isValid(value);
     }
 
     @Override

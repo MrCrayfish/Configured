@@ -53,11 +53,7 @@ public class ListTypes
 
     private static <T> Stream<T> getListValues(IConfigValue<List<T>> holder)
     {
-        return Streams.concat(
-                        holder.get().stream(),
-                        holder.getDefault().stream()
-                )
-                .filter(Objects::nonNull);
+        return Streams.concat(holder.get().stream(), holder.getDefault().stream()).filter(Objects::nonNull);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -127,7 +123,8 @@ public class ListTypes
         try
         {
             return spec.isValid((List<T>) list);
-        } catch (ClassCastException ignored)
+        }
+        catch(ClassCastException ignored)
         {
             return false;
         }

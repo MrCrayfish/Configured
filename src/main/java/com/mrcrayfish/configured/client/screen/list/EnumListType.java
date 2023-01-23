@@ -30,8 +30,9 @@ public class EnumListType<T extends Enum<T>> implements IListType<T>, IAllowedEn
         {
             try
             {
-                return Enum.valueOf(enumClass, s);
-            } catch (IllegalArgumentException ignored)
+                return Enum.valueOf(this.enumClass, s);
+            }
+            catch(IllegalArgumentException ignored)
             {
                 return null;
             }
@@ -47,6 +48,6 @@ public class EnumListType<T extends Enum<T>> implements IListType<T>, IAllowedEn
     @Override
     public Set<T> getAllowedValues()
     {
-        return allowedValues;
+        return this.allowedValues;
     }
 }

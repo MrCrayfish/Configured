@@ -30,15 +30,12 @@ public class JeiCategoryEntry implements IConfigEntry
         if(this.entries == null)
         {
             ImmutableList.Builder<IConfigEntry> builder = ImmutableList.builder();
-            this.category.getConfigValues()
-                    .forEach(configValue ->
-                    {
-                        Objects.requireNonNull(configValue);
-                        builder.add(new ValueEntry(new JeiValue<>(configValue)));
-                    });
+            this.category.getConfigValues().forEach(configValue -> {
+                Objects.requireNonNull(configValue);
+                builder.add(new ValueEntry(new JeiValue<>(configValue)));
+            });
             this.entries = builder.build();
         }
-
         return this.entries;
     }
 

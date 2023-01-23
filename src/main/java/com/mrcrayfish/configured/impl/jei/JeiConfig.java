@@ -54,10 +54,7 @@ public class JeiConfig implements IModConfig
     @Override
     public String getFileName()
     {
-        return this.configFile
-                .getPath()
-                .getFileName()
-                .toString();
+        return this.configFile.getPath().getFileName().toString();
     }
 
     @Override
@@ -67,8 +64,5 @@ public class JeiConfig implements IModConfig
     }
 
     @Override
-    public void loadWorldConfig(Path path, Consumer<IModConfig> result)
-    {
-    }
-
+    public void loadWorldConfig(Path path, Consumer<IModConfig> result) {}
 }
