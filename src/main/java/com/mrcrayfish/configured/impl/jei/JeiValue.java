@@ -1,8 +1,7 @@
 package com.mrcrayfish.configured.impl.jei;
 
 import com.mrcrayfish.configured.api.IConfigValue;
-import com.mrcrayfish.configured.api.simple.validate.Validator;
-import mezz.jei.common.config.file.ConfigValue;
+import mezz.jei.api.runtime.config.IJeiConfigValue;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,22 +12,15 @@ import java.util.Objects;
  */
 public class JeiValue<T> implements IConfigValue<T>
 {
-    protected final ConfigValue<T> configValue;
-    protected final Validator<T> validator;
+    protected final IJeiConfigValue<T> configValue;
     protected final T initialValue;
     protected T value;
 
-    public JeiValue(ConfigValue<T> configValue)
-    {
-        this(configValue, null);
-    }
-
-    public JeiValue(ConfigValue<T> configValue, Validator<T> validator)
+    public JeiValue(IJeiConfigValue<T> configValue)
     {
         this.configValue = configValue;
-        this.validator = validator;
         this.initialValue = configValue.getValue();
-        this.set(configValue.getValue());
+        this.value = configValue.getValue();
     }
 
     @Override
@@ -52,7 +44,8 @@ public class JeiValue<T> implements IConfigValue<T>
     @Override
     public boolean isValid(T value)
     {
-        return this.validator == null || this.validator.test(value);
+        return this.value.getClass().isInstance(value) &&
+                this.configValue.isValid(value);
     }
 
     @Override
@@ -73,25 +66,23 @@ public class JeiValue<T> implements IConfigValue<T>
         this.set(this.configValue.getDefaultValue());
     }
 
-    @Nullable
     @Override
-    public Component getComment()
+    public @Nullable Component getComment()
     {
         return Component.literal(this.configValue.getDescription());
     }
 
-    @Nullable
     @Override
-    public String getTranslationKey()
+    public @Nullable String getTranslationKey()
     {
         return null;
     }
 
-    @Nullable
     @Override
-    public Component getValidationHint()
+    public @Nullable Component getValidationHint()
     {
-        return this.validator != null ? this.validator.getHint() : null;
+        String validValuesDescription = this.configValue.getValidValuesDescription();
+        return Component.literal(validValuesDescription);
     }
 
     @Override
@@ -103,7 +94,6 @@ public class JeiValue<T> implements IConfigValue<T>
     @Override
     public void cleanCache()
     {
-
     }
 
     @Override
@@ -118,8 +108,8 @@ public class JeiValue<T> implements IConfigValue<T>
         return false;
     }
 
-    public ConfigValue<T> getConfigValue()
+    public void updateConfigValue()
     {
-        return this.configValue;
+        this.configValue.set(this.value);
     }
 }

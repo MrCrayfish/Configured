@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class ForgeConfig implements IModConfig
 {
@@ -55,12 +54,12 @@ public class ForgeConfig implements IModConfig
             {
                 if(value instanceof ForgeValue<?> forge)
                 {
-                    if(forge instanceof ForgeListValue forgeList)
+                    if(forge instanceof ForgeListValue<?> forgeList)
                     {
-                        Function<List<?>, List<?>> converter = forgeList.getConverter();
-                        if(converter != null)
+                        List<?> converted = forgeList.getConverted();
+                        if(converted != null)
                         {
-                            newConfig.set(forge.configValue.getPath(), converter.apply(forgeList.get()));
+                            newConfig.set(forge.configValue.getPath(), converted);
                             return;
                         }
                     }

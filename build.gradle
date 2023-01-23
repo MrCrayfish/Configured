@@ -75,8 +75,14 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven {
+        // location of the maven that hosts JEI files before January 2023
         name = "Progwml6 maven"
         url = "https://dvs1.progwml6.com/files/maven/"
+    }
+    maven {
+        // location of the maven that hosts JEI files since January 2023
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"
     }
     maven {
         name = "ModMaven"
@@ -85,8 +91,10 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.3-44.0.6'
-    compileOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.4.0.286")
+    minecraft 'net.minecraftforge:forge:1.19.3-44.1.5'
+    compileOnly fg.deobf("mezz.jei:jei-1.19.3-common-api:12.1.0.7")
+    // uncomment to have JEI run in dev at runtime:
+//    runtimeOnly fg.deobf("mezz.jei:jei-1.19.3-forge:12.1.0.7")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
