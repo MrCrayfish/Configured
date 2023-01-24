@@ -26,7 +26,7 @@ public class JeiListValue<T> extends JeiValue<List<T>> implements IListConfigVal
     public IListType<T> getListType()
     {
         IJeiConfigValueSerializer<List<T>> serializer = this.configValue.getSerializer();
-        if (serializer instanceof IJeiConfigListValueSerializer<T> listSerializer)
+        if(serializer instanceof IJeiConfigListValueSerializer<T> listSerializer)
         {
             IJeiConfigValueSerializer<T> listValueSerializer = listSerializer.getListValueSerializer();
             return new JeiListType<>(listValueSerializer);
@@ -34,31 +34,24 @@ public class JeiListValue<T> extends JeiValue<List<T>> implements IListConfigVal
         return null;
     }
 
-    private static class JeiListType<T> implements IListType<T>
+    private record JeiListType<T>(IJeiConfigValueSerializer<T> serializer) implements IListType<T>
     {
-        private final IJeiConfigValueSerializer<T> listValueSerializer;
-
-        public JeiListType(IJeiConfigValueSerializer<T> listValueSerializer)
-        {
-            this.listValueSerializer = listValueSerializer;
-        }
-
         @Override
         public Function<T, String> getStringParser()
         {
-            return this.listValueSerializer::serialize;
+            return this.serializer::serialize;
         }
 
         @Override
         public Function<String, T> getValueParser()
         {
-            return s -> this.listValueSerializer.deserialize(s).getResult().orElse(null);
+            return s -> this.serializer.deserialize(s).getResult().orElse(null);
         }
 
         @Override
         public Component getHint()
         {
-            return Component.literal(this.listValueSerializer.getValidValuesDescription());
+            return Component.literal(this.serializer.getValidValuesDescription());
         }
     }
 }
