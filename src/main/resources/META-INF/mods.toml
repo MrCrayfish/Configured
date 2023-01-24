@@ -36,7 +36,7 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
 [[dependencies.configured]]
     modId="jei"
     mandatory=false
-    versionRange="[12.1.0.7,)"
+    versionRange="[12.1.1.8,)"
     ordering="NONE"
     side="BOTH"
 

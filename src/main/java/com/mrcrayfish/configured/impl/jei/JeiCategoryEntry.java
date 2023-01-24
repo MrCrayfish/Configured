@@ -5,6 +5,7 @@ import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
 import mezz.jei.api.runtime.config.IJeiConfigCategory;
+import mezz.jei.api.runtime.config.IJeiConfigValue;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,11 +33,20 @@ public class JeiCategoryEntry implements IConfigEntry
             ImmutableList.Builder<IConfigEntry> builder = ImmutableList.builder();
             this.category.getConfigValues().forEach(configValue -> {
                 Objects.requireNonNull(configValue);
-                builder.add(new ValueEntry(new JeiValue<>(configValue)));
+                builder.add(new ValueEntry(createJeiValue(configValue)));
             });
             this.entries = builder.build();
         }
         return this.entries;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private IConfigValue<?> createJeiValue(IJeiConfigValue<?> configValue) {
+        if (configValue.getDefaultValue() instanceof List<?>)
+        {
+            return new JeiListValue(configValue);
+        }
+        return new JeiValue<>(configValue);
     }
 
     @Override

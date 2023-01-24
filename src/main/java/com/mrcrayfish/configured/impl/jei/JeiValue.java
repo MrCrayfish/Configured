@@ -44,7 +44,7 @@ public class JeiValue<T> implements IConfigValue<T>
     @Override
     public boolean isValid(T value)
     {
-        return this.value.getClass().isInstance(value) && this.configValue.isValid(value);
+        return this.configValue.getSerializer().isValid(value);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class JeiValue<T> implements IConfigValue<T>
     @Override
     public @Nullable Component getValidationHint()
     {
-        String validValuesDescription = this.configValue.getValidValuesDescription();
+        String validValuesDescription = this.configValue.getSerializer().getValidValuesDescription();
         return Component.literal(validValuesDescription);
     }
 
