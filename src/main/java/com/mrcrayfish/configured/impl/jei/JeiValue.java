@@ -65,20 +65,23 @@ public class JeiValue<T> implements IConfigValue<T>
         this.set(this.configValue.getDefaultValue());
     }
 
+    @Nullable
     @Override
-    public @Nullable Component getComment()
+    public Component getComment()
     {
         return Component.literal(this.configValue.getDescription());
     }
 
+    @Nullable
     @Override
-    public @Nullable String getTranslationKey()
+    public String getTranslationKey()
     {
         return null;
     }
 
+    @Nullable
     @Override
-    public @Nullable Component getValidationHint()
+    public Component getValidationHint()
     {
         String validValuesDescription = this.configValue.getSerializer().getValidValuesDescription();
         return Component.literal(validValuesDescription);

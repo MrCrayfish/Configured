@@ -40,8 +40,9 @@ public class JeiCategoryListEntry implements IConfigEntry
         return false;
     }
 
+    @Nullable
     @Override
-    public @Nullable IConfigValue<?> getValue()
+    public IConfigValue<?> getValue()
     {
         return null;
     }
@@ -52,14 +53,16 @@ public class JeiCategoryListEntry implements IConfigEntry
         return this.name;
     }
 
+    @Nullable
     @Override
-    public @Nullable Component getTooltip()
+    public Component getTooltip()
     {
         return null;
     }
 
+    @Nullable
     @Override
-    public @Nullable String getTranslationKey()
+    public String getTranslationKey()
     {
         return null;
     }

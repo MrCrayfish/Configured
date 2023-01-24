@@ -20,7 +20,8 @@ import java.util.Optional;
 @JeiPlugin
 public class ConfiguredJeiPlugin implements IModPlugin
 {
-    private static @Nullable IJeiConfigManager jeiConfigManager;
+    @Nullable
+    private static IJeiConfigManager jeiConfigManager;
 
     public static Optional<IJeiConfigManager> getJeiConfigManager()
     {
@@ -28,14 +29,13 @@ public class ConfiguredJeiPlugin implements IModPlugin
     }
 
     @Override
-    @Nonnull
     public ResourceLocation getPluginUid()
     {
         return new ResourceLocation(Reference.MOD_ID, "jei_plugin");
     }
 
     @Override
-    public void onRuntimeAvailable(@Nonnull IJeiRuntime jeiRuntime)
+    public void onRuntimeAvailable(IJeiRuntime jeiRuntime)
     {
         jeiConfigManager = jeiRuntime.getConfigManager();
         ClientHandler.generateConfigFactory(ModIds.JEI_ID);

@@ -18,7 +18,9 @@ import java.util.Objects;
 public class JeiCategoryEntry implements IConfigEntry
 {
     private final IJeiConfigCategory category;
-    private @Nullable List<IConfigEntry> entries;
+
+    @Nullable
+    private List<IConfigEntry> entries;
 
     public JeiCategoryEntry(IJeiConfigCategory category)
     {
@@ -43,7 +45,7 @@ public class JeiCategoryEntry implements IConfigEntry
     @SuppressWarnings({"unchecked", "rawtypes"})
     private IConfigValue<?> createJeiValue(IJeiConfigValue<?> configValue)
     {
-        if (configValue.getDefaultValue() instanceof List<?>)
+        if(configValue.getDefaultValue() instanceof List<?>)
         {
             return new JeiListValue(configValue);
         }
@@ -63,7 +65,8 @@ public class JeiCategoryEntry implements IConfigEntry
     }
 
     @Override
-    public @Nullable IConfigValue<?> getValue()
+    @Nullable
+    public IConfigValue<?> getValue()
     {
         return null;
     }
@@ -75,13 +78,15 @@ public class JeiCategoryEntry implements IConfigEntry
     }
 
     @Override
-    public @Nullable Component getTooltip()
+    @Nullable
+    public Component getTooltip()
     {
         return null;
     }
 
     @Override
-    public @Nullable String getTranslationKey()
+    @Nullable
+    public String getTranslationKey()
     {
         return null;
     }

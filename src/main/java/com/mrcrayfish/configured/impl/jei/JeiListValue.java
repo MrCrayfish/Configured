@@ -46,19 +46,19 @@ public class JeiListValue<T> extends JeiValue<List<T>> implements IListConfigVal
         @Override
         public Function<T, String> getStringParser()
         {
-            return listValueSerializer::serialize;
+            return this.listValueSerializer::serialize;
         }
 
         @Override
         public Function<String, T> getValueParser()
         {
-            return s -> listValueSerializer.deserialize(s).getResult().orElse(null);
+            return s -> this.listValueSerializer.deserialize(s).getResult().orElse(null);
         }
 
         @Override
         public Component getHint()
         {
-            return Component.literal(listValueSerializer.getValidValuesDescription());
+            return Component.literal(this.listValueSerializer.getValidValuesDescription());
         }
     }
 }
