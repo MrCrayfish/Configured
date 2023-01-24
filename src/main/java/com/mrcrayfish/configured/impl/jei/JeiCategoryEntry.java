@@ -41,7 +41,8 @@ public class JeiCategoryEntry implements IConfigEntry
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private IConfigValue<?> createJeiValue(IJeiConfigValue<?> configValue) {
+    private IConfigValue<?> createJeiValue(IJeiConfigValue<?> configValue)
+    {
         if (configValue.getDefaultValue() instanceof List<?>)
         {
             return new JeiListValue(configValue);

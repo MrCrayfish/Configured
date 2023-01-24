@@ -15,8 +15,7 @@ import java.util.Map;
  */
 public class SimpleListValue<T> extends SimpleValue<List<T>> implements IListConfigValue<T>
 {
-    private static final Map<ListProperty.Type<?>, IListType<?>> LIST_TYPE_RESOLVER = Util.make(new HashMap<>(), map ->
-    {
+    private static final Map<ListProperty.Type<?>, IListType<?>> LIST_TYPE_RESOLVER = Util.make(new HashMap<>(), map -> {
         map.put(ListProperty.INT, ListTypes.INTEGER);
         map.put(ListProperty.LONG, ListTypes.LONG);
         map.put(ListProperty.DOUBLE, ListTypes.DOUBLE);
