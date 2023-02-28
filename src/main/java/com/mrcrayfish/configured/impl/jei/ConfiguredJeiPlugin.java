@@ -5,7 +5,6 @@ import com.mrcrayfish.configured.client.ClientHandler;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.ModIds;
-import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.api.runtime.config.IJeiConfigManager;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -35,15 +34,9 @@ public class ConfiguredJeiPlugin implements IModPlugin
     }
 
     @Override
-    public void onRuntimeAvailable(IJeiRuntime jeiRuntime)
+    public void onConfigManagerAvailable(IJeiConfigManager configManager)
     {
-        jeiConfigManager = jeiRuntime.getConfigManager();
+        jeiConfigManager = configManager;
         ClientHandler.generateConfigFactory(ModIds.JEI_ID);
-    }
-
-    @Override
-    public void onRuntimeUnavailable()
-    {
-        jeiConfigManager = null;
     }
 }
