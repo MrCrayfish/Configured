@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
-version = '2.0.2-1.19.3'
+version = '2.1.0-1.19.3'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
