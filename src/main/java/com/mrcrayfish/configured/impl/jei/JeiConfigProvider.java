@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableSet;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigProvider;
 import com.mrcrayfish.configured.api.IModConfig;
-import mezz.jei.common.config.file.ConfigSchema;
+import mezz.jei.api.runtime.config.IJeiConfigManager;
 import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
 
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
@@ -20,15 +20,14 @@ public class JeiConfigProvider implements IConfigProvider
     @Override
     public Set<IModConfig> getConfigurationsForMod(ModContainer container)
     {
-        if(!ModList.get().isLoaded("jei"))
-            return ImmutableSet.of();
-
-        Set<IModConfig> configs = new HashSet<>();
-        ConfigSchema schema = JeiInstanceHolder.getClientSchema();
-        if(schema != null)
+        if(container.getModId().equals("jei"))
         {
-            configs.add(new JeiConfig("Client", ConfigType.CLIENT, schema));
+            return ConfiguredJeiPlugin.getJeiConfigManager().stream()
+                    .map(IJeiConfigManager::getConfigFiles)
+                    .flatMap(Collection::stream)
+                    .map(file -> new JeiConfig("Client", ConfigType.CLIENT, file))
+                    .collect(Collectors.toUnmodifiableSet());
         }
-        return configs;
+        return ImmutableSet.of();
     }
 }

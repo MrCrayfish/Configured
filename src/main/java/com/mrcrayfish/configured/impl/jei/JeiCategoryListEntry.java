@@ -1,14 +1,12 @@
 package com.mrcrayfish.configured.impl.jei;
 
-import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
-import mezz.jei.common.config.file.ConfigCategory;
+import mezz.jei.api.runtime.config.IJeiConfigCategory;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Author: MrCrayfish
@@ -16,24 +14,17 @@ import java.util.Map;
 public class JeiCategoryListEntry implements IConfigEntry
 {
     private final String name;
-    private final Map<String, ConfigCategory> categories;
-    private List<IConfigEntry> entries;
+    private final List<IConfigEntry> entries;
 
-    public JeiCategoryListEntry(String name, Map<String, ConfigCategory> categories)
+    public JeiCategoryListEntry(String name, List<? extends IJeiConfigCategory> categories)
     {
         this.name = name;
-        this.categories = categories;
+        this.entries = categories.stream().<IConfigEntry>map(JeiCategoryEntry::new).toList();
     }
 
     @Override
     public List<IConfigEntry> getChildren()
     {
-        if(this.entries == null)
-        {
-            ImmutableList.Builder<IConfigEntry> builder = ImmutableList.builder();
-            this.categories.forEach((name, category) -> builder.add(new JeiCategoryEntry(name, category)));
-            this.entries = builder.build();
-        }
         return this.entries;
     }
 

@@ -1,62 +1,57 @@
 package com.mrcrayfish.configured.impl.jei;
 
-import com.mrcrayfish.configured.client.screen.EditListScreen;
-import mezz.jei.common.config.file.ConfigValue;
-import mezz.jei.common.config.file.serializers.ChatFormattingSerializer;
-import mezz.jei.common.config.file.serializers.ColorNameSerializer;
-import mezz.jei.common.config.file.serializers.IConfigValueSerializer;
-import mezz.jei.common.config.file.serializers.ListSerializer;
+import com.mrcrayfish.configured.client.screen.list.IListConfigValue;
+import com.mrcrayfish.configured.client.screen.list.IListType;
+import mezz.jei.api.runtime.config.IJeiConfigListValueSerializer;
+import mezz.jei.api.runtime.config.IJeiConfigValue;
+import mezz.jei.api.runtime.config.IJeiConfigValueSerializer;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Author: MrCrayfish
  */
-public class JeiListValue<T> extends JeiValue<List<T>> implements EditListScreen.ListTypeProvider
+public class JeiListValue<T> extends JeiValue<List<T>> implements IListConfigValue<T>
 {
-    private final EditListScreen.IListType listType;
-
-    @SuppressWarnings("unchecked")
-    public JeiListValue(ConfigValue<?> configValue)
+    public JeiListValue(IJeiConfigValue<List<T>> configValue)
     {
-        super((ConfigValue<List<T>>) configValue);
-        this.listType = this.determineType((ConfigValue<List<?>>) configValue);
-    }
-
-    @Override
-    public boolean isValid(List<T> value)
-    {
-        if(this.configValue.getSerializer() instanceof ListSerializer<T> serializer)
-        {
-            JeiReflection.getListValueSerializer(serializer);
-        }
-        return true;
-    }
-
-    @Override
-    @Nullable
-    public EditListScreen.IListType getListType()
-    {
-        return this.listType;
+        super(configValue);
     }
 
     @Nullable
-    private EditListScreen.IListType determineType(ConfigValue<List<?>> configValue)
+    @Override
+    public IListType<T> getListType()
     {
-        IConfigValueSerializer<?> serializer = configValue.getSerializer();
-        if(serializer instanceof ListSerializer<?> listSerializer)
+        IJeiConfigValueSerializer<List<T>> serializer = this.configValue.getSerializer();
+        if(serializer instanceof IJeiConfigListValueSerializer<T> listSerializer)
         {
-            serializer = JeiReflection.getListValueSerializer(listSerializer);
-        }
-        if(serializer instanceof ChatFormattingSerializer)
-        {
-            return JeiListTypes.JEI_CHAT_FORMATTING;
-        }
-        else if(serializer instanceof ColorNameSerializer)
-        {
-            return JeiListTypes.JEI_COLOR_NAME;
+            IJeiConfigValueSerializer<T> listValueSerializer = listSerializer.getListValueSerializer();
+            return new JeiListType<>(listValueSerializer);
         }
         return null;
+    }
+
+    private record JeiListType<T>(IJeiConfigValueSerializer<T> serializer) implements IListType<T>
+    {
+        @Override
+        public Function<T, String> getStringParser()
+        {
+            return this.serializer::serialize;
+        }
+
+        @Override
+        public Function<String, T> getValueParser()
+        {
+            return s -> this.serializer.deserialize(s).getResult().orElse(null);
+        }
+
+        @Override
+        public Component getHint()
+        {
+            return Component.literal(this.serializer.getValidValuesDescription());
+        }
     }
 }

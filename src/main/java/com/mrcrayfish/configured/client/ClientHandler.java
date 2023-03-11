@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Author: MrCrayfish
@@ -131,11 +132,12 @@ public class ClientHandler
             Map<ConfigType, Set<IModConfig>> modConfigMap = createConfigMap(container);
             if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
-                long count = modConfigMap.values().stream().mapToLong(Set::size).sum();
+                int count = modConfigMap.values().stream().mapToInt(Set::size).sum();
                 Configured.LOGGER.info("Registering config factory for mod {}. Found {} config(s)", modId, count);
                 String displayName = container.getModInfo().getDisplayName();
                 ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
-                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> {
+                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) ->
+                {
                     return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
                 }));
             }
@@ -145,9 +147,23 @@ public class ClientHandler
     public static Map<ConfigType, Set<IModConfig>> createConfigMap(ModContainer container)
     {
         Map<ConfigType, Set<IModConfig>> modConfigMap = new HashMap<>();
-        Set<IModConfig> configs = PROVIDERS.stream().flatMap(p -> p.getConfigurationsForMod(container).stream()).collect(Collectors.toSet());
+        Set<IModConfig> configs = PROVIDERS.stream().flatMap(p -> streamConfigsFromProvider(container, p)).collect(Collectors.toSet());
         configs.forEach(config -> modConfigMap.computeIfAbsent(config.getType(), type -> new LinkedHashSet<>()).add(config));
         return modConfigMap;
+    }
+
+    private static Stream<IModConfig> streamConfigsFromProvider(ModContainer container, IConfigProvider provider)
+    {
+        try
+        {
+            return provider.getConfigurationsForMod(container).stream();
+        }
+        catch(Exception e)
+        {
+            Configured.LOGGER.error("An error occurred when loading configs from provider: {}", provider.getClass().getName());
+            e.printStackTrace();
+        }
+        return Stream.empty();
     }
 
     private static ResourceLocation getBackgroundTexture(IModInfo info)

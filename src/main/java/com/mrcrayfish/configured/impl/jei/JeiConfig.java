@@ -2,17 +2,13 @@ package com.mrcrayfish.configured.impl.jei;
 
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IConfigEntry;
-import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.util.ConfigHelper;
-import mezz.jei.common.config.file.ConfigCategory;
-import mezz.jei.common.config.file.ConfigSchema;
-import mezz.jei.common.config.file.ConfigSerializer;
+import mezz.jei.api.runtime.config.IJeiConfigCategory;
+import mezz.jei.api.runtime.config.IJeiConfigFile;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -22,38 +18,25 @@ public class JeiConfig implements IModConfig
 {
     private final String name;
     private final ConfigType type;
-    private final Map<String, ConfigCategory> categories;
-    private final Path path;
+    private final List<? extends IJeiConfigCategory> categories;
+    private final IJeiConfigFile configFile;
 
-    public JeiConfig(String name, ConfigType type, ConfigSchema schema)
+    public JeiConfig(String name, ConfigType type, IJeiConfigFile configFile)
     {
         this.name = name;
         this.type = type;
-        this.categories = JeiReflection.getConfigCategories(schema);
-        this.path = JeiReflection.getConfigPath(schema);
+        this.categories = configFile.getCategories();
+        this.configFile = configFile;
     }
 
     @Override
     public void update(IConfigEntry entry)
     {
-        Set<IConfigValue<?>> changedValues = ConfigHelper.getChangedValues(entry);
-        changedValues.forEach(value ->
-        {
-            if(value instanceof JeiValue jeiValue)
-            {
-                JeiReflection.setJeiValue(jeiValue.getConfigValue(), jeiValue.get());
-            }
-        });
-
-        try
-        {
-            // JEI doesn't save config when memory value is changed, so have to manually save.
-            ConfigSerializer.save(this.path, this.categories.values());
-        }
-        catch(IOException e)
-        {
-            throw new RuntimeException(e);
-        }
+        ConfigHelper.getChangedValues(entry)
+                .stream()
+                .filter(JeiValue.class::isInstance)
+                .map(JeiValue.class::cast)
+                .forEach(JeiValue::updateConfigValue);
     }
 
     @Override
@@ -71,7 +54,7 @@ public class JeiConfig implements IModConfig
     @Override
     public String getFileName()
     {
-        return this.path.getFileName().toString();
+        return this.configFile.getPath().getFileName().toString();
     }
 
     @Override
@@ -82,5 +65,4 @@ public class JeiConfig implements IModConfig
 
     @Override
     public void loadWorldConfig(Path path, Consumer<IModConfig> result) {}
-
 }
