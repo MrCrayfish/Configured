@@ -28,6 +28,9 @@
     ],
     "modmenu": [
       "com.mrcrayfish.configured.integration.ModMenuConfigFactory"
+    ],
+    "jei_mod_plugin": [
+      "com.mrcrayfish.configured.impl.jei.ConfiguredJeiPlugin"
     ]
   },
   "mixins": [
@@ -52,7 +55,8 @@
         "com.mrcrayfish.configured.Config"
       ],
       "providers": [
-        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
+        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
       ],
       "background": "minecraft:textures/block/stone.png"
     }

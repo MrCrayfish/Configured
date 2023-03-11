@@ -1,12 +1,11 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.client.screen.list.IListType;
+import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
@@ -24,38 +23,32 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
  */
-public class EditListScreen extends Screen implements IBackgroundTexture, IEditing
+public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEditing
 {
-    private static final Map<IConfigValue<?>, ListType> TYPE_CACHE = new HashMap<>();
-
     private final Screen parent;
     private final IModConfig config;
     private final List<StringHolder> initialValues = new ArrayList<>();
     private final List<StringHolder> values = new ArrayList<>();
     private final ResourceLocation background;
-    private final IConfigValue<List<?>> holder;
-    private final IListType listType;
+    private final IConfigValue<List<T>> holder;
+    private final IListType<T> listType;
     private ObjectList list;
 
-    public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<?>> holder, ResourceLocation background)
+    public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<T>> holder, ResourceLocation background)
     {
         super(titleIn);
         this.parent = parent;
         this.config = config;
         this.holder = holder;
-        this.listType = getType(holder);
+        this.listType = ListTypes.getType(holder);
         this.initialValues.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
         this.values.addAll(this.initialValues);
         this.background = background;
@@ -70,13 +63,13 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         if(!this.config.isReadOnly())
         {
             this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 0, 44, 90, Component.translatable("configured.gui.apply"), (button) -> {
-                List<?> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
+                List<T> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
                 this.holder.set(newValues);
                 this.minecraft.setScreen(this.parent);
             }));
             this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 22, 33, 90, Component.translatable("configured.gui.add_value"), (button) -> {
                 this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, Component.translatable("configured.gui.edit_value"), "", s -> {
-                    Object value = this.listType.getValueParser().apply(s);
+                    T value = this.listType.getValueParser().apply(s);
                     if(value != null)
                     {
                         if(this.holder.isValid(Collections.singletonList(value)))
@@ -226,7 +219,7 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
 
             this.editButton = new IconButton(0, 0, 1, 22, 20, CommonComponents.EMPTY, onPress -> {
                 EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, EditListScreen.this.background, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
-                    Object value = EditListScreen.this.listType.getValueParser().apply(s);
+                    T value = EditListScreen.this.listType.getValueParser().apply(s);
                     if(value != null)
                     {
                         if(EditListScreen.this.holder.isValid(Collections.singletonList(value)))
@@ -306,133 +299,5 @@ public class EditListScreen extends Screen implements IBackgroundTexture, IEditi
         {
             this.value = value;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected static IListType getType(IConfigValue<?> holder)
-    {
-        if(holder instanceof ListTypeProvider provider)
-        {
-            IListType type = provider.getListType();
-            if(type != null)
-            {
-                return type;
-            }
-        }
-        return TYPE_CACHE.computeIfAbsent(holder, value -> ListType.fromHolder((IConfigValue<List<?>>) holder));
-    }
-
-    public interface IListType
-    {
-        Function<Object, String> getStringParser();
-
-        Function<String, ?> getValueParser();
-
-        Component getHint();
-    }
-
-    public enum ListType implements IListType
-    {
-        BOOLEAN(Object::toString, Boolean::valueOf, "configured.parser.not_a_boolean"),
-        INTEGER(Object::toString, Ints::tryParse, "configured.parser.not_a_number"),
-        LONG(Object::toString, Longs::tryParse, "configured.parser.not_a_number"),
-        DOUBLE(Object::toString, Doubles::tryParse, "configured.parser.not_a_number"),
-        STRING(Object::toString, o -> o, "configured.parser.not_a_value"),
-        UNKNOWN(Object::toString, o -> o, "configured.parser.not_a_value");
-
-        final Function<Object, String> stringParser;
-        final Function<String, ?> valueParser;
-        final String hintKey;
-
-        ListType(Function<Object, String> stringParser, Function<String, ?> valueParser, String hintKey)
-        {
-            this.stringParser = stringParser;
-            this.valueParser = valueParser;
-            this.hintKey = hintKey;
-        }
-
-        @Override
-        public Function<Object, String> getStringParser()
-        {
-            return this.stringParser;
-        }
-
-        @Override
-        public Function<String, ?> getValueParser()
-        {
-            return this.valueParser;
-        }
-
-        @Override
-        public Component getHint()
-        {
-            return Component.translatable(this.hintKey);
-        }
-
-        public static ListType fromHolder(IConfigValue<List<?>> holder)
-        {
-            ListType type = UNKNOWN;
-            List<?> defaultList = holder.getDefault();
-            if(!defaultList.isEmpty())
-            {
-                type = fromObject(defaultList.get(0));
-            }
-            if(type == UNKNOWN)
-            {
-                type = fromElementValidator(holder);
-            }
-            return type;
-        }
-
-        private static ListType fromObject(Object o)
-        {
-            if(o instanceof Boolean)
-            {
-                return BOOLEAN;
-            }
-            else if(o instanceof Integer)
-            {
-                return INTEGER;
-            }
-            else if(o instanceof Long)
-            {
-                return LONG;
-            }
-            else if(o instanceof Double)
-            {
-                return DOUBLE;
-            }
-            else if(o instanceof String)
-            {
-                return STRING;
-            }
-            return UNKNOWN;
-        }
-
-        /**
-         * Attempts to determine the type of list from the element validator. This currently
-         * used as a last resort since validation may fail even though it's the correct type.
-         * It may also return the incorrect type if the validator accepts everything.
-         */
-        private static ListType fromElementValidator(IConfigValue<List<?>> spec)
-        {
-            if(spec.isValid(Collections.singletonList("s")))
-                return STRING;
-            if(spec.isValid(Collections.singletonList(true)))
-                return BOOLEAN;
-            if(spec.isValid(Collections.singletonList(0.0D)))
-                return DOUBLE;
-            if(spec.isValid(Collections.singletonList(0L)))
-                return LONG;
-            if(spec.isValid(Collections.singletonList(0)))
-                return INTEGER;
-            return UNKNOWN;
-        }
-    }
-
-    public interface ListTypeProvider
-    {
-        @Nullable
-        IListType getListType();
     }
 }

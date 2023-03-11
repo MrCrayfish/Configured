@@ -1,7 +1,9 @@
 package com.mrcrayfish.configured.impl.simple;
 
 import com.mrcrayfish.configured.api.simple.ListProperty;
-import com.mrcrayfish.configured.client.screen.EditListScreen;
+import com.mrcrayfish.configured.client.screen.list.IListConfigValue;
+import com.mrcrayfish.configured.client.screen.list.IListType;
+import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import net.minecraft.Util;
 
 import java.util.HashMap;
@@ -11,14 +13,14 @@ import java.util.Map;
 /**
  * Author: MrCrayfish
  */
-public class SimpleListValue<T> extends SimpleValue<List<T>> implements EditListScreen.ListTypeProvider
+public class SimpleListValue<T> extends SimpleValue<List<T>> implements IListConfigValue<T>
 {
-    private static final Map<ListProperty.Type<?>, EditListScreen.ListType> LIST_TYPE_RESOLVER = Util.make(new HashMap<>(), map -> {
-        map.put(ListProperty.INT, EditListScreen.ListType.INTEGER);
-        map.put(ListProperty.LONG, EditListScreen.ListType.LONG);
-        map.put(ListProperty.DOUBLE, EditListScreen.ListType.DOUBLE);
-        map.put(ListProperty.BOOL, EditListScreen.ListType.BOOLEAN);
-        map.put(ListProperty.STRING, EditListScreen.ListType.STRING);
+    private static final Map<ListProperty.Type<?>, IListType<?>> LIST_TYPE_RESOLVER = Util.make(new HashMap<>(), map -> {
+        map.put(ListProperty.INT, ListTypes.INTEGER);
+        map.put(ListProperty.LONG, ListTypes.LONG);
+        map.put(ListProperty.DOUBLE, ListTypes.DOUBLE);
+        map.put(ListProperty.BOOL, ListTypes.BOOLEAN);
+        map.put(ListProperty.STRING, ListTypes.STRING);
     });
 
     private final ListProperty<T> property;
@@ -29,10 +31,11 @@ public class SimpleListValue<T> extends SimpleValue<List<T>> implements EditList
         this.property = property;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public EditListScreen.ListType getListType()
+    public IListType<T> getListType()
     {
-        return LIST_TYPE_RESOLVER.getOrDefault(this.property.getType(), EditListScreen.ListType.UNKNOWN);
+        return (IListType<T>) LIST_TYPE_RESOLVER.getOrDefault(this.property.getType(), ListTypes.getUnknown());
     }
 
     @Override

@@ -5,7 +5,10 @@
     "compatibilityLevel": "JAVA_17",
     "mixins": [
     ],
-    "client": [ "AbstractSelectionListMixin", "ScreenMixin" ],
+    "client": [
+      "AbstractSelectionListMixin",
+      "ScreenMixin"
+    ],
     "injectors": {
         "defaultRequire": 1
     }
