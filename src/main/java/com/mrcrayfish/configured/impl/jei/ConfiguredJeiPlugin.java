@@ -37,6 +37,5 @@ public class ConfiguredJeiPlugin implements IModPlugin
     public void onConfigManagerAvailable(IJeiConfigManager configManager)
     {
         jeiConfigManager = configManager;
-        ClientHandler.generateConfigFactory(ModIds.JEI_ID);
     }
 }

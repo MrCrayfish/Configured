@@ -129,31 +129,19 @@ public class ClientHandler
             if(container.getCustomExtension(ConfigScreenHandler.ConfigScreenFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
                 return;
 
-            generateConfigFactory(modId, container);
-        });
-    }
-
-    public static void generateConfigFactory(String modId)
-    {
-        ModList.get().getModContainerById(modId).ifPresentOrElse(modContainer -> {
-            ClientHandler.generateConfigFactory(modId, modContainer);
-        }, () -> Configured.LOGGER.info("No mod container found for ModId: {}.", modId));
-    }
-
-    public static void generateConfigFactory(String modId, ModContainer container)
-    {
-        Map<ConfigType, Set<IModConfig>> modConfigMap = createConfigMap(container);
-        if(!modConfigMap.isEmpty()) // Only add if at least one config exists
-        {
-            long count = modConfigMap.values().stream().mapToLong(Set::size).sum();
-            Configured.LOGGER.info("Registering config factory for mod {}. Found {} config(s)", modId, count);
-            String displayName = container.getModInfo().getDisplayName();
-            ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
-            container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) ->
+            Map<ConfigType, Set<IModConfig>> modConfigMap = createConfigMap(container);
+            if(!modConfigMap.isEmpty()) // Only add if at least one config exists
             {
-                return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
-            }));
-        }
+                int count = modConfigMap.values().stream().mapToInt(Set::size).sum();
+                Configured.LOGGER.info("Registering config factory for mod {}. Found {} config(s)", modId, count);
+                String displayName = container.getModInfo().getDisplayName();
+                ResourceLocation backgroundTexture = getBackgroundTexture(container.getModInfo());
+                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) ->
+                {
+                    return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
+                }));
+            }
+        });
     }
 
     public static Map<ConfigType, Set<IModConfig>> createConfigMap(ModContainer container)
