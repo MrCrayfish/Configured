@@ -1,0 +1,56 @@
+{
+    "schemaVersion": 1,
+    "id": "${mod_id}",
+    "version": "${version}",
+    "name": "${mod_name}",
+    "description": "${mod_desc}",
+    "authors": [ "${mod_author}" ],
+    "contact": {
+        "homepage": "${mod_homepage}",
+        "sources": "${mod_source}",
+        "issues": "${mod_issues}"
+    },
+    "license": "${mod_license}",
+    "icon": "${mod_id}_icon.png",
+    "environment": "*",
+    "entrypoints": {
+        "main": [],
+        "client": [
+            "com.mrcrayfish.configured.client.ClientConfiguredFabric"
+        ],
+        "modmenu": [
+            "com.mrcrayfish.configured.integration.ModMenuConfigFactory"
+        ],
+        "jei_mod_plugin": [
+            "com.mrcrayfish.configured.impl.jei.ConfiguredJeiPlugin"
+        ]
+    },
+    "mixins": [
+        "configured.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.14",
+        "fabric": "*",
+        "minecraft": "${minecraft_version}",
+        "java": ">=17"
+    },
+    "accessWidener": "configured.accesswidener",
+    "custom": {
+        "configured": {
+            "configs": [
+                "com.mrcrayfish.configured.Config"
+            ],
+            "providers": [
+                "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
+                "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
+            ],
+            "background": "minecraft:textures/block/stone.png"
+        },
+        "catalogue": {
+            "banner": "${mod_id}_banner.png",
+            "background": "${mod_id}_background.png",
+            "configFactory": "com.mrcrayfish.configured.integration.CatalogueConfigFactory"
+        }
+    }
+}
+  

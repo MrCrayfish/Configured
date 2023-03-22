@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "simple_config_test",
+  "version": "${version}",
+  "name": "SimpleConfig Test",
+  "description": "A mod to test simple configs",
+  "authors": [
+    "MrCrayfish"
+  ],
+  "contact": {
+    "homepage": "https://mrcrayfish.com/mods?id=configured",
+    "sources": "https://github.com/MrCrayfish/Configured",
+    "issues": "https://github.com/MrCrayfish/Configured/issues"
+  },
+  "license": "GPLv3",
+  "icon": "assets/configured/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "test.simpleconfig.SimpleConfigTest"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.11",
+    "fabric-api": "*",
+    "minecraft": ">=1.19.3",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  },
+  "custom": {
+    "configured": {
+      "configs": [
+        "test.simpleconfig.SimpleConfigTest"
+      ]
+    }
+  }
+}
