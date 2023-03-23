@@ -5,7 +5,7 @@ issueTrackerURL="${mod_issues}"
 
 [[mods]]
 modId="${mod_id}"
-version="${version}"
+version="${mod_version}"
 displayName="${mod_name}"
 credits="Hatsondogs for creating icons. LizterZapZap for creating mod logo"
 updateJSONURL="https://mrcrayfish.com/modupdatejson?id=${mod_id}"
@@ -30,16 +30,23 @@ description="${mod_desc}"
     side="BOTH"
 
 [[dependencies."${mod_id}"]]
+    modId="framework"
+    mandatory=true
+    versionRange="[${framework_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies."${mod_id}"]]
     modId="catalogue"
     mandatory=false
-    versionRange="[1.2.0,)"
+    versionRange="[${catalogue_version},)"
     ordering="NONE"
     side="CLIENT"
 
 [[dependencies."${mod_id}"]]
     modId="jei"
     mandatory=false
-    versionRange="[12.3.0.18,)"
+    versionRange="[${jei_version},)"
     ordering="NONE"
     side="BOTH"
 

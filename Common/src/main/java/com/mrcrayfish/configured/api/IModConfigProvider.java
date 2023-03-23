@@ -32,7 +32,7 @@ public interface IModConfigProvider
     /**
      * Gets all the mod configs for a mod from the implementing provider.
      *
-     * @param container the container of the mod to filter returned configs
+     * @param context the container of the mod to filter returned configs
      * @return a set of mod configs for the given mod
      */
     Set<IModConfig> getConfigurationsForMod(ModContext context);

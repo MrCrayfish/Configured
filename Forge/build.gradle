@@ -5,7 +5,8 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
 }
 
-archivesBaseName = "${mod_id}-forge-${minecraft_version}"
+archivesBaseName = "${mod_id}-forge"
+version = "${mod_version}-${minecraft_version}"
 
 minecraft {
     mappings channel: 'official', version: minecraft_version
@@ -73,7 +74,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     // Framework
-    implementation fg.deobf("com.mrcrayfish:framework-forge-${minecraft_version}:${framework_version}")
+    implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
 
     // JEI
     implementation fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")

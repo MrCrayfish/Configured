@@ -4,7 +4,8 @@ plugins {
     id 'idea'
 }
 
-archivesBaseName = "${mod_id}-fabric-${minecraft_version}"
+archivesBaseName = "${mod_id}-fabric"
+version = "${mod_version}-${minecraft_version}"
 
 sourceSets {
     testMod {
@@ -29,7 +30,7 @@ dependencies {
     modImplementation "com.terraformersmc:modmenu:5.0.2"
 
     // Framework
-    modImplementation "com.mrcrayfish:framework-fabric-${minecraft_version}:${framework_version}"
+    modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
 
     // JEI
     modCompileOnlyApi "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"

@@ -1,7 +1,7 @@
 {
     "schemaVersion": 1,
     "id": "${mod_id}",
-    "version": "${version}",
+    "version": "${mod_version}",
     "name": "${mod_name}",
     "description": "${mod_desc}",
     "authors": [ "${mod_author}" ],
@@ -32,7 +32,11 @@
         "fabricloader": ">=0.14",
         "fabric": "*",
         "minecraft": "${minecraft_version}",
-        "java": ">=17"
+        "java": ">=17",
+        "framework": ">=${framework_version}"
+    },
+    "breaks": {
+        "catalogue": "<${catalogue_version}"
     },
     "accessWidener": "configured.accesswidener",
     "custom": {
