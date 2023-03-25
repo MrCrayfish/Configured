@@ -13,7 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 /**
  * Author: MrCrayfish
  */
-public class ClientConfiguredFabric implements ClientModInitializer
+public class ClientConfigured implements ClientModInitializer
 {
     @Override
     public void onInitializeClient()

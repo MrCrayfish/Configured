@@ -14,9 +14,11 @@
     "icon": "${mod_id}_icon.png",
     "environment": "*",
     "entrypoints": {
-        "main": [],
+        "main": [
+            "com.mrcrayfish.configured.Configured"
+        ],
         "client": [
-            "com.mrcrayfish.configured.client.ClientConfiguredFabric"
+            "com.mrcrayfish.configured.client.ClientConfigured"
         ],
         "modmenu": [
             "com.mrcrayfish.configured.integration.ModMenuConfigFactory"
