@@ -1,6 +1,6 @@
 package com.mrcrayfish.configured;
 
-import com.mrcrayfish.configured.client.ClientConfiguredForge;
+import com.mrcrayfish.configured.client.ClientConfigured;
 import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.client.EditingTracker;
 import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
@@ -22,16 +22,16 @@ import net.minecraftforge.network.NetworkConstants;
  * Author: MrCrayfish
  */
 @Mod(value = Constants.MOD_ID)
-public class ConfiguredForge
+public class Configured
 {
-    public ConfiguredForge()
+    public Configured()
     {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(this::onCommonSetup);
         bus.addListener(this::onLoadComplete);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            bus.addListener(ClientConfiguredForge::onRegisterKeyMappings);
-            bus.addListener(ClientConfiguredForge::onRegisterTooltipComponentFactory);
+            bus.addListener(ClientConfigured::onRegisterKeyMappings);
+            bus.addListener(ClientConfigured::onRegisterTooltipComponentFactory);
         });
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
         MinecraftForge.EVENT_BUS.register(SimpleConfigManager.getInstance());
@@ -53,7 +53,7 @@ public class ConfiguredForge
             if(FMLLoader.getDist() == Dist.CLIENT)
             {
                 ClientHandler.init();
-                ClientConfiguredForge.generateConfigFactories();
+                ClientConfigured.generateConfigFactories();
             }
         });
     }

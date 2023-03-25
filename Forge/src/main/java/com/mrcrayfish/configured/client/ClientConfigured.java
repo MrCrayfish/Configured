@@ -37,7 +37,7 @@ import java.util.Set;
  * Author: MrCrayfish
  */
 @Mod.EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
-public class ClientConfiguredForge
+public class ClientConfigured
 {
     // This is where the magic happens
     public static void generateConfigFactories()
