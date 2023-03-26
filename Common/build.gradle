@@ -22,21 +22,22 @@ minecraft {
     }
 }
 
+configurations {
+    compileOnly.extendsFrom library
+}
+
 dependencies {
-    compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    compileOnly "org.spongepowered:mixin:0.8.5"
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
     compileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
-    compileOnly "com.electronwill.night-config:core:3.6.0"
-    compileOnly "com.electronwill.night-config:toml:3.6.0"
     compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    library "com.electronwill.night-config:core:3.6.6"
+    library "com.electronwill.night-config:toml:3.6.6"
 }
 
 processResources {
-
     def buildProps = project.properties.clone()
-
     filesMatching(['pack.mcmeta']) {
-
         expand buildProps
     }
 }
@@ -47,7 +48,21 @@ publishing {
             groupId project.group
             artifactId project.archivesBaseName
             version project.version
-            from components.java
+
+            artifact jar
+            artifact sourcesJar
+
+            pom.withXml {
+                def depsNode = asNode().appendNode('dependencies')
+                [this.configurations.library].each {
+                    it.allDependencies.each {
+                        def depNode = depsNode.appendNode('dependency')
+                        depNode.appendNode('groupId', it.group)
+                        depNode.appendNode('artifactId', it.name)
+                        depNode.appendNode('version', it.version)
+                    }
+                }
+            }
         }
     }
 

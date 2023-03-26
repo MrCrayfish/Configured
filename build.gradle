@@ -13,6 +13,10 @@ subprojects {
     java.withSourcesJar()
     java.withJavadocJar()
 
+    configurations {
+        library
+    }
+
     jar {
         from(rootProject.file("LICENSE")) {
             rename { "${it}_${mod_name}" }

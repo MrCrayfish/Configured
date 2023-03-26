@@ -22,12 +22,21 @@ repositories {
     }
 }
 
+configurations {
+    implementation.extendsFrom library
+}
+
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation "com.terraformersmc:modmenu:5.0.2"
+    modApi "com.terraformersmc:modmenu:5.0.2"
+
+    // Night Config
+    library include("com.electronwill.night-config:core:3.6.6")
+    library include("com.electronwill.night-config:toml:3.6.6")
 
     // Framework
     modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
@@ -37,12 +46,9 @@ dependencies {
     modCompileOnlyApi "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
     modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 
-    // Night Config
-    implementation include('com.electronwill.night-config:core:3.6.0')
-    implementation include('com.electronwill.night-config:toml:3.6.0')
-
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
     implementation project(":Common")
+
     testModImplementation sourceSets.main.output
     testModImplementation sourceSets.test.output
 }
@@ -57,10 +63,8 @@ loom {
             runDir("run")
         }
         testModClient {
-            client()
+            inherit client
             setConfigName("Fabric Test Client")
-            ideConfigGenerated(true)
-            runDir("run")
             setSource(sourceSets.testMod)
         }
         server {
@@ -91,7 +95,23 @@ publishing {
             groupId project.group
             artifactId project.archivesBaseName
             version project.version
-            from components.java
+
+            artifact remapJar
+            artifact(sourcesJar) {
+                builtBy remapSourcesJar
+            }
+
+            pom.withXml {
+                def depsNode = asNode().appendNode('dependencies')
+                [this.configurations.library].each {
+                    it.allDependencies.each {
+                        def depNode = depsNode.appendNode('dependency')
+                        depNode.appendNode('groupId', it.group)
+                        depNode.appendNode('artifactId', it.name)
+                        depNode.appendNode('version', it.version)
+                    }
+                }
+            }
         }
     }
 
@@ -109,3 +129,5 @@ publishing {
         }
     }
 }
+
+loom.disableDeprecatedPomGeneration(publishing.publications.mavenJava)
