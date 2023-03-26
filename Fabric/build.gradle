@@ -5,7 +5,7 @@ plugins {
 }
 
 archivesBaseName = "${mod_id}-fabric"
-version = "${mod_version}-${minecraft_version}"
+version = "${minecraft_version}-${mod_version}"
 
 sourceSets {
     testMod {

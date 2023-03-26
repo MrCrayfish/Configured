@@ -6,7 +6,7 @@ plugins {
 }
 
 archivesBaseName = "${mod_id}-forge"
-version = "${mod_version}-${minecraft_version}"
+version = "${minecraft_version}-${mod_version}"
 
 minecraft {
     mappings channel: 'official', version: minecraft_version
