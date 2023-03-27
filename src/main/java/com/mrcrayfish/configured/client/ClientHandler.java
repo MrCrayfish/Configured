@@ -33,13 +33,7 @@ import net.minecraftforge.forgespi.language.IModInfo;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -160,8 +154,7 @@ public class ClientHandler
         }
         catch(Exception e)
         {
-            Configured.LOGGER.error("An error occurred when loading configs from provider: {}", provider.getClass().getName());
-            e.printStackTrace();
+            Configured.LOGGER.error("An error occurred when loading configs from provider: {}", provider.getClass().getName(), e);
         }
         return Stream.empty();
     }
