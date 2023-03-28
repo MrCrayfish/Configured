@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
-version = '2.1.1-1.19.3'
+version = '2.1.1-1.19.4'
 group = 'com.mrcrayfish'
 archivesBaseName = 'configured'
 
@@ -16,7 +16,7 @@ mixin {
 }
 
 minecraft {
-    mappings channel: 'official', version: '1.19.3'
+    mappings channel: 'official', version: '1.19.4'
     runs {
         client {
             workingDirectory project.file('run')
@@ -91,7 +91,7 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.3-44.1.5'
+    minecraft 'net.minecraftforge:forge:1.19.4-45.0.27'
     compileOnly fg.deobf("mezz.jei:jei-1.19.3-common-api:12.3.0.18")
     // uncomment to have JEI run in dev at runtime:
 //    runtimeOnly fg.deobf("mezz.jei:jei-1.19.3-forge:12.3.0.18")

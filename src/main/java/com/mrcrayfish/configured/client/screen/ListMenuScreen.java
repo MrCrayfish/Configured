@@ -140,7 +140,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         // Draws the Configured logo in the top left of the screen
         RenderSystem.setShaderTexture(0, CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        Screen.blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+        Screen.blit(poseStack, 10, 13, 0, 0, 0, 23, 23, 32, 32);
 
         // Draws the search icon next to the search text field
         RenderSystem.setShaderTexture(0, IconButton.ICONS);
@@ -369,7 +369,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        protected void setFocused(boolean focused)
+        public void setFocused(boolean focused)
         {
             super.setFocused(focused);
             if(focused)

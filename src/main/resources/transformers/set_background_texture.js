@@ -4,7 +4,7 @@ function initializeCoreMod() {
 	        'target': {
 	            'type': 'METHOD',
 	            'class': 'net.minecraft.client.gui.components.AbstractSelectionList',
-	            'methodName': 'm_6305_',
+	            'methodName': 'm_86412_',
 	            'methodDesc': '(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V'
 	        },
 	        'transformer': patchAbstractList
@@ -13,8 +13,8 @@ function initializeCoreMod() {
             'target': {
                 'type': 'METHOD',
                 'class': 'net.minecraft.client.gui.screens.Screen',
-                'methodName': 'm_96626_',
-                'methodDesc': '(I)V'
+                'methodName': 'm_264065_',
+                'methodDesc': '(Lcom/mojang/blaze3d/vertex/PoseStack;)V'
             },
             'transformer': patchScreen
         }
