@@ -20,8 +20,7 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
     configuredBackground="minecraft:textures/block/stone.png"
     configuredProviders=[
         "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
-        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
+        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider"
     ]
 
 [[mods]]
