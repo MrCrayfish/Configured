@@ -65,7 +65,7 @@ public class IconButton extends Button
             RenderSystem.setShaderColor(brightness, brightness, brightness, this.alpha);
             blit(poseStack, iconX, iconY, this.getBlitOffset(), this.u, this.v, 11, 11, 64, 64);
         }
-        int textX = renderIcon ? iconX + 14 : this.getX() + (this.width - mc.font.width(this.label)) / 2;
+        int textX = renderIcon ? iconX + 14 : this.x + (this.width - mc.font.width(this.label)) / 2;
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         int textColor = this.getFGColor() | Mth.ceil(this.alpha * 255.0F) << 24;
         drawString(poseStack, mc.font, this.label, textX, iconY + 1, textColor);
