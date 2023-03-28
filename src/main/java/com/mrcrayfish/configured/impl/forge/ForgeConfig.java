@@ -30,18 +30,15 @@ public class ForgeConfig implements IModConfig
     });
 
     protected final ModConfig config;
+    protected final ForgeConfigSpec spec;
     protected final List<ForgeValueEntry> allConfigValues;
 
-    public ForgeConfig(ModConfig config)
+    public ForgeConfig(ModConfig config, ForgeConfigSpec spec)
     {
         this.config = config;
-        this.allConfigValues = getAllConfigValues(config);
-    }
-
-    protected ForgeConfig(ModConfig config, List<ForgeValueEntry> allConfigValues)
-    {
-        this.config = config;
-        this.allConfigValues = allConfigValues;
+        Objects.requireNonNull(spec, "spec is null");
+        this.spec = spec;
+        this.allConfigValues = getAllConfigValues(this.spec);
     }
 
     @Override
@@ -82,7 +79,7 @@ public class ForgeConfig implements IModConfig
         else if(!changedValues.isEmpty())
         {
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
-            this.config.getSpec().afterReload();
+            this.spec.afterReload();
             ConfigHelper.fireForgeConfigEvent(this.config, new ModConfigEvent.Reloading(this.config));
         }
     }
@@ -163,9 +160,9 @@ public class ForgeConfig implements IModConfig
         this.allConfigValues.forEach(pair -> pair.value.clearCache());
     }
 
-    protected List<ForgeValueEntry> getAllConfigValues(ModConfig config)
+    protected static List<ForgeValueEntry> getAllConfigValues(ForgeConfigSpec spec)
     {
-        return ConfigHelper.gatherAllForgeConfigValues(config).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
+        return ConfigHelper.gatherAllForgeConfigValues(spec.getValues(), spec).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
     }
 
     protected record ForgeValueEntry(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec) {}

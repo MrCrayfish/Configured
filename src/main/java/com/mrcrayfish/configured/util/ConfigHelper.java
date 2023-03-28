@@ -5,6 +5,7 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
+import com.electronwill.nightconfig.core.utils.UnmodifiableConfigWrapper;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.ConfigType;
@@ -30,17 +31,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -110,7 +108,7 @@ public class ConfigHelper
     /**
      * Gathers all the Forge config values with a deep search. Used for resetting defaults
      */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(UnmodifiableConfig config, ForgeConfigSpec spec)
+    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(UnmodifiableConfig config, UnmodifiableConfig spec)
     {
         List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values = new ArrayList<>();
         gatherValuesFromForgeConfig(config, spec, values);
@@ -121,7 +119,7 @@ public class ConfigHelper
      * Gathers all the config values from the given Forge config and adds it's to the provided list.
      * This will search deeper if it finds another config and recursively call itself.
      */
-    private static void gatherValuesFromForgeConfig(UnmodifiableConfig config, ForgeConfigSpec spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
+    private static void gatherValuesFromForgeConfig(UnmodifiableConfig config, UnmodifiableConfig spec, List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> values)
     {
         config.valueMap().forEach((s, o) ->
         {
@@ -168,16 +166,7 @@ public class ConfigHelper
     @Nullable
     public static ModConfig getForgeConfig(String fileName)
     {
-        ConcurrentHashMap<String, ModConfig> configMap = ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "fileMap");
-        return configMap != null ? configMap.get(fileName) : null;
-    }
-
-    /**
-     * Gathers all the config values with a deep search. Used for resetting defaults
-     */
-    public static List<Pair<ForgeConfigSpec.ConfigValue<?>, ForgeConfigSpec.ValueSpec>> gatherAllForgeConfigValues(ModConfig config)
-    {
-        return gatherAllForgeConfigValues(((ForgeConfigSpec) config.getSpec()).getValues(), (ForgeConfigSpec) config.getSpec());
+        return ConfigTracker.INSTANCE.fileMap().get(fileName);
     }
 
     /**
@@ -387,5 +376,22 @@ public class ConfigHelper
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         TomlFormat.instance().createWriter().write(config, stream);
         return stream.toByteArray();
+    }
+
+    @Nullable
+    public static ForgeConfigSpec findForgeConfigSpec(UnmodifiableConfig config) {
+        if (config instanceof ForgeConfigSpec spec) return spec;
+        // find ForgeConfigSpec instances that have been wrapped, Night Config provides a commonly used default implementation for this which we use here
+        // Night Config also has more config wrapper classes, which all seem to extend this one fortunately
+        if (config instanceof UnmodifiableConfigWrapper) {
+            try {
+                Field field = UnmodifiableConfigWrapper.class.getDeclaredField("config");
+                field.setAccessible(true);
+                return findForgeConfigSpec((UnmodifiableConfig) MethodHandles.lookup().unreflectGetter(field).invoke(config));
+            } catch (Throwable ignored) {
+
+            }
+        }
+        return null;
     }
 }

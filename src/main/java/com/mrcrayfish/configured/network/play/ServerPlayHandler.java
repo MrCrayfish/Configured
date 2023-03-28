@@ -60,7 +60,8 @@ public class ServerPlayHandler
             return;
         }
 
-        if(!(config.getSpec() instanceof ForgeConfigSpec))
+        ForgeConfigSpec spec = ConfigHelper.findForgeConfigSpec(config.getSpec());
+        if(spec == null)
         {
             Configured.LOGGER.warn("Unable to process server config update due to unknown spec for config: {}", message.fileName());
             player.connection.disconnect(new TranslatableComponent("configured.multiplayer.disconnect.bad_config_packet"));
@@ -70,7 +71,7 @@ public class ServerPlayHandler
         try
         {
             CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.data()));
-            int result = ((ForgeConfigSpec) config.getSpec()).correct(data,
+            int result = spec.correct(data,
                     (action, path, incorrectValue, correctedValue) ->
                             Configured.LOGGER.warn("Incorrect key {} was corrected from {} to its default, {}. {}", DOT_JOINER.join(path), incorrectValue, correctedValue, incorrectValue == correctedValue ? "This seems to be an error." : ""),
                     (action, path, incorrectValue, correctedValue) ->
