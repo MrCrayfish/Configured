@@ -33,14 +33,9 @@ import net.minecraftforge.forgespi.language.IModInfo;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Author: MrCrayfish
@@ -148,6 +143,19 @@ public class ClientHandler
         Set<IModConfig> configs = PROVIDERS.stream().flatMap(p -> p.getConfigurationsForMod(container).stream()).collect(Collectors.toSet());
         configs.forEach(config -> modConfigMap.computeIfAbsent(config.getType(), type -> new LinkedHashSet<>()).add(config));
         return modConfigMap;
+    }
+
+    private static Stream<IModConfig> streamConfigsFromProvider(ModContainer container, IConfigProvider provider)
+    {
+        try
+        {
+            return provider.getConfigurationsForMod(container).stream();
+        }
+        catch(Exception e)
+        {
+            Configured.LOGGER.error("An error occurred when loading configs from provider: {}", provider.getClass().getName(), e);
+        }
+        return Stream.empty();
     }
 
     private static ResourceLocation getBackgroundTexture(IModInfo info)
