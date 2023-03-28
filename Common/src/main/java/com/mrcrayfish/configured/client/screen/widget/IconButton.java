@@ -35,9 +35,9 @@ public class IconButton extends ConfiguredButton
     }
 
     @Override
-    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
     {
-        super.renderButton(poseStack, mouseX, mouseY, partialTicks);
+        super.renderWidget(poseStack, mouseX, mouseY, partialTicks);
         Minecraft mc = Minecraft.getInstance();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, ICONS);
@@ -58,7 +58,7 @@ public class IconButton extends ConfiguredButton
         if(renderIcon)
         {
             RenderSystem.setShaderColor(brightness, brightness, brightness, this.alpha);
-            blit(poseStack, iconX, iconY, this.getBlitOffset(), this.u, this.v, 11, 11, 64, 64);
+            blit(poseStack, iconX, iconY, 0, this.u, this.v, 11, 11, 64, 64); //TODO what happen to blit offset
         }
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         int textColor = (this.active ? 0xFFFFFF : 0xA0A0A0) | Mth.ceil(this.alpha * 255.0F) << 24;

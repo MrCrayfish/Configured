@@ -32,7 +32,7 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modApi "com.terraformersmc:modmenu:5.0.2"
+    modApi "com.terraformersmc:modmenu:6.1.0-rc.4"
 
     // Night Config
     library include("com.electronwill.night-config:core:3.6.6")
@@ -42,9 +42,9 @@ dependencies {
     modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
 
     // JEI
-    modCompileOnlyApi "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    modCompileOnlyApi "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
+    modCompileOnlyApi "mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}"
+    modCompileOnlyApi "mezz.jei:jei-${jei_minecraft_version}-fabric-api:${jei_version}"
+    //modRuntimeOnly "mezz.jei:jei-${jei_minecraft_version}-fabric:${jei_version}"
 
     implementation "com.google.code.findbugs:jsr305:3.0.2"
     implementation project(":Common")

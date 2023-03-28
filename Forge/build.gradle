@@ -81,8 +81,8 @@ dependencies {
     implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
 
     // JEI
-    implementation fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
-    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    implementation fg.deobf("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
+    //runtimeOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 

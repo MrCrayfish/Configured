@@ -180,7 +180,6 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         RenderSystem.disableDepthTest();
         RenderSystem.enableBlend();
         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableTexture();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.vertex(startX, startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();

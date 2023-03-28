@@ -11,6 +11,7 @@ import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
@@ -124,7 +125,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         super.render(poseStack, mouseX, mouseY, partialTicks);
         RenderSystem.setShaderTexture(0, ListMenuScreen.CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+        blit(poseStack, 10, 13, 0, 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
             this.setActiveTooltip(Component.translatable("configured.gui.info"));
@@ -182,7 +183,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         }
     }
 
-    public class Entry extends AbstractSelectionList.Entry<Entry> implements ILabelProvider
+    public class Entry extends ObjectSelectionList.Entry<Entry> implements ILabelProvider
     {
         private final Enum<?> enumValue;
         private final Component label;
@@ -222,6 +223,12 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
             ChangeEnumScreen.this.list.setSelected(this);
             ChangeEnumScreen.this.selectedValue = this.enumValue;
             return true;
+        }
+
+        @Override
+        public Component getNarration()
+        {
+            return this.label;
         }
     }
 }

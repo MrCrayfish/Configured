@@ -8,6 +8,7 @@ import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.ClickEvent;
@@ -140,7 +142,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         // Draws the Configured logo in the top left of the screen
         RenderSystem.setShaderTexture(0, CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        Screen.blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+        Screen.blit(poseStack, 10, 13, 0, 0, 0, 23, 23, 32, 32);
 
         // Draws the search icon next to the search text field
         RenderSystem.setShaderTexture(0, IconButton.ICONS);
@@ -369,7 +371,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        protected void setFocused(boolean focused)
+        public void setFocused(boolean focused)
         {
             super.setFocused(focused);
             if(focused)
