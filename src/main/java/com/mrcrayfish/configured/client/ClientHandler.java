@@ -7,8 +7,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.common.ForgeConfigSpec;
 import org.lwjgl.glfw.GLFW;
 
 import com.mrcrayfish.configured.Config;
@@ -103,7 +106,13 @@ public class ClientHandler
         Set<ModConfig> configSet = getConfigSets().get(type);
         synchronized(configSet)
         {
-            Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(ForgeConfig::new).collect(Collectors.toSet());
+            Set<IModConfig> filteredConfigSets = configSet.stream().filter(config -> config.getModId().equals(container.getModId())).map(config -> {
+                ForgeConfigSpec forgeConfigSpec = ConfigHelper.findForgeConfigSpec(config.getSpec());
+                if(forgeConfigSpec != null) {
+                    return new ForgeConfig(config, forgeConfigSpec);
+                }
+                return null;
+            }).collect(Collectors.toSet());
             if(!filteredConfigSets.isEmpty())
             {
                 configMap.put(type, filteredConfigSets);

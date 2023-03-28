@@ -8,6 +8,7 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.ListMenuScreen;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.config.ModConfig.Type;
 
@@ -22,10 +23,13 @@ import java.util.function.Function;
 public class ForgeConfig implements IModConfig
 {
     ModConfig config;
+    protected final ForgeConfigSpec spec;
 
-    public ForgeConfig(ModConfig config)
+    public ForgeConfig(ModConfig config, ForgeConfigSpec spec)
     {
         this.config = config;
+        this.spec = spec;
+        ConfigHelper.gatherAllForgeConfigValues(spec.getValues(), spec);
     }
 
     @Override
@@ -73,7 +77,7 @@ public class ForgeConfig implements IModConfig
         else
         {
             Configured.LOGGER.info("Sending config reloading event for {}", this.config.getFileName());
-            this.config.getSpec().afterReload();
+            this.spec.afterReload();
             ConfigHelper.fireEvent(this.config, ConfigHelper.reloadingEvent(this.config));
         }
     }
@@ -81,7 +85,7 @@ public class ForgeConfig implements IModConfig
     @Override
     public IConfigEntry getRoot()
     {
-        return new ForgeFolderEntry("Root", this.config.getSpec().getValues(), this.config.getSpec(), true);
+        return new ForgeFolderEntry("Root", this.config.getSpec().getValues(), this.spec, true);
     }
 
     @Override
