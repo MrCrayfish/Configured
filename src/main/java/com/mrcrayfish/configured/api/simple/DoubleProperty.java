@@ -38,7 +38,7 @@ public final class DoubleProperty extends ConfigProperty<Double>
      */
     public static DoubleProperty create(double defaultValue)
     {
-        return create(defaultValue, Double.MIN_VALUE, Double.MAX_VALUE);
+        return create(defaultValue, -Double.MAX_VALUE, Double.MAX_VALUE);
     }
 
     /**
