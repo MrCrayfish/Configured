@@ -37,7 +37,7 @@ public class Configured implements ModInitializer
         {
             synchronizer.waitFor(server.submit(() ->
             {
-                boolean local = handler.getConnection().isMemoryConnection();
+                boolean local = handler.connection.isMemoryConnection();
                 SimpleConfigManager.getInstance().getMessagesForLogin(local).forEach(pair ->
                 {
                     FriendlyByteBuf buf = PacketByteBufs.create();

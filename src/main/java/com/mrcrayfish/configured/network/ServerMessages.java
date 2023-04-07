@@ -21,7 +21,7 @@ public class ServerMessages
         ServerPlayNetworking.registerGlobalReceiver(MessageSyncSimpleConfig.ID, (server, player, handler, buf, sender) -> {
             ResourceLocation id = buf.readResourceLocation();
             byte[] data = buf.readByteArray();
-            server.execute(() -> ServerPlayHandler.handleSyncSimpleConfigMessage(handler.getConnection(), player, id, data));
+            server.execute(() -> ServerPlayHandler.handleSyncSimpleConfigMessage(handler.connection, player, id, data));
         });
     }
 }

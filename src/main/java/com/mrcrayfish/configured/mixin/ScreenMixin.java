@@ -1,5 +1,6 @@
 package com.mrcrayfish.configured.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ScreenMixin
 {
     @Inject(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V"))
-    public void afterSetTexture(int i, CallbackInfo ci)
+    public void afterSetTexture(PoseStack poseStack, CallbackInfo ci)
     {
         IBackgroundTexture.loadTexture(this);
     }

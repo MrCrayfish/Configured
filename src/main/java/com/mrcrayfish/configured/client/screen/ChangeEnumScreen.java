@@ -124,7 +124,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         super.render(poseStack, mouseX, mouseY, partialTicks);
         RenderSystem.setShaderTexture(0, ListMenuScreen.CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        blit(poseStack, 10, 13, this.getBlitOffset(), 0, 0, 23, 23, 32, 32);
+        blit(poseStack, 10, 13, 0, 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
             this.setActiveTooltip(Component.translatable("configured.gui.info"));

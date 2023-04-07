@@ -21,9 +21,10 @@ public class AbstractSelectionListMixin
         IBackgroundTexture.loadTexture(this);
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V"))
+    // TODO: Check if this is still required
+    /*@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V"))
     public void beforeEnableDepthTest(PoseStack poseStack, int mouseX, int mouseY, float partialTick, CallbackInfo ci)
     {
         IBackgroundTexture.loadTexture(this);
-    }
+    }*/
 }
