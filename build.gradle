@@ -1,9 +1,9 @@
-def githubFile = new File(System.getenv("GITHUB_CREDENTIALS"))
-def githubProperties = new Properties()
-githubProperties.load(new FileInputStream(githubFile))
-project.ext {
-    githubCredentials = githubProperties
-}
+//def githubFile = new File(System.getenv("GITHUB_CREDENTIALS"))
+//def githubProperties = new Properties()
+//githubProperties.load(new FileInputStream(new File("", "")))
+//project.ext {
+//    githubCredentials = githubProperties
+//}
 
 subprojects {
 
@@ -57,8 +57,8 @@ subprojects {
             name = "MrCrayfish (GitHub)"
             url = "https://maven.pkg.github.com/MrCrayfish/Maven"
             credentials {
-                username = githubCredentials['GITHUB_USERNAME']
-                password = githubCredentials['GITHUB_TOKEN']
+                username = System.getenv("GITHUB_USERNAME")//githubCredentials['GITHUB_USERNAME']
+                password = System.getenv("GITHUB_TOKEN")//githubCredentials['GITHUB_TOKEN']
             }
         }
     }

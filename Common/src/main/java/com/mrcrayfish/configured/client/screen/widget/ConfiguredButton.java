@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.client.screen.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -29,7 +30,7 @@ public class ConfiguredButton extends Button
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick)
+    public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTick)
     {
         if(this.visible)
         {

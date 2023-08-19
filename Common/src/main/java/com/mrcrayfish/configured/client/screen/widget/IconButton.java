@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -35,7 +36,7 @@ public class IconButton extends ConfiguredButton
     }
 
     @Override
-    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    public void renderWidget(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks)
     {
         super.renderWidget(poseStack, mouseX, mouseY, partialTicks);
         Minecraft mc = Minecraft.getInstance();
@@ -58,11 +59,11 @@ public class IconButton extends ConfiguredButton
         if(renderIcon)
         {
             RenderSystem.setShaderColor(brightness, brightness, brightness, this.alpha);
-            blit(poseStack, iconX, iconY, 0, this.u, this.v, 11, 11, 64, 64); //TODO what happen to blit offset
+            poseStack.blit(ICONS, iconX, iconY, 0, this.u, this.v, 11, 11, 64, 64); //TODO what happen to blit offset
         }
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         int textColor = (this.active ? 0xFFFFFF : 0xA0A0A0) | Mth.ceil(this.alpha * 255.0F) << 24;
-        drawString(poseStack, mc.font, this.label, iconX + 14, iconY + 1, textColor);
+        poseStack.drawString(mc.font, this.label, iconX + 14, iconY + 1, textColor);
     }
 
     @Override

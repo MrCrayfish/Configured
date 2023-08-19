@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
@@ -32,7 +33,7 @@ public class CheckBoxButton extends Checkbox
     }
 
     @Override
-    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    public void renderWidget(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks)
     {
         Minecraft minecraft = Minecraft.getInstance();
         RenderSystem.enableDepthTest();
@@ -42,7 +43,7 @@ public class CheckBoxButton extends Checkbox
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        blit(poseStack, this.getX(), this.getY(), this.isHoveredOrFocused() ? 50 : 36, this.selected() ? 49 : 35, 14, 14, 64, 64);
+        poseStack.blit(ICONS, this.getX(), this.getY(), this.isHoveredOrFocused() ? 50 : 36, this.selected() ? 49 : 35, 14, 14, 64, 64);
         //this.renderBg(poseStack, minecraft, mouseX, mouseY); //TODO wat this?
     }
 

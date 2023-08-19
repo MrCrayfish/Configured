@@ -2,6 +2,8 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -32,14 +34,14 @@ public interface IColouredTooltip
     @Nullable
     Integer getTooltipBackgroundColour();
 
-    default boolean drawColouredTooltip(PoseStack poseStack, int mouseX, int mouseY, Screen screen)
+    default boolean drawColouredTooltip(GuiGraphics poseStack, int mouseX, int mouseY, Screen screen)
     {
         if(this.getTooltipText() != null)
         {
             boolean positioned = this.getTooltipX() != null && this.getTooltipY() != null;
             int x = positioned ? this.getTooltipX() + 12 : mouseX;
             int y = positioned ? this.getTooltipY() - 12 : mouseY;
-            screen.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
+            poseStack.renderComponentTooltip(Minecraft.getInstance().font, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
             return true;
         }
         return false;

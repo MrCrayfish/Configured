@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'net.minecraftforge.gradle' version '6.+'
 }
 
 archivesBaseName = "${mod_id}-forge"
@@ -136,8 +136,8 @@ publishing {
             name = "GitHubPackages"
             url = "https://maven.pkg.github.com/MrCrayfish/Maven"
             credentials {
-                username = rootProject.githubCredentials['GITHUB_USERNAME']
-                password = rootProject.githubCredentials['GITHUB_TOKEN']
+                username = System.getenv("GITHUB_USERNAME")//rootProject.githubCredentials['GITHUB_USERNAME']
+                password = System.getenv("GITHUB_TOKEN")//rootProject.githubCredentials['GITHUB_TOKEN']
             }
         }
     }

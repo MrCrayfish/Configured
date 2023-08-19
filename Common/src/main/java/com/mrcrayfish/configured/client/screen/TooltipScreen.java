@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.network.chat.Component;
@@ -71,7 +72,7 @@ public abstract class TooltipScreen extends Screen
         this.tooltipOutlineColour = outlineColour;
     }
 
-    protected void drawTooltip(PoseStack poseStack, int mouseX, int mouseY)
+    protected void drawTooltip(GuiGraphics poseStack, int mouseX, int mouseY)
     {
         if(this.tooltipText != null)
         {

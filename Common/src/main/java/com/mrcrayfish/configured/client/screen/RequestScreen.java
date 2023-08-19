@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.Util;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -55,12 +56,12 @@ public class RequestScreen extends ListMenuScreen implements IEditing
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float deltaTick)
+    public void render(GuiGraphics poseStack, int mouseX, int mouseY, float deltaTick)
     {
         super.render(poseStack, mouseX, mouseY, deltaTick);
         if(this.failed)
         {
-            drawCenteredString(poseStack, this.font, this.message != null ? this.message : FAILED_LABEL, this.width / 2, this.height / 2, 8421504);
+            poseStack.drawCenteredString(this.font, this.message != null ? this.message : FAILED_LABEL, this.width / 2, this.height / 2, 8421504);
         }
         else if(this.requested)
         {
@@ -69,8 +70,8 @@ public class RequestScreen extends ListMenuScreen implements IEditing
                 case 1, 3 -> "o O o";
                 case 2 -> "o o O";
             };
-            drawCenteredString(poseStack, this.font, REQUESTING_LABEL, this.width / 2, this.height / 2 - this.font.lineHeight, 0xFFFFFFFF);
-            drawCenteredString(poseStack, this.font, label, this.width / 2, this.height / 2 + 5, 8421504);
+            poseStack.drawCenteredString(this.font, REQUESTING_LABEL, this.width / 2, this.height / 2 - this.font.lineHeight, 0xFFFFFFFF);
+            poseStack.drawCenteredString(this.font, label, this.width / 2, this.height / 2 + 5, 8421504);
         }
     }
 

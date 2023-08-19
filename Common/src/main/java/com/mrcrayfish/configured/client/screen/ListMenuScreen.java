@@ -10,6 +10,7 @@ import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.EditBox;
@@ -119,7 +120,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks)
     {
         // Resets the active tooltip each draw call
         this.resetTooltip();
@@ -132,7 +133,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         this.searchTextField.render(poseStack, mouseX, mouseY, partialTicks);
 
         // Draw title
-        drawCenteredString(poseStack, this.font, this.title, this.width / 2, 7, 0xFFFFFF);
+        poseStack.drawCenteredString(this.font, this.title, this.width / 2, 7, 0xFFFFFF);
 
         super.render(poseStack, mouseX, mouseY, partialTicks);
 
@@ -142,12 +143,12 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         // Draws the Configured logo in the top left of the screen
         RenderSystem.setShaderTexture(0, CONFIGURED_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        Screen.blit(poseStack, 10, 13, 0, 0, 0, 23, 23, 32, 32);
+        poseStack.blit(CONFIGURED_LOGO, 10, 13, 0, 0, 0, 23, 23, 32, 32);
 
         // Draws the search icon next to the search text field
         RenderSystem.setShaderTexture(0, IconButton.ICONS);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        Screen.blit(poseStack, this.width / 2 - 128, 26, 14, 14, 22, 11, 10, 10, 64, 64);
+        poseStack.blit(IconButton.ICONS, this.width / 2 - 128, 26, 14, 14, 22, 11, 10, 10, 64, 64);
 
         // Gives a chance for child classes to set the active tooltip
         this.updateTooltip(mouseX, mouseY);
@@ -163,7 +164,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
             {
                 if(widget instanceof Button && ((Button) widget).isHoveredOrFocused())
                 {
-                    //TODO check
+                    //TODO check this, not sure how this will work. Better using poseStack? (GuiGraphics)
                     //((Button) widget).renderToolTip(poseStack, mouseX, mouseY);
                     break;
                 }
@@ -171,7 +172,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
     }
 
-    protected void renderForeground(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {}
+    protected void renderForeground(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks) {}
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button)
@@ -223,13 +224,13 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+        public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks)
         {
             super.render(poseStack, mouseX, mouseY, partialTicks);
             this.renderToolTips(poseStack, mouseX, mouseY);
         }
 
-        private void renderToolTips(PoseStack poseStack, int mouseX, int mouseY)
+        private void renderToolTips(GuiGraphics poseStack, int mouseX, int mouseY)
         {
             this.children().forEach(item ->
             {
@@ -268,7 +269,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(GuiGraphics poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
             if(this.isMouseOver(mouseX, mouseY))
             {
@@ -321,9 +322,9 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(GuiGraphics poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
+            poseStack.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
         }
     }
 
@@ -338,10 +339,10 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(GuiGraphics poseStack, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top, 0xFFFFFFFF);
-            Screen.drawCenteredString(poseStack, ListMenuScreen.this.minecraft.font, this.bottomText, left + width / 2, top + 12, 0xFFFFFFFF);
+            poseStack.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top, 0xFFFFFFFF);
+            poseStack.drawCenteredString(ListMenuScreen.this.minecraft.font, this.bottomText, left + width / 2, top + 12, 0xFFFFFFFF);
 
             if(this.isMouseOver(mouseX, mouseY))
             {
@@ -385,7 +386,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick)
+        public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTick)
         {
             super.render(poseStack, mouseX, mouseY, partialTick);
             if(this.clearable && !this.getValue().isEmpty())
@@ -394,7 +395,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
                 RenderSystem.setShaderTexture(0, IconButton.ICONS);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
                 boolean hovered = ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, mouseX, mouseY);
-                blit(poseStack, this.getX() + this.width - 15, this.getY() + 5, 9, 9, hovered ? 9 : 0, 55, 9, 9, 64, 64);
+                poseStack.blit(IconButton.ICONS, this.getX() + this.width - 15, this.getY() + 5, 9, 9, hovered ? 9 : 0, 55, 9, 9, 64, 64);
             }
         }
 

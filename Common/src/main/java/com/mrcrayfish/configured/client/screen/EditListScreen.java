@@ -10,6 +10,7 @@ import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
@@ -109,11 +110,11 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks)
     {
         this.renderBackground(poseStack);
         this.list.render(poseStack, mouseX, mouseY, partialTicks);
-        drawCenteredString(poseStack, this.font, this.title, this.width / 2, 14, 0xFFFFFF);
+        poseStack.drawCenteredString(this.font, this.title, this.width / 2, 14, 0xFFFFFF);
         super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 
@@ -182,7 +183,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         }
 
         @Override
-        public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+        public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks)
         {
             super.render(poseStack, mouseX, mouseY, partialTicks);
             this.children().forEach(entry ->
@@ -243,10 +244,11 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(GuiGraphics poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            if(x % 2 != 0) Screen.fill(poseStack, left, top, left + width, top + 24, 0x55000000);
-            EditListScreen.this.minecraft.font.draw(poseStack, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
+            if(x % 2 != 0) poseStack.fill(left, top, left + width, top + 24, 0x55000000);
+            //TODO check for new
+            //EditListScreen.this.minecraft.font.draw(poseStack, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
             this.editButton.visible = true;
             this.editButton.setX(left + width - 44);
             this.editButton.setY(top + 2);
