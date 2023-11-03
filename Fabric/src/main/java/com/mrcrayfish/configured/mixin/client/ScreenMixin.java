@@ -15,9 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ScreenMixin
 {
     //TODO fix this mixin, I don't know how to do it
-    @Inject(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 0))
-    public void afterSetTexture(GuiGraphics poseStack, CallbackInfo ci)
-    {
-        IBackgroundTexture.loadTexture(this);
-    }
+    //@Inject(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 0))
+    //public void afterSetTexture(GuiGraphics poseStack)
+    //{
+    //    IBackgroundTexture.loadTexture(this);
+    //}
 }

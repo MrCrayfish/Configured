@@ -94,8 +94,7 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         for(int i = 0; i < lines.size(); i++)
         {
             int lineWidth = this.font.width(lines.get(i));
-            //TODO check for new
-            //this.font.draw(poseStack, lines.get(i), this.width / 2 - lineWidth / 2, this.startY + MESSAGE_PADDING + i * (this.font.lineHeight + 2) + 1, 0xFFFFFF);
+            poseStack.drawString(this.font, lines.get(i), this.width / 2 - lineWidth / 2, this.startY + MESSAGE_PADDING + i * (this.font.lineHeight + 2) + 1, 0xFFFFFF);
         }
     }
 

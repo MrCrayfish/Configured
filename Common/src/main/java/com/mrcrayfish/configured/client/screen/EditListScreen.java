@@ -247,8 +247,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         public void render(GuiGraphics poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
             if(x % 2 != 0) poseStack.fill(left, top, left + width, top + 24, 0x55000000);
-            //TODO check for new
-            //EditListScreen.this.minecraft.font.draw(poseStack, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
+            poseStack.drawString(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
             this.editButton.visible = true;
             this.editButton.setX(left + width - 44);
             this.editButton.setY(top + 2);
