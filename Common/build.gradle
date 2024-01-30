@@ -67,15 +67,18 @@ publishing {
     }
 
     repositories {
-        maven {
-            url "file://" + System.getenv("LOCAL_MAVEN")
-        }
-        maven {
-            name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/MrCrayfish/Maven"
-            credentials {
-                username = githubCredentials['GITHUB_USERNAME']
-                password = githubCredentials['GITHUB_TOKEN']
+        if (System.getenv("CI")) {
+            maven {
+                name = "GitHubPackages"
+                url = "https://maven.pkg.github.com/MrCrayfish/Maven"
+                credentials {
+                    username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+                    password = project.findProperty("gpr.key") ?: System.getenv("GPR_KEY")
+                }
+            }
+        } else {
+            maven {
+                url "file://" + System.getenv("LOCAL_MAVEN")
             }
         }
     }
