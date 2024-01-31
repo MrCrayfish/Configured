@@ -47,7 +47,7 @@ dependencies {
     //modRuntimeOnly "mezz.jei:jei-${jei_minecraft_version}-fabric:${jei_version}"
 
     implementation "com.google.code.findbugs:jsr305:3.0.2"
-    implementation project(":Common")
+    implementation project(":common")
 
     testModImplementation sourceSets.main.output
     testModImplementation sourceSets.test.output
@@ -77,7 +77,7 @@ loom {
 }
 
 processResources {
-    from project(":Common").sourceSets.main.resources
+    from project(":common").sourceSets.main.resources
     inputs.property "version", project.version
 
     filesMatching("fabric.mod.json") {
@@ -86,7 +86,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile) {
-    source(project(":Common").sourceSets.main.allSource)
+    source(project(":common").sourceSets.main.allSource)
 }
 
 publishing {
