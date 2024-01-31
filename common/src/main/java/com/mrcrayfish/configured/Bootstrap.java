@@ -9,6 +9,7 @@ public class Bootstrap
 {
     public static void init()
     {
+        Config.load();
         Network.init();
         Events.init();
     }

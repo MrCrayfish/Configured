@@ -3,7 +3,6 @@ package com.mrcrayfish.configured;
 import com.mrcrayfish.configured.client.ClientConfigured;
 import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.client.EditingTracker;
-import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.mrcrayfish.configured.network.ForgeNetwork;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -34,7 +33,6 @@ public class Configured
             bus.addListener(ClientConfigured::onRegisterTooltipComponentFactory);
         });
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
-        MinecraftForge.EVENT_BUS.register(SimpleConfigManager.getInstance());
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> MinecraftForge.EVENT_BUS.register(EditingTracker.instance()));
     }
 

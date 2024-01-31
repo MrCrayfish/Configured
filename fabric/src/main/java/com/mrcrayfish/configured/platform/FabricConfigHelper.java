@@ -5,17 +5,14 @@ import com.mrcrayfish.configured.api.IConfigProviderT;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
-import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.platform.services.IConfigHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.commons.lang3.tuple.Pair;
+import net.minecraft.world.level.storage.LevelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,6 +28,13 @@ import java.util.function.Supplier;
 public class FabricConfigHelper implements IConfigHelper
 {
     private static final ResourceLocation BACKGROUND_LOCATION = new ResourceLocation("textures/gui/options_background.png");
+    private static final LevelResource SERVER_CONFIG_RESOURCE = new LevelResource("serverconfig");
+
+    @Override
+    public LevelResource getServerConfigResource()
+    {
+        return SERVER_CONFIG_RESOURCE;
+    }
 
     @Override
     public Set<IModConfigProvider> getProviders()
@@ -126,62 +130,6 @@ public class FabricConfigHelper implements IConfigHelper
             throw new RuntimeException("Failed to load config provider", e);
         }
     }
-
-    @Override
-    public List<Pair<SimpleConfig, java.lang.Object>> getAllSimpleConfigs()
-    {
-        List<Pair<SimpleConfig, Object>> configs = new ArrayList<>();
-        FabricLoader.getInstance().getAllMods().forEach(container ->
-        {
-            CustomValue value = container.getMetadata().getCustomValue("configured");
-            if(value != null && value.getType() == CustomValue.CvType.OBJECT)
-            {
-                CustomValue.CvObject configuredObj = value.getAsObject();
-                CustomValue configsValue = configuredObj.get("configs");
-                if(configsValue != null && configsValue.getType() == CustomValue.CvType.ARRAY)
-                {
-                    CustomValue.CvArray configsArray = configsValue.getAsArray();
-                    configsArray.forEach(elementValue ->
-                    {
-                        if(elementValue.getType() == CustomValue.CvType.STRING)
-                        {
-                            try
-                            {
-                                String className = elementValue.getAsString();
-                                Class<?> configClass = Class.forName(className);
-                                for(Field field : configClass.getDeclaredFields())
-                                {
-                                    SimpleConfig config = field.getDeclaredAnnotation(SimpleConfig.class);
-                                    if(config != null)
-                                    {
-                                        field.setAccessible(true);
-                                        if(!Modifier.isStatic(field.getModifiers()))
-                                            throw new RuntimeException("Fields annotated with @SimpleConfig must be static");
-                                        Object object = field.get(null);
-                                        configs.add(Pair.of(config, object));
-                                    }
-                                }
-                            }
-                            catch(ClassNotFoundException | IllegalAccessException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    });
-                }
-            }
-        });
-        return configs;
-    }
-
-    @Override
-    public void sendLegacySimpleConfigLoadEvent(String modId, java.lang.Object source) {}
-
-    @Override
-    public void sendLegacySimpleConfigUnloadEvent(String modId, java.lang.Object source) {}
-
-    @Override
-    public void sendLegacySimpleConfigReloadEvent(String modId, java.lang.Object source) {}
 
     @Override
     public ResourceLocation getBackgroundTexture(String modId)

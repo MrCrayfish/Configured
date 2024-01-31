@@ -5,22 +5,15 @@ import com.mrcrayfish.configured.api.IConfigProvider;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
-import com.mrcrayfish.configured.api.simple.event.SimpleConfigEvent;
-import com.mrcrayfish.configured.api.simple.SimpleConfig;
 import com.mrcrayfish.configured.platform.services.IConfigHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
-import net.minecraftforge.forgespi.language.ModFileScanData;
-import org.apache.commons.lang3.tuple.Pair;
-import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +28,13 @@ import java.util.function.Supplier;
 public class ForgeConfigHelper implements IConfigHelper
 {
     private static final ResourceLocation BACKGROUND_LOCATION = new ResourceLocation("textures/gui/options_background.png");
-    private static final Type SIMPLE_CONFIG = Type.getType(SimpleConfig.class);
+    private static final LevelResource SERVER_CONFIG_RESOURCE = new LevelResource("serverconfig");
+
+    @Override
+    public LevelResource getServerConfigResource()
+    {
+        return SERVER_CONFIG_RESOURCE;
+    }
 
     @Override
     public Set<IModConfigProvider> getProviders()
@@ -143,60 +142,6 @@ public class ForgeConfigHelper implements IConfigHelper
             Constants.LOG.error("Failed to load config provider from mod: {}", container.getModId());
             return null;
         }
-    }
-
-    @Override
-    public List<Pair<SimpleConfig, Object>> getAllSimpleConfigs()
-    {
-        List<ModFileScanData.AnnotationData> annotations = ModList.get().getAllScanData().stream().map(ModFileScanData::getAnnotations).flatMap(Collection::stream).filter(a -> SIMPLE_CONFIG.equals(a.annotationType())).toList();
-        List<Pair<SimpleConfig, Object>> configs = new ArrayList<>();
-        annotations.forEach(data ->
-        {
-            try
-            {
-                Class<?> configClass = Class.forName(data.clazz().getClassName());
-                Field field = configClass.getDeclaredField(data.memberName());
-                field.setAccessible(true);
-                Object object = field.get(null);
-                Optional.ofNullable(field.getDeclaredAnnotation(SimpleConfig.class)).ifPresent(simpleConfig -> {
-                    configs.add(Pair.of(simpleConfig, object));
-                });
-            }
-            catch(NoSuchFieldException | ClassNotFoundException | IllegalAccessException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
-        return configs;
-    }
-
-    @Override
-    public void sendLegacySimpleConfigLoadEvent(String modId, Object source)
-    {
-        this.sendSimpleEvent(modId, new SimpleConfigEvent.Load(source));
-    }
-
-    @Override
-    public void sendLegacySimpleConfigUnloadEvent(String modId, Object source)
-    {
-        this.sendSimpleEvent(modId, new SimpleConfigEvent.Unload(source));
-    }
-
-    @Override
-    public void sendLegacySimpleConfigReloadEvent(String modId, Object source)
-    {
-        this.sendSimpleEvent(modId, new SimpleConfigEvent.Reload(source));
-    }
-
-    private void sendSimpleEvent(String modId, SimpleConfigEvent event)
-    {
-        ModList.get().getModContainerById(modId).ifPresent(container ->
-        {
-            if(container instanceof FMLModContainer modContainer)
-            {
-                modContainer.getEventBus().post(event);
-            }
-        });
     }
 
     @Override

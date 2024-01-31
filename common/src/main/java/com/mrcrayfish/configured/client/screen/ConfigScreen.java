@@ -327,7 +327,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         return entries.stream().filter(item -> {
             if(item instanceof IIgnoreSearch)
                 return false;
-            if(item instanceof FolderItem && !Config.CLIENT.includeFoldersInSearch.get())
+            if(item instanceof FolderItem && !Config.isIncludeFoldersInSearch())
                 return false;
             return item.getLabel().toLowerCase(Locale.ENGLISH).contains(s.toLowerCase(Locale.ENGLISH));
         }).collect(Collectors.toList());
@@ -416,7 +416,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             boolean showValidationHint = this.validationHint != null;
             int trimLength = showValidationHint ? 100 : 80;
-            ChatFormatting labelStyle = this.holder.isChanged() ? Config.CLIENT.changedFormatting.get() : ChatFormatting.RESET;
+            ChatFormatting labelStyle = this.holder.isChanged() ? Config.getChangedFormatting() : ChatFormatting.RESET;
             Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFF);
 
             if(showValidationHint)

@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured.client;
 
-import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -35,10 +34,6 @@ public class ClientConfigured implements ClientModInitializer
                 }
             });
         }
-
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            SimpleConfigManager.getInstance().onClientDisconnect(handler.getConnection());
-        });
     }
 
     private boolean isModListInstalled()

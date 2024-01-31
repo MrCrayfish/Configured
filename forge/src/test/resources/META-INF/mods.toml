@@ -20,7 +20,6 @@ displayURL="https://mrcrayfish.com/mods?id=configured"
     configuredBackground="minecraft:textures/block/stone.png"
     configuredProviders=[
         "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
         "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
     ]
 
@@ -30,20 +29,7 @@ version="1.0.0"
 displayName="Config Test"
 authors="MrCrayfish"
 
-[[mods]]
-modId="simple_config_test"
-version="1.0.0"
-displayName="SimpleConfig Test"
-authors="MrCrayfish"
-
 [[dependencies.config_test]]
-modId="configured"
-mandatory=true
-versionRange="[1.5.3,)"
-ordering="NONE"
-side="BOTH"
-
-[[dependencies.simple_config_test]]
 modId="configured"
 mandatory=true
 versionRange="[1.5.3,)"

@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -24,6 +23,7 @@ import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageException;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
+import org.apache.commons.io.file.PathUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ import java.util.List;
  */
 public class WorldSelectionScreen extends ListMenuScreen
 {
-    private static final LevelResource SERVER_CONFIG_FOLDER = SimpleConfigManager.createLevelResource("serverconfig");
+    private static final LevelResource SERVER_CONFIG_FOLDER = Services.CONFIG.getServerConfigResource();
     private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
 
     private final IModConfig config;
@@ -208,7 +208,9 @@ public class WorldSelectionScreen extends ListMenuScreen
             try(LevelStorageSource.LevelStorageAccess storageAccess = Minecraft.getInstance().getLevelSource().createAccess(worldFileName))
             {
                 Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
-                SimpleConfigManager.createDirectory(worldConfigPath);
+                PathUtils.createParentDirectories(worldConfigPath);
+                if(!Files.isDirectory(worldConfigPath))
+                    Files.createDirectory(worldConfigPath);
                 WorldSelectionScreen.this.config.loadWorldConfig(worldConfigPath, T -> {
                     if(Services.PLATFORM.isModLoaded(T.getModId())) {
                         Component configName = Component.literal(ModConfigSelectionScreen.createLabelFromModConfig(WorldSelectionScreen.this.config));

@@ -17,7 +17,7 @@ public class Events
         PlayerEvents.LOGGED_IN.register(player ->
         {
             ServerPlayer serverPlayer = (ServerPlayer) player;
-            boolean developer = EnvironmentHelper.getEnvironment() == Environment.DEDICATED_SERVER && Config.DEVELOPER.enabled.get() && Config.DEVELOPER.developers.get().contains(serverPlayer.getStringUUID());
+            boolean developer = EnvironmentHelper.getEnvironment() == Environment.DEDICATED_SERVER && Config.isDeveloperEnabled() && Config.getDevelopers().contains(serverPlayer.getStringUUID());
             boolean lanServer = serverPlayer.getServer() != null && !serverPlayer.getServer().isDedicatedServer();
             Network.getPlay().sendToPlayer(() -> serverPlayer, new S2CMessageSessionData(developer, lanServer));
         });

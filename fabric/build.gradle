@@ -7,15 +7,6 @@ plugins {
 archivesBaseName = "${mod_id}-fabric"
 version = "${minecraft_version}-${mod_version}"
 
-sourceSets {
-    testMod {
-        compileClasspath += main.compileClasspath
-        runtimeClasspath += main.runtimeClasspath
-        compileClasspath += test.compileClasspath
-        runtimeClasspath += test.runtimeClasspath
-    }
-}
-
 repositories {
     maven {
         url "https://maven.terraformersmc.com/"
@@ -48,9 +39,6 @@ dependencies {
 
     implementation "com.google.code.findbugs:jsr305:3.0.2"
     implementation project(":common")
-
-    testModImplementation sourceSets.main.output
-    testModImplementation sourceSets.test.output
 }
 
 loom {
@@ -61,11 +49,6 @@ loom {
             setConfigName("Fabric Client")
             ideConfigGenerated(true)
             runDir("run")
-        }
-        testModClient {
-            inherit client
-            setConfigName("Fabric Test Client")
-            setSource(sourceSets.testMod)
         }
         server {
             server()

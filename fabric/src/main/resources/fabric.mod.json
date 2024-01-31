@@ -47,7 +47,6 @@
                 "com.mrcrayfish.configured.Config"
             ],
             "providers": [
-                "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
                 "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
             ],
             "background": "minecraft:textures/block/stone.png"

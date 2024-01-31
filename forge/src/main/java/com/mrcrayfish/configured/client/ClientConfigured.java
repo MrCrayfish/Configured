@@ -8,7 +8,6 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.api.util.ConfigScreenHelper;
 import com.mrcrayfish.configured.client.screen.TooltipScreen;
-import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -17,7 +16,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -46,7 +44,7 @@ public class ClientConfigured
         ModList.get().forEachModContainer((modId, container) ->
         {
             // Ignore mods that already implement their own custom factory
-            if(container.getCustomExtension(ConfigScreenHandler.ConfigScreenFactory.class).isPresent() && !Config.CLIENT.forceConfiguredMenu.get())
+            if(container.getCustomExtension(ConfigScreenHandler.ConfigScreenFactory.class).isPresent() && !Config.isForceConfiguredMenu())
                 return;
 
             Map<ConfigType, Set<IModConfig>> modConfigMap = ClientHandler.createConfigMap(new ModContext(modId));
@@ -85,12 +83,6 @@ public class ClientConfigured
             Screen oldScreen = minecraft.screen;
             minecraft.setScreen(new ModListScreen(oldScreen));
         }
-    }
-
-    @SubscribeEvent
-    public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggingOut event)
-    {
-        SimpleConfigManager.getInstance().onClientDisconnect(event.getConnection());
     }
 
     @SubscribeEvent

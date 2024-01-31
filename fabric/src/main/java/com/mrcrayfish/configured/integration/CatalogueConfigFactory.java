@@ -1,13 +1,11 @@
 package com.mrcrayfish.configured.integration;
 
 import com.google.common.collect.ImmutableMap;
-import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.api.util.ConfigScreenHelper;
 import com.mrcrayfish.configured.client.ClientHandler;
-import com.mrcrayfish.configured.impl.simple.SimpleConfigManager;
 import com.mrcrayfish.configured.platform.Services;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.gui.screens.Screen;
@@ -31,6 +29,8 @@ public final class CatalogueConfigFactory
     {
         String modId = container.getMetadata().getId();
         Map<ConfigType, Set<IModConfig>> modConfigMap = ClientHandler.createConfigMap(new ModContext(modId));
+        if(modConfigMap.isEmpty())
+            return null;
         ResourceLocation backgroundTexture = Services.CONFIG.getBackgroundTexture(modId);
         return ConfigScreenHelper.createSelectionScreen(currentScreen, Component.literal(container.getMetadata().getName()), modConfigMap, backgroundTexture);
     }
@@ -39,9 +39,6 @@ public final class CatalogueConfigFactory
     public static Map<String, BiFunction<Screen, ModContainer, Screen>> createConfigProvider()
     {
         Map<String, BiFunction<Screen, ModContainer, Screen>> providers = new HashMap<>();
-        SimpleConfigManager.getInstance().getConfigs().stream().map(SimpleConfigManager.SimpleConfigImpl::getModId).distinct().forEach(s -> {
-            if(!s.equals(Constants.MOD_ID)) providers.put(s, CatalogueConfigFactory::createConfigScreen);
-        });
         return ImmutableMap.copyOf(providers);
     }
 }
