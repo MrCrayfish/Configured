@@ -2,22 +2,21 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.ConfigType;
+import com.mrcrayfish.configured.api.Environment;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.SessionData;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.platform.Services;
 import com.mrcrayfish.configured.util.ConfigHelper;
-import com.mrcrayfish.framework.api.Environment;
-import com.mrcrayfish.framework.api.util.EnvironmentHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -66,7 +65,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         if(!remoteConfigs.isEmpty() && (!ConfigHelper.isPlayingGame() || ConfigHelper.isConfiguredInstalledOnServer()))
         {
             Player player = Minecraft.getInstance().player;
-            if(ConfigHelper.isPlayingGame() && ConfigHelper.isPlayingRemotely())
+            if(ConfigHelper.isPlayingGame() && isPlayingRemotely())
             {
                 if(SessionData.isLan())
                 {
@@ -194,7 +193,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     }
                 }
-                else if(ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
+                else if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
                 {
                     if(Services.PLATFORM.isModLoaded(config.getModId()))
                     {
@@ -217,7 +216,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(ConfigHelper.isPlayingGame())
             {
-                if(ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
+                if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
                 {
                     return 22;
                 }
@@ -236,7 +235,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(ConfigHelper.isPlayingGame())
             {
-                if(ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
+                if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
                 {
                     return 22;
                 }
@@ -261,7 +260,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             {
                 return Component.translatable("configured.gui.select_world");
             }
-            if(ConfigHelper.isPlayingGame() && ConfigHelper.isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync() && config.getType() != ConfigType.DEDICATED_SERVER)
+            if(ConfigHelper.isPlayingGame() && isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync() && config.getType() != ConfigType.DEDICATED_SERVER)
             {
                 return Component.translatable("configured.gui.request");
             }
@@ -371,9 +370,9 @@ public class ModConfigSelectionScreen extends ListMenuScreen
     {
         return switch(config.getType())
         {
-            case CLIENT -> EnvironmentHelper.getEnvironment() == Environment.CLIENT;
+            case CLIENT -> Services.PLATFORM.getEnvironment() == Environment.CLIENT;
             case UNIVERSAL, MEMORY -> true;
-            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isRunningLocalServer() || ConfigHelper.isOperator(player) && SessionData.isDeveloper(player);
+            case SERVER, WORLD, SERVER_SYNC, WORLD_SYNC -> !ConfigHelper.isPlayingGame() || isRunningLocalServer() || ConfigHelper.isOperator(player) && SessionData.isDeveloper(player);
             case DEDICATED_SERVER -> false;
         };
     }
@@ -383,9 +382,20 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         return switch(config.getType())
         {
             case CLIENT, UNIVERSAL, MEMORY -> true;
-            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame() || ConfigHelper.isRunningLocalServer();
-            case WORLD, WORLD_SYNC -> ConfigHelper.isRunningLocalServer();
+            case SERVER, SERVER_SYNC -> !ConfigHelper.isPlayingGame() || isRunningLocalServer();
+            case WORLD, WORLD_SYNC -> isRunningLocalServer();
             case DEDICATED_SERVER -> false;
         };
+    }
+
+    public static boolean isRunningLocalServer()
+    {
+        return Minecraft.getInstance().hasSingleplayerServer();
+    }
+
+    public static boolean isPlayingRemotely()
+    {
+        ClientPacketListener listener = Minecraft.getInstance().getConnection();
+        return listener != null && !listener.getConnection().isMemoryConnection();
     }
 }

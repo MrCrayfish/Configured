@@ -1,9 +1,10 @@
 package com.mrcrayfish.configured.client;
 
+import com.mrcrayfish.configured.network.FabricNetwork;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
@@ -34,6 +35,15 @@ public class ClientConfigured implements ClientModInitializer
                 }
             });
         }
+
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetwork.SESSION_DATA_MESSAGE_ID, (client, handler, buf, responseSender) -> {
+            boolean developer = buf.readBoolean();
+            boolean lan = buf.readBoolean();
+            client.execute(() -> {
+                SessionData.setDeveloper(developer);
+                SessionData.setLan(lan);
+            });
+        });
     }
 
     private boolean isModListInstalled()

@@ -24,8 +24,12 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
+    //modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
     implementation "com.google.code.findbugs:jsr305:3.0.2"
+
+    // NightConfig
+    library include("com.electronwill.night-config:core:3.6.6")
+    library include("com.electronwill.night-config:toml:3.6.6")
 
     // JEI
     modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"

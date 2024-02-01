@@ -4,10 +4,12 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.Constants;
+import com.mrcrayfish.configured.client.SessionData;
+import com.mrcrayfish.configured.network.message.play.MessageSessionData;
 import com.mrcrayfish.configured.network.message.play.MessageSyncForgeConfig;
 import com.mrcrayfish.configured.util.ForgeConfigHelper;
-import com.mrcrayfish.framework.api.network.MessageContext;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -19,7 +21,7 @@ import java.io.ByteArrayInputStream;
  */
 public class ForgeClientPlayHandler
 {
-    public static void handleSyncServerConfigMessage(MessageContext context, MessageSyncForgeConfig message)
+    public static void handleSyncServerConfigMessage(Connection connection, MessageSyncForgeConfig message)
     {
         // Avoid updating config if packet was sent to self
         if(Minecraft.getInstance().isLocalServer())
@@ -31,20 +33,26 @@ public class ForgeClientPlayHandler
         if(config == null)
         {
             Constants.LOG.error("Server sent data for a forge config that doesn't exist: {}", message.fileName());
-            context.getNetworkManager().disconnect(Component.translatable("configured.multiplayer.disconnect.process_config"));
+            connection.disconnect(Component.translatable("configured.multiplayer.disconnect.process_config"));
             return;
         }
 
         if(config.getType() != ModConfig.Type.SERVER)
         {
             Constants.LOG.error("Server sent data for a config that isn't a server type: {}", message.fileName());
-            context.getNetworkManager().disconnect(Component.translatable("configured.multiplayer.disconnect.process_config"));
+            connection.disconnect(Component.translatable("configured.multiplayer.disconnect.process_config"));
             return;
         }
 
         try
         {
             CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.data()));
+            if(config.getSpec().isCorrect(data))
+            {
+                Constants.LOG.error("Server sent an incorrect config: {}", message.fileName());
+                connection.disconnect(Component.translatable("configured.multiplayer.disconnect.process_config"));
+                return;
+            }
             config.getSpec().acceptConfig(data);
             ForgeConfigHelper.fireForgeConfigEvent(config, new ModConfigEvent.Reloading(config));
         }
@@ -52,5 +60,11 @@ public class ForgeClientPlayHandler
         {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void handleSessionData(MessageSessionData message)
+    {
+        SessionData.setDeveloper(message.developer());
+        SessionData.setLan(message.lan());
     }
 }

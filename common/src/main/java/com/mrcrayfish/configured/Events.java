@@ -1,10 +1,6 @@
 package com.mrcrayfish.configured;
 
-import com.mrcrayfish.configured.network.Network;
-import com.mrcrayfish.configured.network.message.play.S2CMessageSessionData;
-import com.mrcrayfish.framework.api.Environment;
-import com.mrcrayfish.framework.api.event.PlayerEvents;
-import com.mrcrayfish.framework.api.util.EnvironmentHelper;
+import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -12,14 +8,8 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public class Events
 {
-    public static void init()
+    public static void onPlayerLoggedIn(ServerPlayer player)
     {
-        PlayerEvents.LOGGED_IN.register(player ->
-        {
-            ServerPlayer serverPlayer = (ServerPlayer) player;
-            boolean developer = EnvironmentHelper.getEnvironment() == Environment.DEDICATED_SERVER && Config.isDeveloperEnabled() && Config.getDevelopers().contains(serverPlayer.getStringUUID());
-            boolean lanServer = serverPlayer.getServer() != null && !serverPlayer.getServer().isDedicatedServer();
-            Network.getPlay().sendToPlayer(() -> serverPlayer, new S2CMessageSessionData(developer, lanServer));
-        });
+        Services.PLATFORM.sendSessionData(player);
     }
 }

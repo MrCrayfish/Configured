@@ -1,7 +1,5 @@
 package com.mrcrayfish.configured.api;
 
-import com.mrcrayfish.framework.api.Environment;
-
 import javax.annotation.Nullable;
 import java.util.Optional;
 

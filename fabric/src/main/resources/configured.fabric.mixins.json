@@ -4,10 +4,7 @@
     "package": "com.mrcrayfish.configured.mixin",
     "compatibilityLevel": "JAVA_17",
     "mixins": [
-    ],
-    "client": [
-        "client.AbstractSelectionListMixin",
-        "client.ScreenMixin"
+        "PlayerListMixin"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -30,13 +30,6 @@ description="${mod_desc}"
     side="BOTH"
 
 [[dependencies."${mod_id}"]]
-    modId="framework"
-    mandatory=false
-    versionRange="[${framework_version},)"
-    ordering="NONE"
-    side="BOTH"
-
-[[dependencies."${mod_id}"]]
     modId="catalogue"
     mandatory=false
     versionRange="[${catalogue_version},)"

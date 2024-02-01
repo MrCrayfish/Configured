@@ -89,7 +89,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     // Core dependencies
-    implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
+    //implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
 
     // Runtime mods
     runtimeOnly fg.deobf("com.mrcrayfish:catalogue-forge:${minecraft_version}-1.7.1")

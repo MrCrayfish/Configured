@@ -7,12 +7,10 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
@@ -35,9 +33,6 @@ public final class ModMenuConfigFactory implements ModMenuApi
         FabricLoader.getInstance().getAllMods().forEach(container -> {
             ModContext context = new ModContext(container.getMetadata().getId());
             Services.CONFIG.getProviders().stream().flatMap(p -> p.getConfigurationsForMod(context).stream()).forEach(config -> {
-                mods.add(config.getModId());
-            });
-            Services.CONFIG.getLegacyProviders().stream().map(p -> p.apply(context)).map(Supplier::get).flatMap(Collection::stream).forEach(config -> {
                 mods.add(config.getModId());
             });
         });

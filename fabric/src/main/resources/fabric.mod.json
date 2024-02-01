@@ -28,7 +28,6 @@
         ]
     },
     "mixins": [
-        "configured.common.mixins.json",
         "configured.fabric.mixins.json"
     ],
     "depends": {
@@ -36,9 +35,6 @@
         "fabric": "*",
         "minecraft": "${minecraft_version}",
         "java": ">=17"
-    },
-    "recommends": {
-        "framework": ">=${framework_version}"
     },
     "breaks": {
         "catalogue": "<${catalogue_version}"

@@ -6,12 +6,12 @@ import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.ConfigType;
+import com.mrcrayfish.configured.api.Environment;
 import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.network.Network;
-import com.mrcrayfish.framework.api.Environment;
-import com.mrcrayfish.framework.api.util.EnvironmentHelper;
+import com.mrcrayfish.configured.client.ClientConfigHelper;
+import com.mrcrayfish.configured.platform.Services;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -105,7 +105,7 @@ public class ConfigHelper
     public static boolean isConfiguredInstalledOnServer()
     {
         ClientPacketListener listener = Minecraft.getInstance().getConnection();
-        return listener != null && Network.getPlay().isActive(listener.getConnection());
+        return listener != null && Services.PLATFORM.isConnectionActive(listener);
     }
 
     /**
@@ -140,7 +140,10 @@ public class ConfigHelper
     // Client only
     public static boolean isPlayingGame()
     {
-        return EnvironmentHelper.getEnvironment() == Environment.CLIENT && EnvironmentHelper.callOn(Environment.CLIENT, () -> () -> Minecraft.getInstance().level != null);
+        if(Services.PLATFORM.getEnvironment() != Environment.CLIENT)
+            return false;
+
+        return ClientConfigHelper.isPlayingGame();
     }
 
     public static boolean isServerOwnedByPlayer(@Nullable Player player)
@@ -156,30 +159,6 @@ public class ConfigHelper
     public static boolean isOperator(@Nullable Player player)
     {
         return player != null && player.hasPermissions(4);
-    }
-
-    public static boolean isRunningLocalServer()
-    {
-        return EnvironmentHelper.getEnvironment() == Environment.CLIENT && EnvironmentHelper.callOn(Environment.CLIENT, () -> () -> Minecraft.getInstance().hasSingleplayerServer());
-    }
-
-    public static boolean isPlayingLocally()
-    {
-        return EnvironmentHelper.getEnvironment() == Environment.CLIENT && EnvironmentHelper.callOn(Environment.CLIENT, () -> () -> Minecraft.getInstance().getSingleplayerServer() != null);
-    }
-
-    public static boolean isPlayingRemotely()
-    {
-        return EnvironmentHelper.getEnvironment() == Environment.CLIENT && EnvironmentHelper.callOn(Environment.CLIENT, () -> () -> {
-            ClientPacketListener listener = Minecraft.getInstance().getConnection();
-            return listener != null && !listener.getConnection().isMemoryConnection();
-        });
-    }
-
-    @Nullable
-    public static Player getClientPlayer()
-    {
-        return EnvironmentHelper.getEnvironment() != Environment.CLIENT ? null : EnvironmentHelper.callOn(Environment.CLIENT, () -> () -> Minecraft.getInstance().player);
     }
 
     public static void createBackup(UnmodifiableConfig config)

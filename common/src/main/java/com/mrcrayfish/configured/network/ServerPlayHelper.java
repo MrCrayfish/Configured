@@ -1,4 +1,4 @@
-package com.mrcrayfish.configured.network.play;
+package com.mrcrayfish.configured.network;
 
 import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.Config;
@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
 /**
  * Author: MrCrayfish
  */
-public class ServerPlayHandler
+public class ServerPlayHelper
 {
     public static void sendMessageToOperators(Component message, ServerPlayer player)
     {

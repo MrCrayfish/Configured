@@ -1,10 +1,7 @@
 package com.mrcrayfish.configured.platform;
 
 import com.mrcrayfish.configured.Constants;
-import com.mrcrayfish.configured.api.IConfigProviderT;
-import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.IModConfigProvider;
-import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.platform.services.IConfigHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -13,14 +10,9 @@ import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
@@ -45,28 +37,6 @@ public class FabricConfigHelper implements IConfigHelper
             if(obj instanceof IModConfigProvider provider)
             {
                 providers.add(provider);
-            }
-        });
-        return providers;
-    }
-
-    @Override
-    public List<Function<ModContext, Supplier<Set<IModConfig>>>> getLegacyProviders()
-    {
-        List<Function<ModContext, Supplier<Set<IModConfig>>>> providers = new ArrayList<>();
-        this.readProviders(obj ->
-        {
-            if(obj instanceof IConfigProviderT provider)
-            {
-                providers.add(context ->
-                {
-                    ModContainer c = FabricLoader.getInstance().getModContainer(context.modId()).orElse(null);
-                    if(c != null)
-                    {
-                        return () -> provider.getConfigurationsForMod(c);
-                    }
-                    return Collections::emptySet;
-                });
             }
         });
         return providers;
@@ -118,7 +88,7 @@ public class FabricConfigHelper implements IConfigHelper
         {
             Class<?> providerClass = Class.forName(classPath);
             Object obj = providerClass.getDeclaredConstructor().newInstance();
-            if(!(obj instanceof IModConfigProvider) && !(obj instanceof IConfigProviderT))
+            if(!(obj instanceof IModConfigProvider))
             {
                 throw new RuntimeException("Config providers must implement IModConfigProvider");
             }

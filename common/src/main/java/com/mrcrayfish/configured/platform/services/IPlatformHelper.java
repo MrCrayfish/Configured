@@ -1,5 +1,9 @@
 package com.mrcrayfish.configured.platform.services;
 
+import com.mrcrayfish.configured.api.Environment;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.server.level.ServerPlayer;
+
 import java.nio.file.Path;
 
 public interface IPlatformHelper
@@ -36,9 +40,15 @@ public interface IPlatformHelper
         return isDevelopmentEnvironment() ? "development" : "production";
     }
 
+    Environment getEnvironment();
+
     Path getGamePath();
 
     Path getConfigPath();
 
     String getDefaultConfigPath();
+
+    void sendSessionData(ServerPlayer player);
+
+    boolean isConnectionActive(ClientPacketListener listener);
 }

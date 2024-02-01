@@ -7,13 +7,14 @@ import com.google.common.base.Joiner;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.network.ForgeNetwork;
 import com.mrcrayfish.configured.network.message.play.MessageSyncForgeConfig;
-import com.mrcrayfish.configured.network.play.ServerPlayHandler;
+import com.mrcrayfish.configured.network.ServerPlayHelper;
 import com.mrcrayfish.configured.util.ForgeConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.io.ByteArrayInputStream;
 
@@ -26,7 +27,7 @@ public class ForgeServerPlayHandler
 
     public static void handleSyncServerConfigMessage(ServerPlayer player, MessageSyncForgeConfig message)
     {
-        if(!ServerPlayHandler.canEditServerConfigs(player))
+        if(!ServerPlayHelper.canEditServerConfigs(player))
             return;
 
         Constants.LOG.debug("Received server config sync from player: {}", player.getName().getString());
@@ -71,7 +72,7 @@ public class ForgeServerPlayHandler
         {
             Constants.LOG.warn("{} sent malformed config data to the server", player.getName().getString());
             player.connection.disconnect(Component.translatable("configured.multiplayer.disconnect.invalid_config_packet"));
-            ServerPlayHandler.sendMessageToOperators(Component.translatable("configured.chat.malformed_config_data", player.getName(), Component.literal(config.getFileName()).withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.RED), player);
+            ServerPlayHelper.sendMessageToOperators(Component.translatable("configured.chat.malformed_config_data", player.getName(), Component.literal(config.getFileName()).withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.RED), player);
             return;
         }
         catch(Exception e)
@@ -82,7 +83,7 @@ public class ForgeServerPlayHandler
 
         Constants.LOG.debug("Successfully processed config update for '" + message.fileName() + "'");
 
-        ForgeNetwork.getPlay().sendToAll(new MessageSyncForgeConfig(message.fileName(), message.data()));
-        ServerPlayHandler.sendMessageToOperators(Component.translatable("configured.chat.config_updated", player.getName(), config.getFileName()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), player);
+        ForgeNetwork.getPlay().send(PacketDistributor.ALL.noArg(), new MessageSyncForgeConfig(message.fileName(), message.data()));
+        ServerPlayHelper.sendMessageToOperators(Component.translatable("configured.chat.config_updated", player.getName(), config.getFileName()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), player);
     }
 }
