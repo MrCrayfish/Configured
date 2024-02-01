@@ -3,6 +3,8 @@ package com.mrcrayfish.configured;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.EnumGetMethod;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.google.common.collect.ImmutableSet;
+import com.mrcrayfish.configured.api.Environment;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -28,7 +30,7 @@ public class Config
         ConfigSpec spec = new ConfigSpec();
         spec.define("forceConfiguredMenu", false);
         spec.define("includeFoldersInSearch", false);
-        spec.defineEnum("changedFormatting", ChatFormatting.class, EnumGetMethod.NAME_IGNORECASE, () -> ChatFormatting.ITALIC);
+        spec.defineRestrictedEnum("changedFormatting", ChatFormatting.ITALIC, ImmutableSet.copyOf(ChatFormatting.values()), EnumGetMethod.NAME_IGNORECASE);
         return spec;
     });
 
@@ -49,9 +51,15 @@ public class Config
         clientConfig = createConfig(new File(configPath.toFile(), "configured-client.toml"));
         clientConfig.load();
         CLIENT_SPEC.correct(clientConfig);
-        developerConfig = createConfig(new File(configPath.toFile(), "configured-developer.toml"));
-        developerConfig.load();
-        DEVELOPER_SPEC.correct(developerConfig);
+        clientConfig.save();
+
+        if(Services.PLATFORM.getEnvironment() == Environment.DEDICATED_SERVER)
+        {
+            developerConfig = createConfig(new File(configPath.toFile(), "configured-developer.toml"));
+            developerConfig.load();
+            DEVELOPER_SPEC.correct(developerConfig);
+            developerConfig.save();
+        }
     }
 
     private static CommentedFileConfig createConfig(File configFile)
@@ -76,21 +84,25 @@ public class Config
 
     public static ChatFormatting getChangedFormatting()
     {
-        return clientConfig.getEnum("changedFormatting", ChatFormatting.class);
+        return clientConfig.getEnumOrElse("changedFormatting", ChatFormatting.ITALIC, EnumGetMethod.NAME_IGNORECASE);
     }
 
     public static boolean isDeveloperEnabled()
     {
-        return developerConfig.get("enabled");
+        return developerConfig != null && developerConfig.<Boolean>get("enabled");
     }
 
     public static List<String> getDevelopers()
     {
-        return developerConfig.get("broadcastLogs");
+        if(developerConfig != null)
+        {
+            return developerConfig.getOrElse("developers", Collections.emptyList());
+        }
+        return Collections.emptyList();
     }
 
     public static boolean shouldBroadcastLogs()
     {
-        return developerConfig.get("broadcastLogs");
+        return developerConfig != null && developerConfig.<Boolean>get("broadcastLogs");
     }
 }

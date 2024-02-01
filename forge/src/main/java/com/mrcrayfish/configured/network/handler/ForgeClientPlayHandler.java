@@ -47,7 +47,7 @@ public class ForgeClientPlayHandler
         try
         {
             CommentedConfig data = TomlFormat.instance().createParser().parse(new ByteArrayInputStream(message.data()));
-            if(config.getSpec().isCorrect(data))
+            if(!config.getSpec().isCorrect(data))
             {
                 Constants.LOG.error("Server sent an incorrect config: {}", message.fileName());
                 connection.disconnect(Component.translatable("configured.multiplayer.disconnect.process_config"));

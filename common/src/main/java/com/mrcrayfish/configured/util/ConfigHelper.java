@@ -259,4 +259,12 @@ public class ConfigHelper
         TomlFormat.instance().createWriter().write(config, stream);
         return stream.toByteArray();
     }
+
+    public static Player getClientPlayer()
+    {
+        if(Services.PLATFORM.getEnvironment() != Environment.CLIENT)
+            return null;
+
+        return ClientConfigHelper.getClientPlayer();
+    }
 }
