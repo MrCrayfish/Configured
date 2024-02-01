@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -10,11 +9,12 @@ public interface IBackgroundTexture
 {
     ResourceLocation getBackgroundTexture();
 
-    static void loadTexture(Object object)
+    static ResourceLocation loadTexture(Object object, ResourceLocation original)
     {
         if(object instanceof IBackgroundTexture)
         {
-            RenderSystem.setShaderTexture(0, ((IBackgroundTexture) object).getBackgroundTexture());
+            return ((IBackgroundTexture) object).getBackgroundTexture();
         }
+        return original;
     }
 }

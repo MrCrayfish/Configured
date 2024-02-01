@@ -19,6 +19,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -289,13 +290,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     }
 
     @Override
-    protected void renderForeground(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    protected void renderForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
         if(this.config.isReadOnly())
         {
-            RenderSystem.setShaderTexture(0, IconButton.ICONS);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            blit(poseStack, this.width - 30, 14, 20, 20, 0, 33, 10, 10, 64, 64);
+            graphics.blit(IconButton.ICONS, this.width - 30, 14, 20, 20, 0, 33, 10, 10, 64, 64);
             if(ScreenUtil.isMouseWithin(this.width - 30, 14, 20, 20, mouseX, mouseY))
             {
                 this.setActiveTooltip(Component.translatable("configured.gui.read_only_config"), 0xFF1E6566);
@@ -357,13 +357,13 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            super.render(poseStack, index, top, left, width, height, mouseX, mouseY, selected, partialTicks);
+            super.render(graphics, index, top, left, width, height, mouseX, mouseY, selected, partialTicks);
             this.button.setX(left - 1);
             this.button.setY(top);
             this.button.setWidth(width);
-            this.button.render(poseStack, mouseX, mouseY, partialTicks);
+            this.button.render(graphics, mouseX, mouseY, partialTicks);
         }
 
         private static Component createLabelForFolderEntry(IConfigEntry entry)
@@ -412,18 +412,17 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             boolean showValidationHint = this.validationHint != null;
             int trimLength = showValidationHint ? 100 : 80;
             ChatFormatting labelStyle = this.holder.isChanged() ? Config.getChangedFormatting() : ChatFormatting.RESET;
-            Minecraft.getInstance().font.draw(poseStack, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFF);
 
             if(showValidationHint)
             {
-                RenderSystem.setShaderTexture(0, IconButton.ICONS);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                blit(poseStack, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
+                graphics.blit(IconButton.ICONS, left + width - 88, top + 3, 16, 16, 11, 11, 11, 11, 64, 64);
             }
 
             if(!ConfigScreen.this.config.isReadOnly())
@@ -431,9 +430,8 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 if(this.holder.requiresGameRestart() || this.holder.requiresWorldRestart())
                 {
                     boolean gameRestart = this.holder.requiresGameRestart();
-                    RenderSystem.setShaderTexture(0, IconButton.ICONS);
                     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                    blit(poseStack, left - 18, top + 5, 11, 11, gameRestart ? 51 : 11, 22, 11, 11, 64, 64);
+                    graphics.blit(IconButton.ICONS, left - 18, top + 5, 11, 11, gameRestart ? 51 : 11, 22, 11, 11, 64, 64);
 
                     if(ScreenUtil.isMouseWithin(left - 18, top + 5, 11, 11, mouseX, mouseY))
                     {
@@ -459,7 +457,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.resetButton.active = !this.holder.isDefault() && !ConfigScreen.this.config.isReadOnly();
             this.resetButton.setX(left + width - 21);
             this.resetButton.setY(top);
-            this.resetButton.render(poseStack, mouseX, mouseY, partialTicks);
+            this.resetButton.render(graphics, mouseX, mouseY, partialTicks);
         }
 
         private MutableComponent getTrimmedLabel(int maxWidth)
@@ -551,9 +549,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             long time = Util.getMillis();
             if(time - this.lastTick >= 50)
             {
@@ -562,7 +560,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             }
             this.textField.setX(left + width - 68);
             this.textField.setY(top + 1);
-            this.textField.render(poseStack, mouseX, mouseY, partialTicks);
+            this.textField.render(graphics, mouseX, mouseY, partialTicks);
         }
 
         @Override
@@ -613,12 +611,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.setX(left + width - 69);
             this.button.setY(top);
-            this.button.render(poseStack, mouseX, mouseY, partialTicks);
+            this.button.render(graphics, mouseX, mouseY, partialTicks);
         }
 
         @Override
@@ -646,12 +644,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.setX(left + width - 69);
             this.button.setY(top);
-            this.button.render(poseStack, mouseX, mouseY, partialTicks);
+            this.button.render(graphics, mouseX, mouseY, partialTicks);
         }
     }
 
@@ -668,12 +666,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.setX(left + width - 69);
             this.button.setY(top);
-            this.button.render(poseStack, mouseX, mouseY, partialTicks);
+            this.button.render(graphics, mouseX, mouseY, partialTicks);
         }
     }
 
@@ -693,12 +691,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(PoseStack poseStack, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
-            super.render(poseStack, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
             this.button.setX(left + width - 69);
             this.button.setY(top);
-            this.button.render(poseStack, mouseX, mouseY, partialTicks);
+            this.button.render(graphics, mouseX, mouseY, partialTicks);
         }
     }
 

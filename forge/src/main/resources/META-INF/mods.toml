@@ -31,7 +31,7 @@ description="${mod_desc}"
 
 [[dependencies."${mod_id}"]]
     modId="framework"
-    mandatory=true
+    mandatory=false
     versionRange="[${framework_version},)"
     ordering="NONE"
     side="BOTH"
@@ -56,6 +56,5 @@ description="${mod_desc}"
     configuredBackground="minecraft:textures/block/stone.png"
     configuredProviders=[
         "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.simple.SimpleConfigProvider",
         "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
     ]

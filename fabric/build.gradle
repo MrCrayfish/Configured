@@ -1,48 +1,50 @@
 plugins {
-    id 'fabric-loom' version '1.0-SNAPSHOT'
-    id 'maven-publish'
+    id 'java'
     id 'idea'
+    id 'maven-publish'
+    id 'fabric-loom'
 }
 
 archivesBaseName = "${mod_id}-fabric"
 version = "${minecraft_version}-${mod_version}"
 
-repositories {
-    maven {
-        url "https://maven.terraformersmc.com/"
-    }
-}
-
 configurations {
     implementation.extendsFrom library
 }
 
+repositories {
+    maven {
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com'
+    }
+}
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modApi "com.terraformersmc:modmenu:6.1.0-rc.4"
-
-    // Night Config
-    library include("com.electronwill.night-config:core:3.6.6")
-    library include("com.electronwill.night-config:toml:3.6.6")
-
-    // Framework
     modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
 
     // JEI
-    modCompileOnlyApi "mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}"
-    modCompileOnlyApi "mezz.jei:jei-${jei_minecraft_version}-fabric-api:${jei_version}"
-    //modRuntimeOnly "mezz.jei:jei-${jei_minecraft_version}-fabric:${jei_version}"
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
+    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 
-    implementation "com.google.code.findbugs:jsr305:3.0.2"
+    // ModMenu
+    modApi "com.terraformersmc:modmenu:7.2.2"
+
     implementation project(":common")
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/configured.accesswidener")
+    if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
+        accessWidenerPath.set(file("src/main/resources/${mod_id}.accesswidener"))
+    }
+    mixin {
+        defaultRefmapName.set("${mod_id}.refmap.json")
+    }
     runs {
         client {
             client()
@@ -56,20 +58,31 @@ loom {
             ideConfigGenerated(true)
             runDir("run")
         }
+        datagen {
+            inherit client
+            setConfigName("Fabric Data")
+            vmArg "-Dfabric-api.datagen"
+            vmArg "-Dfabric-api.datagen.output-dir=${file("src/generated/resources")}"
+            vmArg "-Dfabric-api.datagen.modid=${mod_id}"
+            runDir "build/datagen"
+        }
     }
+}
+
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+tasks.withType(JavaCompile).configureEach {
+    source(project(":common").sourceSets.main.allSource)
+}
+tasks.withType(Javadoc).configureEach {
+    source(project(":common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":common").sourceSets.main.allSource)
 }
 
 processResources {
     from project(":common").sourceSets.main.resources
-    inputs.property "version", project.version
-
-    filesMatching("fabric.mod.json") {
-        expand project.properties
-    }
-}
-
-tasks.withType(JavaCompile) {
-    source(project(":common").sourceSets.main.allSource)
 }
 
 publishing {
@@ -114,6 +127,15 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    if (System.getenv("SIGNING_KEY")) {
+        def signingKey = System.getenv("SIGNING_KEY")
+        def signingPassword = System.getenv("SIGNING_PASSPHRASE")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+    sign publishing.publications.mavenJava
 }
 
 loom.disableDeprecatedPomGeneration(publishing.publications.mavenJava)

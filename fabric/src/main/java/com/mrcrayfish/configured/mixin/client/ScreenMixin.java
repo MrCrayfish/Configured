@@ -1,12 +1,11 @@
 package com.mrcrayfish.configured.mixin.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 /**
  * Author: MrCrayfish
@@ -14,9 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Screen.class)
 public class ScreenMixin
 {
-    @Inject(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 0))
-    public void afterSetTexture(PoseStack poseStack, CallbackInfo ci)
+    @ModifyArg(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIFFIIII)V", ordinal = 0), index = 0)
+    public ResourceLocation afterSetTexture(ResourceLocation location)
     {
-        IBackgroundTexture.loadTexture(this);
+        return IBackgroundTexture.loadTexture(this, location);
     }
 }

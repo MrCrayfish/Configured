@@ -28,13 +28,16 @@
         ]
     },
     "mixins": [
-        "configured.mixins.json"
+        "configured.common.mixins.json",
+        "configured.fabric.mixins.json"
     ],
     "depends": {
         "fabricloader": ">=0.14",
         "fabric": "*",
         "minecraft": "${minecraft_version}",
-        "java": ">=17",
+        "java": ">=17"
+    },
+    "recommends": {
         "framework": ">=${framework_version}"
     },
     "breaks": {

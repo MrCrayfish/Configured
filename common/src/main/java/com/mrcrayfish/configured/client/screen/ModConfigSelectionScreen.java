@@ -14,6 +14,7 @@ import com.mrcrayfish.framework.api.Environment;
 import com.mrcrayfish.framework.api.util.EnvironmentHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -283,28 +284,27 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
+        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
-            Screen.drawString(poseStack, Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFF);
-            Screen.drawString(poseStack, Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFF);
-            RenderSystem.setShaderTexture(0, IconButton.ICONS);
+            graphics.drawString(Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFF);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            blit(poseStack, left + 4, top, 18, 22, this.getIconU(), this.getIconV(), 9, 11, 64, 64);
+            graphics.blit(IconButton.ICONS, left + 4, top, 18, 22, this.getIconU(), this.getIconV(), 9, 11, 64, 64);
 
             if(this.config.isReadOnly())
             {
-                blit(poseStack, left + 1, top + 15, 11, 11, 0, 33, 11, 11, 64, 64);
+                graphics.blit(IconButton.ICONS, left + 1, top + 15, 11, 11, 0, 33, 11, 11, 64, 64);
             }
 
             this.modifyButton.setX(left + width - 83);
             this.modifyButton.setY(top);
-            this.modifyButton.render(poseStack, mouseX, mouseY, partialTicks);
+            this.modifyButton.render(graphics, mouseX, mouseY, partialTicks);
 
             if(this.restoreButton != null)
             {
                 this.restoreButton.setX(left + width - 21);
                 this.restoreButton.setY(top);
-                this.restoreButton.render(poseStack, mouseX, mouseY, partialTicks);
+                this.restoreButton.render(graphics, mouseX, mouseY, partialTicks);
             }
 
             if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 15, 11, 11, mouseX, mouseY))

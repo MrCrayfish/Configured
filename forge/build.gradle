@@ -1,21 +1,26 @@
+import net.minecraftforge.gradle.common.tasks.SignJar
+import org.apache.commons.io.FilenameUtils
+
 plugins {
-    id 'java'
-    id 'eclipse'
+    id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'net.minecraftforge.gradle'
+    id 'org.spongepowered.mixin'
 }
 
 archivesBaseName = "${mod_id}-forge"
 version = "${minecraft_version}-${mod_version}"
 
+mixin {
+    add(sourceSets.main, "${mod_id}.refmap.json")
+    config("${mod_id}.common.mixins.json")
+}
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
 
-    if (project.hasProperty('forge_ats_enabled') && project.findProperty('forge_ats_enabled').toBoolean()) {
-        // This location is hardcoded in Forge and can not be changed.
-        // https://github.com/MinecraftForge/MinecraftForge/blob/be1698bb1554f9c8fa2f58e32b9ab70bc4385e60/fmlloader/src/main/java/net/minecraftforge/fml/loading/moddiscovery/ModFile.java#L123
+    if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
         accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-        project.logger.debug('Forge Access Transformers are enabled for this project.')
     }
 
     runs {
@@ -70,6 +75,12 @@ minecraft {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+repositories {
+    maven {
+        url = "https://api.modrinth.com/maven"
+    }
+}
+
 configurations {
     implementation.extendsFrom library
 }
@@ -77,30 +88,33 @@ configurations {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Framework
+    // Core dependencies
     implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
 
-    // JEI
-    implementation fg.deobf("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
-    //runtimeOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
+    // Runtime mods
+    runtimeOnly fg.deobf("com.mrcrayfish:catalogue-forge:${minecraft_version}-1.7.1")
 
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 
     compileOnly project(":common")
-    testCompileOnly project(":common")
+    annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }
 
-tasks.withType(JavaCompile) {
+Spec<Task> notTest = { Task it -> !it.name.contains("Test") } as Spec<Task>
+
+tasks.withType(JavaCompile).matching(notTest).configureEach {
     source(project(":common").sourceSets.main.allSource)
+}
+tasks.withType(Javadoc).matching(notTest).configureEach {
+    source(project(":common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":common").sourceSets.main.allSource)
 }
 
 processResources {
     from project(":common").sourceSets.main.resources
-    inputs.property "version", project.version
-
-    filesMatching("META-INF/mods.toml") {
-        expand project.properties
-    }
 }
 
 jar.finalizedBy('reobfJar')
@@ -145,3 +159,28 @@ publishing {
         }
     }
 }
+
+signing {
+    if (System.getenv("SIGNING_KEY")) {
+        def signingKey = System.getenv("SIGNING_KEY")
+        def signingPassword = System.getenv("SIGNING_PASSPHRASE")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+    sign publishing.publications.mavenJava
+}
+
+tasks.register('signJar', SignJar) {
+    dependsOn jar
+    onlyIf {
+        project.hasProperty('keyStore') || System.getenv("KEYSTORE")
+    }
+    keyStore = findProperty('keyStore') ?: System.getenv("KEYSTORE")
+    alias = findProperty('keyStoreAlias') ?: System.getenv("KEYSTORE_ALIAS")
+    storePass = findProperty('keyStorePass') ?: System.getenv("KEYSTORE_PASS")
+    inputFile = jar.archiveFile
+    def name = FilenameUtils.removeExtension(jar.archiveFile.get().getAsFile().getName());
+    outputFile = layout.buildDirectory.file("libs/%s-signed.jar".formatted(name));
+}
+
+jar.finalizedBy 'signJar'
+signJar.mustRunAfter 'reobfJar'

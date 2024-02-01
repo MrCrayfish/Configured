@@ -39,7 +39,8 @@ public interface IColouredTooltip
             boolean positioned = this.getTooltipX() != null && this.getTooltipY() != null;
             int x = positioned ? this.getTooltipX() + 12 : mouseX;
             int y = positioned ? this.getTooltipY() - 12 : mouseY;
-            screen.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
+            // TODO add back eventually
+            //screen.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, x, y); // Yep, this is strange. See the forge events below!
             return true;
         }
         return false;

@@ -12,6 +12,7 @@ import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -82,14 +83,14 @@ public class WorldSelectionScreen extends ListMenuScreen
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks)
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
-        super.render(poseStack, mouseX, mouseY, partialTicks);
-        poseStack.pushPose();
-        poseStack.translate(this.width - 30, 15, 0);
-        poseStack.scale(2.5F, 2.5F, 2.5F);
-        Screen.drawString(poseStack, this.font, Component.literal("?").withStyle(ChatFormatting.BOLD), 0, 0, 0xFFFFFF);
-        poseStack.popPose();
+        super.render(graphics, mouseX, mouseY, partialTicks);
+        graphics.pose().pushPose();
+        graphics.pose().translate(this.width - 30, 15, 0);
+        graphics.pose().scale(2.5F, 2.5F, 2.5F);
+        graphics.drawString(this.font, Component.literal("?").withStyle(ChatFormatting.BOLD), 0, 0, 0xFFFFFF);
+        graphics.pose().popPose();
     }
 
     @Override
@@ -165,18 +166,17 @@ public class WorldSelectionScreen extends ListMenuScreen
         }
 
         @Override
-        public void render(PoseStack poseStack, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
+        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
-            if(x % 2 != 0) Screen.fill(poseStack, left, top, left + width, top + 24, 0x55000000);
-            if(this.modifyButton.isMouseOver(mouseX, mouseY)) Screen.fill(poseStack, left - 1, top - 1, left + 25, top + 25, 0xFFFFFFFF);
-            RenderSystem.setShaderTexture(0, this.texture != null ? this.iconId : MISSING_ICON);
+            if(x % 2 != 0) graphics.fill(left, top, left + width, top + 24, 0x55000000);
+            if(this.modifyButton.isMouseOver(mouseX, mouseY)) graphics.fill(left - 1, top - 1, left + 25, top + 25, 0xFFFFFFFF);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            blit(poseStack, left, top, 24, 24, 0, 0, 64, 64, 64, 64);
-            Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFF);
-            Screen.drawString(poseStack, WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFF);
+            graphics.blit(this.texture != null ? this.iconId : MISSING_ICON, left, top, 24, 24, 0, 0, 64, 64, 64, 64);
+            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFF);
+            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFF);
             this.modifyButton.setX(left + width - 61);
             this.modifyButton.setY(top + 2);
-            this.modifyButton.render(poseStack, mouseX, mouseY, partialTicks);
+            this.modifyButton.render(graphics, mouseX, mouseY, partialTicks);
         }
 
         private DynamicTexture loadWorldIcon()
