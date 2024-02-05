@@ -1,25 +1,47 @@
-![Configured Banner](https://i.imgur.com/2GR7I6q.png)
+![Configured_Banner](https://github.com/MrCrayfish/Configured/assets/4958241/d9ddfa31-7ff3-4489-b4b2-77723e0e361f)
 
-![Minecraft](https://img.shields.io/static/v1?label=&message=1.17%20|%201.16&color=2d2d2d&labelColor=dddddd&style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMjCGJ1kDAAACoElEQVQ4T22SeU8aURTF/ULGtNRWWVQY9lXABWldIDPIMgVbNgEVtaa0damiqGBdipXaJcY2ofEf4ycbTt97pVAabzK5b27u+Z377kwXgK77QthRy7OfXbeJM+ttqKSXN8sdwbT/A0L7elmsYqrPHZmROLPh5YkV4oEBwaKuHj+yyJptLDoAhbq3O1V1XCVObY3FL24mfn5oRPrcwSCRfQOyNWcjVjZdCbtcdwcgXrXUspdOKbDN/XE9tiBJMhXHT60gUIT2dMhcDLMc3NVKQklz0QIkf5qlyEcO6Qs7yPhMJB4amDMFimQSmqNlE8SKAZFzDfxHfVILIIZ10sJ3OwIbcqSuiOjchkzNCboHev9o2YhgiUP8mxnLN24I6/3ghYdtQG5iUMpFBuCP9iKwLsfiLyeCp2rMnZgwX3NArGoxW1Ridl+BzLEVKa8KSxOqNmDdz0kFnxaLHhWEgAyZigWhHXL+pEDy2ozsDxv8vAzTnh7w5kcghqCaFmCT10of4iPIT2mRdPUh4HoCcVwBH/8Ac2kzUkEV5r3EfVSOvbAJa5NDyI0r2oDtWb1EClh+OoC3Pg7v/Bw7p939yI4rsRW2Y3lKh01eh7WpIRyKZqzyjjYgPdIvlaMWRqYuG7wWryYHsRM0sFolZiPvQ3jheIwSmSBPdkByG/B6Wi3RYiVmRX7GiAPiUCRisii8D+jZNKvPBrHCW1GY0bAz6WkDCtOaSyKQFsi4K5NqNiZtehN2Y5uAShETqolhBqJXpfdPuPsuWwAaRdHSkxdc11mPqkGnyY4pyKbpl1GyJ0Pel7yqBoFcF3zqno5f+d8ohYy9Sx7lzQpxo1eirluCDgt++00p6uxttrG4F/A39sJGZWZMfrcp6O6+5kaVzXJHAOj6DeSs8qw5o8oxAAAAAElFTkSuQmCC) [![Curseforge](http://cf.way2muchnoise.eu/full_configured_downloads.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/configured)
+
+![Forge](https://github.com/MrCrayfish/Configured/assets/4958241/5f1efaa6-2649-43e3-83aa-3c7891d922bc) ![Fabric](https://github.com/MrCrayfish/Configured/assets/4958241/47926b83-c53a-4074-a2ca-fdcfb9eba1fc) [![Download on Website](https://github.com/MrCrayfish/Configured/assets/4958241/460bd882-4918-4241-a0be-c701f71b7f07)](https://mrcrayfish.com/mods/configured) [![Curseforge](http://cf.way2muchnoise.eu/full_configured_downloads.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/configured) 
+
 
 # Configured
 
-Configured is a simple and lightweight mod that dynamically creates a configuration menu for every mod. Previously mods would use Forge's built-in GUI system however that no longer exists in newer versions. This mod aims to reintroduce that system and create fresh new experience with an updated easy-to-use layout. The best part is that Configured supports* every mod and doesn't require other mods to write extra code. Configured allows you to change client, common and server configurations! This mod can be safely added to any modpack without any problems.
-
-*Configured only supports mods that use Forge's config system, anything custom will not work.*
+Configured is a simple and lightweight mod that dynamically creates configuration menus for every mod with a supported config system. The mod was initially created due to the removal of Forge's built-in GUI system but it has now expnaded in features and supported modloaders. Configured aims to make it easier for players to modify the configurations of mods by providing a beautiful GUI and an intuitive experience. The best part is that Configured doesn't need other mods to write extra code in order for a menu to be generated, assuming they are using a supported config system. This mod can be safely added to any modpack without any problems.
 
 ## Features
 
-* Supports editing client, common and server configurations. This can be done from the main menu or even in-game!
-* Automatically supports every mod that utilises the Forge config system. No extra work needed mod developers!
-* A simple and intuitive layout for quick modification of config values
+* Allows you to edit mod configurations directly in-game. This makes it easy to quickly modify properties!
+* Automatically supports every mod that utilise the supported config systems. No extra work needed mod developers!
+* A beautiful GUI design with a focus on creating an intuitive experience.
 * Adds a new keybinding to open the mod list from in-game without additional mods.
 * Optional support for mod developers to set the background texture of their config menu (See below)
 * Lightweight and just works! Add it to your modpack without any problems.
 
+## Supported Config Systems
+* Forge (Supports editing client, common, and world configs)
+* Framework (Supports editing client, common, server, and world configs)
+* JEI (Supports editing clients configs)
+
 ## Developers
 
-This mod has support to change the background texture of the config screen. Just add `[modproperties.<yourmodid>]` to the bottom of your `mods.toml` then under it add an entry called `configuredBackground` set the value to `"minecraft:textures/block/stone.png"` or another location to a texture file. You do not need to make your mod depend on this mod, however on CurseForge I appreciate if you mark this mod as an optional dependency. See `mods.toml` in this repo for an example.
+This mod has support to change the background texture of the config screen through the mod's metadata. Below you can find an example for each modloader.
+
+**Forge** - Add this under your `[[mods]]` section in your `mods.toml`
+```toml
+[modproperties.<your_mod_id>]
+  configuredBackground="minecraft:textures/block/stone.png"
+```
+
+**Fabric** - Merge this JSON into your `fabric.mod.json`
+```json
+{
+  "custom": {
+    "configured": {
+      "background": "minecraft:textures/block/stone.png"
+    }
+  }
+}
+```
 
 ## Screenshots
 ![Screenshot6](https://user-images.githubusercontent.com/4958241/141668789-094a0da7-92a0-404b-ac93-c4d1a8d3e7bf.png)
