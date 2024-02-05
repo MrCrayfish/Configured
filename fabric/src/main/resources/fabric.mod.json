@@ -28,6 +28,7 @@
         ]
     },
     "mixins": [
+        "configured.common.mixins.json",
         "configured.fabric.mixins.json"
     ],
     "depends": {
@@ -46,6 +47,7 @@
                 "com.mrcrayfish.configured.Config"
             ],
             "providers": [
+                "com.mrcrayfish.configured.impl.framework.FrameworkConfigProvider",
                 "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
             ],
             "background": "minecraft:textures/block/stone.png"

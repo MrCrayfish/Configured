@@ -49,5 +49,6 @@ description="${mod_desc}"
     configuredBackground="minecraft:textures/block/stone.png"
     configuredProviders=[
         "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
+        "com.mrcrayfish.configured.impl.framework.FrameworkConfigProvider",
+        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider",
     ]

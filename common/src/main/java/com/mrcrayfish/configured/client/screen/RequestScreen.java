@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured.client.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.Util;
@@ -27,6 +26,7 @@ public class RequestScreen extends ListMenuScreen implements IEditing
     private boolean failed;
     private Component message = null;
     private final IModConfig config;
+    private IModConfig response;
 
     protected RequestScreen(Screen parent, Component title, ResourceLocation background, IModConfig config)
     {
@@ -82,18 +82,26 @@ public class RequestScreen extends ListMenuScreen implements IEditing
         {
             this.failed = true;
         }
+
+        if(!this.failed && this.response != null && this.time >= 10)
+        {
+            this.minecraft.setScreen(new ConfigScreen(this.parent, this.title, this.response, this.background));
+            this.response = null;
+        }
     }
 
     public void handleResponse(@Nullable IModConfig config, @Nullable Component message)
     {
+        if(this.failed)
+            return;
+
         if(config != null)
         {
-            this.minecraft.setScreen(new ConfigScreen(this.parent, this.title, config, this.background));
+            this.response = config;
+            return;
         }
-        else
-        {
-            this.failed = true;
-            this.message = message;
-        }
+
+        this.failed = true;
+        this.message = message;
     }
 }

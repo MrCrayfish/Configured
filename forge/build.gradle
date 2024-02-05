@@ -88,11 +88,14 @@ configurations {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Core dependencies
-    //implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
-
     // Runtime mods
+    compileOnly fg.deobf("com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}")
+    testCompileOnly fg.deobf("com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}")
+    runtimeOnly fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
     runtimeOnly fg.deobf("com.mrcrayfish:catalogue-forge:${minecraft_version}-1.7.1")
+
+    // Test mods
+    runtimeOnly fg.deobf("com.mrcrayfish:goblintraders-forge:${minecraft_version}-1.9.3")
 
     compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")

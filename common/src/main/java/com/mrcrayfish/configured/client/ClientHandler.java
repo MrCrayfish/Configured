@@ -29,17 +29,27 @@ public class ClientHandler
 {
     //TODO register this on fabric
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
-    private static final Set<IModConfigProvider> PROVIDERS = new HashSet<>();
+    private static Set<IModConfigProvider> providers;
 
     public static void init()
     {
-        PROVIDERS.addAll(Services.CONFIG.getProviders());
+        if(providers == null)
+        {
+            providers = new LinkedHashSet<>();
+            providers.addAll(Services.CONFIG.getProviders());
+        }
+    }
+
+    public static Set<IModConfigProvider> getProviders()
+    {
+        init();
+        return providers;
     }
 
     public static Map<ConfigType, Set<IModConfig>> createConfigMap(ModContext context)
     {
         Map<ConfigType, Set<IModConfig>> modConfigMap = new HashMap<>();
-        Set<IModConfig> configs = PROVIDERS.stream().flatMap(p -> streamConfigsFromProvider(context, p)).collect(Collectors.toSet());
+        Set<IModConfig> configs = providers.stream().flatMap(p -> streamConfigsFromProvider(context, p)).collect(Collectors.toSet());
         configs.forEach(config -> modConfigMap.computeIfAbsent(config.getType(), type -> new LinkedHashSet<>()).add(config));
         return modConfigMap;
     }

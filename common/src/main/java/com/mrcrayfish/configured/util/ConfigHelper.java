@@ -267,4 +267,12 @@ public class ConfigHelper
 
         return ClientConfigHelper.getClientPlayer();
     }
+
+    public static boolean isRunningLocalServer()
+    {
+        if(Services.PLATFORM.getEnvironment() != Environment.CLIENT)
+            return false;
+
+        return ClientConfigHelper.isRunningLocalServer();
+    }
 }

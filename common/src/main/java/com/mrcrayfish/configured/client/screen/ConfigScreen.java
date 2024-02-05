@@ -733,7 +733,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         valueName = Strings.join(words, " ");
         // Try split by underscores
-        words = valueName.split("_");
+        words = valueName.split("[_\\-.]");
         for(int i = 0; i < words.length; i++) words[i] = StringUtils.capitalize(words[i]);
         // Finally join words. Some mods have inputs like "Foo_Bar" and this causes a double space.
         // To fix this any whitespace is replaced with a single space

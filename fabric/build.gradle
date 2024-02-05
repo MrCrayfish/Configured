@@ -8,6 +8,15 @@ plugins {
 archivesBaseName = "${mod_id}-fabric"
 version = "${minecraft_version}-${mod_version}"
 
+sourceSets {
+    test {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += test.compileClasspath
+        runtimeClasspath += test.runtimeClasspath
+    }
+}
+
 configurations {
     implementation.extendsFrom library
 }
@@ -24,8 +33,11 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    //modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
     implementation "com.google.code.findbugs:jsr305:3.0.2"
+
+    // Framework
+    modCompileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
+    modRuntimeOnly "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
 
     // NightConfig
     library include("com.electronwill.night-config:core:3.6.6")
@@ -56,11 +68,21 @@ loom {
             ideConfigGenerated(true)
             runDir("run")
         }
+        testClient {
+            inherit client
+            setConfigName("Fabric Test Client")
+            setSource(sourceSets.test)
+        }
         server {
             server()
             setConfigName("Fabric Server")
             ideConfigGenerated(true)
             runDir("run")
+        }
+        testServer {
+            inherit server
+            setConfigName("Fabric Test Server")
+            setSource(sourceSets.test)
         }
         datagen {
             inherit client

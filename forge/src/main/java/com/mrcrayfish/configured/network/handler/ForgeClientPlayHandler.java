@@ -4,8 +4,6 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.Constants;
-import com.mrcrayfish.configured.client.SessionData;
-import com.mrcrayfish.configured.network.message.play.MessageSessionData;
 import com.mrcrayfish.configured.network.message.play.MessageSyncForgeConfig;
 import com.mrcrayfish.configured.util.ForgeConfigHelper;
 import net.minecraft.client.Minecraft;
@@ -60,11 +58,5 @@ public class ForgeClientPlayHandler
         {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void handleSessionData(MessageSessionData message)
-    {
-        SessionData.setDeveloper(message.developer());
-        SessionData.setLan(message.lan());
     }
 }

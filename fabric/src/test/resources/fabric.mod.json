@@ -1,0 +1,29 @@
+{
+    "schemaVersion": 1,
+    "id": "config_test",
+    "version": "1.0",
+    "name": "Test Config",
+    "description": "This is a mod to test a config",
+    "authors": [ "MrCrayfish" ],
+    "license": "",
+    "environment": "*",
+    "entrypoints": {},
+    "depends": {
+        "fabricloader": ">=0.14",
+        "fabric": "*",
+        "minecraft": "1.20.1",
+        "java": ">=17",
+        "framework": "*"
+    },
+    "custom": {
+        "framework": {
+            "configs": [
+                "test.Config"
+            ]
+        },
+        "configured": {
+            "background": "minecraft:textures/block/stone.png"
+        }
+    }
+}
+  

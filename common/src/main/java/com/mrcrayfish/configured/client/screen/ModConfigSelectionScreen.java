@@ -181,6 +181,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 if(!button.isActive() || !button.visible)
                     return;
 
+                // If you're at the main menu, not loaded into a world
                 if(!ConfigHelper.isPlayingGame())
                 {
                     if(ConfigHelper.isWorldConfig(config))
@@ -192,36 +193,32 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                         Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
                         Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                     }
+                    return;
                 }
-                else if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
+
+                // If you're playing on a dedicated server and the config is a non-sync server type
+                if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
                 {
                     if(Services.PLATFORM.isModLoaded(config.getModId()))
                     {
                         Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
                         Minecraft.getInstance().setScreen(new RequestScreen(ModConfigSelectionScreen.this, newTitle, ModConfigSelectionScreen.this.background, config));
                     }
+                    return;
                 }
-                else
+
+                // Handle all remaining cases
+                if(Services.PLATFORM.isModLoaded(config.getModId())) // Why did I need to check this?
                 {
-                    if(Services.PLATFORM.isModLoaded(config.getModId()))
-                    {
-                        Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
-                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
-                    }
+                    Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
+                    Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
                 }
             });
         }
 
         private int getModifyIconU(IModConfig config)
         {
-            if(ConfigHelper.isPlayingGame())
-            {
-                if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
-                {
-                    return 22;
-                }
-            }
-            else
+            if(!ConfigHelper.isPlayingGame())
             {
                 if(ConfigHelper.isWorldConfig(config))
                 {
@@ -235,10 +232,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         {
             if(ConfigHelper.isPlayingGame())
             {
-                if(isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync())
-                {
-                    return 22;
-                }
                 if(config.isReadOnly())
                 {
                     return 33;
@@ -259,10 +252,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             if(!ConfigHelper.isPlayingGame() && ConfigHelper.isWorldConfig(config))
             {
                 return Component.translatable("configured.gui.select_world");
-            }
-            if(ConfigHelper.isPlayingGame() && isPlayingRemotely() && config.getType().isServer() && !config.getType().isSync() && config.getType() != ConfigType.DEDICATED_SERVER)
-            {
-                return Component.translatable("configured.gui.request");
             }
             if(config.isReadOnly())
             {

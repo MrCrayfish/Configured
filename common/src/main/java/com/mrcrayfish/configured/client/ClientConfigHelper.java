@@ -17,4 +17,9 @@ public class ClientConfigHelper
     {
         return Minecraft.getInstance().player;
     }
+
+    public static boolean isRunningLocalServer()
+    {
+        return Minecraft.getInstance().hasSingleplayerServer();
+    }
 }

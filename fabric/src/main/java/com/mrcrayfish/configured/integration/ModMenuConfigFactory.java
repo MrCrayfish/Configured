@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.integration;
 
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ModContext;
+import com.mrcrayfish.configured.client.ClientHandler;
 import com.mrcrayfish.configured.platform.Services;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -32,7 +33,7 @@ public final class ModMenuConfigFactory implements ModMenuApi
         Set<String> mods = new HashSet<>();
         FabricLoader.getInstance().getAllMods().forEach(container -> {
             ModContext context = new ModContext(container.getMetadata().getId());
-            Services.CONFIG.getProviders().stream().flatMap(p -> p.getConfigurationsForMod(context).stream()).forEach(config -> {
+            ClientHandler.getProviders().stream().flatMap(p -> p.getConfigurationsForMod(context).stream()).forEach(config -> {
                 mods.add(config.getModId());
             });
         });

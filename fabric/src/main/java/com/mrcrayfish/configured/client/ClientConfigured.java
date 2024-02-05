@@ -1,6 +1,8 @@
 package com.mrcrayfish.configured.client;
 
-import com.mrcrayfish.configured.network.FabricNetwork;
+import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
+import com.mrcrayfish.configured.platform.Services;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -36,14 +38,16 @@ public class ClientConfigured implements ClientModInitializer
             });
         }
 
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetwork.SESSION_DATA_MESSAGE_ID, (client, handler, buf, responseSender) -> {
-            boolean developer = buf.readBoolean();
-            boolean lan = buf.readBoolean();
-            client.execute(() -> {
-                SessionData.setDeveloper(developer);
-                SessionData.setLan(lan);
-            });
+        ClientPlayNetworking.registerGlobalReceiver(MessageSessionData.ID, (client, handler, buf, responseSender) -> {
+            MessageSessionData.handle(MessageSessionData.decode(buf), client::execute);
         });
+
+        if(Services.PLATFORM.isModLoaded("framework"))
+        {
+            ClientPlayNetworking.registerGlobalReceiver(MessageFramework.Response.ID, (client, handler, buf, responseSender) -> {
+                MessageFramework.Response.handle(MessageFramework.Response.decode(buf), client::execute, handler::onDisconnect);
+            });
+        }
     }
 
     private boolean isModListInstalled()

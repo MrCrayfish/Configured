@@ -2,10 +2,12 @@ package com.mrcrayfish.configured.platform;
 
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.api.Environment;
+import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
 import com.mrcrayfish.configured.network.ForgeNetwork;
-import com.mrcrayfish.configured.network.message.play.MessageSessionData;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
 import com.mrcrayfish.configured.platform.services.IPlatformHelper;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLConfig;
@@ -65,6 +67,30 @@ public class ForgePlatformHelper implements IPlatformHelper
         boolean developer = FMLLoader.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getStringUUID());
         boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
         ForgeNetwork.getPlay().send(PacketDistributor.PLAYER.with(() -> player), new MessageSessionData(developer, lan));
+    }
+
+    @Override
+    public void sendFrameworkConfigToServer(ResourceLocation id, byte[] data)
+    {
+        if(!this.isModLoaded("framework"))
+            return;
+        ForgeNetwork.getPlay().sendToServer(new MessageFramework.Sync(id, data));
+    }
+
+    @Override
+    public void sendFrameworkConfigRequest(ResourceLocation id)
+    {
+        if(!this.isModLoaded("framework"))
+            return;
+        ForgeNetwork.getPlay().sendToServer(new MessageFramework.Request(id));
+    }
+
+    @Override
+    public void sendFrameworkConfigResponse(ServerPlayer player, byte[] data)
+    {
+        if(!this.isModLoaded("framework"))
+            return;
+        ForgeNetwork.getPlay().send(PacketDistributor.PLAYER.with(() -> player), new MessageFramework.Response(data));
     }
 
     @Override
