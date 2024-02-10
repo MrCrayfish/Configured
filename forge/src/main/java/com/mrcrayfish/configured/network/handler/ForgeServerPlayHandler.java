@@ -83,7 +83,7 @@ public class ForgeServerPlayHandler
 
         Constants.LOG.debug("Successfully processed config update for '" + message.fileName() + "'");
 
-        ForgeNetwork.getPlay().send(PacketDistributor.ALL.noArg(), new MessageSyncForgeConfig(message.fileName(), message.data()));
+        ForgeNetwork.getPlay().send(new MessageSyncForgeConfig(message.fileName(), message.data()), PacketDistributor.ALL.noArg());
         ServerPlayHelper.sendMessageToOperators(Component.translatable("configured.chat.config_updated", player.getName(), config.getFileName()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), player);
     }
 }

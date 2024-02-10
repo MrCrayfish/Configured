@@ -36,9 +36,9 @@ public class IconButton extends ConfiguredButton
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
     {
-        super.renderWidget(graphics, mouseX, mouseY, partialTicks);
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
         Minecraft mc = Minecraft.getInstance();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableDepthTest();

@@ -312,7 +312,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     protected Collection<Item> getSearchResults(String s)
     {
         List<Item> entries = this.entries;
-        if(this.deepSearchCheckBox.selected())
+        if(this.deepSearchCheckBox.isSelected())
         {
             List<Item> allEntries = new ArrayList<>();
             ConfigHelper.gatherAllConfigEntries(this.folderEntry).forEach(entry -> {
@@ -555,7 +555,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             long time = Util.getMillis();
             if(time - this.lastTick >= 50)
             {
-                this.textField.tick();
+                //this.textField.tick(); // TODO what happened to this
                 this.lastTick = time;
             }
             this.textField.setX(left + width - 68);

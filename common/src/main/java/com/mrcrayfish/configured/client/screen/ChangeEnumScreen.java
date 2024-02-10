@@ -119,11 +119,11 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
-        this.renderBackground(graphics);
+        // TODO check
+        super.render(graphics, mouseX, mouseY, partialTicks);
         this.list.render(graphics, mouseX, mouseY, partialTicks);
         this.searchTextField.render(graphics, mouseX, mouseY, partialTicks);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 7, 0xFFFFFF);
-        super.render(graphics, mouseX, mouseY, partialTicks);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         graphics.blit(ListMenuScreen.CONFIGURED_LOGO, 10, 13, 0, 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
@@ -149,7 +149,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
     {
         public EnumList(List<ChangeEnumScreen.Entry> entries)
         {
-            super(ChangeEnumScreen.this.minecraft, ChangeEnumScreen.this.width, ChangeEnumScreen.this.height, 50, ChangeEnumScreen.this.height - 36, 20);
+            super(ChangeEnumScreen.this.minecraft, ChangeEnumScreen.this.width, ChangeEnumScreen.this.height - 36 - 50, 50, 20);
             entries.forEach(this::addEntry);
         }
 
@@ -166,7 +166,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         }
 
         @Override
-        public void updateNarration(NarrationElementOutput output)
+        protected void updateWidgetNarration(NarrationElementOutput output)
         {
             if(this.getSelected() != null)
             {

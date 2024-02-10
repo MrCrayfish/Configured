@@ -87,7 +87,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
     {
         this.resetTooltip();
 
-        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTicks);
         ConfirmationScreen.drawListBackground(0.0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
         this.textField.render(graphics, mouseX, mouseY, partialTicks);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFF);
@@ -103,8 +103,6 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
                 this.setActiveTooltip(this.validationHint, 0xAADD0000);
             }
         }
-
-        super.render(graphics, mouseX, mouseY, partialTicks);
 
         this.drawTooltip(graphics, mouseX, mouseY);
     }

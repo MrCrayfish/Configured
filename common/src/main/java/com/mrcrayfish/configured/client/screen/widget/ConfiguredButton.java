@@ -30,12 +30,12 @@ public class ConfiguredButton extends Button
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
     {
         if(this.visible)
         {
             this.setTooltip(this.tooltipPredicate.test(this) ? this.tooltip : null);
         }
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
     }
 }

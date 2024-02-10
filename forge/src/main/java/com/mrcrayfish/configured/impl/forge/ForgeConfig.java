@@ -18,6 +18,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -198,7 +199,7 @@ public class ForgeConfig implements IModConfig
         {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             TomlFormat.instance().createWriter().write(this.config.getConfigData(), stream);
-            ForgeNetwork.getPlay().sendToServer(new MessageSyncForgeConfig(this.config.getFileName(), stream.toByteArray()));
+            ForgeNetwork.getPlay().send(new MessageSyncForgeConfig(this.config.getFileName(), stream.toByteArray()), PacketDistributor.SERVER.noArg());
             stream.close();
         }
         catch(IOException e)

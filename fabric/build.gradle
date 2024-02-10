@@ -2,11 +2,12 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom'
+    id 'fabric-loom' version '1.2-SNAPSHOT'
 }
 
-archivesBaseName = "${mod_id}-fabric"
-version = "${minecraft_version}-${mod_version}"
+base {
+    archivesName = "${mod_id}-fabric"
+}
 
 sourceSets {
     test {
@@ -49,13 +50,13 @@ dependencies {
     modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 
     // ModMenu
-    modApi "com.terraformersmc:modmenu:7.2.2"
+    modApi "com.terraformersmc:modmenu:9.0.0"
 
     implementation project(":common")
 }
 
 loom {
-    if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
+    if(file("src/main/resources/${mod_id}.accesswidener").exists()) {
         accessWidenerPath.set(file("src/main/resources/${mod_id}.accesswidener"))
     }
     mixin {

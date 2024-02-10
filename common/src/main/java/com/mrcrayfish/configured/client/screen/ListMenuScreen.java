@@ -76,7 +76,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         this.constructEntries(entries);
         this.entries = ImmutableList.copyOf(entries); //Should this still be immutable?
         this.list = new EntryList(this.entries);
-        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
+        //this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.addWidget(this.list);
 
         // Adds a search text field to the top of the screen
@@ -114,19 +114,13 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
     }
 
     @Override
-    public void tick()
-    {
-        this.searchTextField.tick();
-    }
-
-    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
         // Resets the active tooltip each draw call
         this.resetTooltip();
 
         // Draws the background texture (dirt or custom texture)
-        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTicks); // TODO check
 
         // Draws widgets manually since they are not buttons
         this.list.render(graphics, mouseX, mouseY, partialTicks);
@@ -134,8 +128,6 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
 
         // Draw title
         graphics.drawCenteredString(this.font, this.title,this.width / 2, 7, 0xFFFFFF);
-
-        super.render(graphics, mouseX, mouseY, partialTicks);
 
         // Draws the foreground. Allows subclasses to draw onto the screen at the appropriate time.
         this.renderForeground(graphics, mouseX, mouseY, partialTicks);
@@ -190,7 +182,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
     {
         public EntryList(List<Item> entries)
         {
-            super(ListMenuScreen.this.minecraft, ListMenuScreen.this.width, ListMenuScreen.this.height, 50, ListMenuScreen.this.height - 36, ListMenuScreen.this.itemHeight);
+            super(ListMenuScreen.this.minecraft, ListMenuScreen.this.width, ListMenuScreen.this.height - 36 - 50, 50, ListMenuScreen.this.itemHeight);
             entries.forEach(this::addEntry);
         }
 
@@ -220,9 +212,9 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
         {
-            super.render(graphics, mouseX, mouseY, partialTicks);
+            super.renderWidget(graphics, mouseX, mouseY, partialTicks);
             this.renderToolTips(graphics, mouseX, mouseY);
         }
 
@@ -382,9 +374,9 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
         {
-            super.render(graphics, mouseX, mouseY, partialTick);
+            super.renderWidget(graphics, mouseX, mouseY, partialTick);
             if(this.clearable && !this.getValue().isEmpty())
             {
                 RenderSystem.setShader(GameRenderer::getPositionTexColorShader);

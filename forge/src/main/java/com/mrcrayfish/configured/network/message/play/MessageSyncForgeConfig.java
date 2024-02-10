@@ -4,10 +4,8 @@ import com.mrcrayfish.configured.network.handler.ForgeClientPlayHandler;
 import com.mrcrayfish.configured.network.handler.ForgeServerPlayHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
@@ -25,9 +23,8 @@ public record MessageSyncForgeConfig(String fileName, byte[] data)
         return new MessageSyncForgeConfig(buffer.readUtf(), buffer.readByteArray());
     }
 
-    public static void handle(MessageSyncForgeConfig message, Supplier<NetworkEvent.Context> context)
+    public static void handle(MessageSyncForgeConfig message, CustomPayloadEvent.Context ctx)
     {
-        NetworkEvent.Context ctx = context.get();
         if(ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER)
         {
             ServerPlayer player = ctx.getSender();
@@ -38,7 +35,7 @@ public record MessageSyncForgeConfig(String fileName, byte[] data)
         }
         else
         {
-            ctx.enqueueWork(() -> ForgeClientPlayHandler.handleSyncServerConfigMessage(ctx.getNetworkManager(), message));
+            ctx.enqueueWork(() -> ForgeClientPlayHandler.handleSyncServerConfigMessage(ctx.getConnection(), message));
         }
         ctx.setPacketHandled(true);
     }

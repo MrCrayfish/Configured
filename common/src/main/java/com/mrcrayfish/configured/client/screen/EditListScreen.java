@@ -112,10 +112,9 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
-        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTicks);
         this.list.render(graphics, mouseX, mouseY, partialTicks);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 14, 0xFFFFFF);
-        super.render(graphics, mouseX, mouseY, partialTicks);
     }
 
     @Override
@@ -152,7 +151,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
     {
         public ObjectList()
         {
-            super(EditListScreen.this.minecraft, EditListScreen.this.width, EditListScreen.this.height, 36, EditListScreen.this.height - 36, 24);
+            super(EditListScreen.this.minecraft, EditListScreen.this.width, EditListScreen.this.height - 36 - 36, 36, 24);
             EditListScreen.this.values.forEach(value -> {
                 this.addEntry(new StringEntry(this, value));
             });
@@ -182,7 +181,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
             return super.removeEntry(entry);
         }
 
-        @Override
+        /*@Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
         {
             super.render(graphics, mouseX, mouseY, partialTicks);
@@ -197,7 +196,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
                     }
                 });
             });
-        }
+        }*/
 
         @Override
         public ResourceLocation getBackgroundTexture()

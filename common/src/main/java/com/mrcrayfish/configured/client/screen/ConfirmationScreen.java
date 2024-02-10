@@ -79,7 +79,6 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
-        this.renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTicks);
 
         List<FormattedCharSequence> lines = this.font.split(this.message, 300);

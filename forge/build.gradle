@@ -2,14 +2,16 @@ import net.minecraftforge.gradle.common.tasks.SignJar
 import org.apache.commons.io.FilenameUtils
 
 plugins {
-    id 'idea'
+    id 'java'
+    id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle'
-    id 'org.spongepowered.mixin'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
-archivesBaseName = "${mod_id}-forge"
-version = "${minecraft_version}-${mod_version}"
+base {
+    archivesName = "${mod_id}-forge"
+}
 
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
@@ -19,56 +21,40 @@ mixin {
 minecraft {
     mappings channel: 'official', version: minecraft_version
 
+    copyIdeResources = true
+
     if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
         accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     }
 
     runs {
+        configureEach {
+            workingDirectory project.file('run')
+            ideaModule "${rootProject.name}.${project.name}.test"
+            property 'forge.logging.markers', 'REGISTRIES,SCAN,LOADING'
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                create(mod_id) {
+                    source sourceSets.main
+                    source sourceSets.test
+                    source project(":common").sourceSets.main
+                }
+            }
+        }
         client {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
-            taskName 'Client'
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modClientRun {
-                    source sourceSets.main
-                    source sourceSets.test
-                    source project(":common").sourceSets.main
-                }
-            }
+            taskName "Client"
+            property 'forge.enabledGameTestNamespaces', mod_id
         }
-
         server {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
-            taskName 'Server'
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modServerRun {
-                    source sourceSets.main
-                    source sourceSets.test
-                    source project(":common").sourceSets.main
-                }
-            }
+            taskName "Server"
+            property 'forge.enabledGameTestNamespaces', mod_id
+            args '--nogui'
         }
-
         data {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
+            taskName "Data"
             args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            taskName 'Data'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modDataRun {
-                    source sourceSets.main
-                    source project(":common").sourceSets.main
-                }
-            }
         }
     }
 }
@@ -87,40 +73,31 @@ configurations {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    // Runtime mods
-    compileOnly fg.deobf("com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}")
-    testCompileOnly fg.deobf("com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}")
-    runtimeOnly fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
-    runtimeOnly fg.deobf("com.mrcrayfish:catalogue-forge:${minecraft_version}-1.7.1")
-
-    // Test mods
-    runtimeOnly fg.deobf("com.mrcrayfish:goblintraders-forge:${minecraft_version}-1.9.3")
-
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
-
     compileOnly project(":common")
+    testCompileOnly project(":common")
+    implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    testCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }
 
-Spec<Task> notTest = { Task it -> !it.name.contains("Test") } as Spec<Task>
+Spec<Task> notForge = { Task it -> !it.name.startsWith("forge") && !it.name.contains("Test") } as Spec<Task>
 
-tasks.withType(JavaCompile).matching(notTest).configureEach {
+tasks.withType(JavaCompile).matching(notForge).configureEach {
     source(project(":common").sourceSets.main.allSource)
 }
-tasks.withType(Javadoc).matching(notTest).configureEach {
-    source(project(":common").sourceSets.main.allJava)
-}
-tasks.named("sourcesJar", Jar) {
-    from(project(":common").sourceSets.main.allSource)
-}
 
-processResources {
+tasks.withType(ProcessResources).matching(notForge).configureEach {
     from project(":common").sourceSets.main.resources
 }
 
 jar.finalizedBy('reobfJar')
+
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
+}
 
 publishing {
     publications {

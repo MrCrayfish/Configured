@@ -1,36 +1,16 @@
 modLoader="javafml"
 loaderVersion="[40,)"
-license="GPL3"
+license="GNU Lesser General Public License v3.0"
 issueTrackerURL="https://github.com/MrCrayfish/Configured/issues"
-
-[[mods]]
-modId="configured"
-version="2.1.0"
-displayName="Configured"
-credits="Hatsondogs for creating icons. LizterZapZap for creating mod logo"
-authors="MrCrayfish"
-description="Creates a simple GUI config for every mod!"
-logoFile="configured_logo.png"
-logoBlur=false
-updateJSONURL="https://mrcrayfish.com/modupdatejson?id=configured"
-displayURL="https://mrcrayfish.com/mods?id=configured"
-
-[modproperties.configured]
-    catalogueImageIcon="configured_icon.png"
-    configuredProviders=[
-        "com.mrcrayfish.configured.impl.forge.ForgeConfigProvider",
-        "com.mrcrayfish.configured.impl.framework.FrameworkConfigProvider",
-        "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
-    ]
-
-[modproperties.config_test]
-    configuredBackground="minecraft:textures/block/stone.png"
 
 [[mods]]
 modId="config_test"
 version="1.0.0"
 displayName="Config Test"
 authors="MrCrayfish"
+
+[modproperties.config_test]
+    configuredBackground="minecraft:textures/block/stone.png"
 
 [[dependencies.config_test]]
 modId="configured"
