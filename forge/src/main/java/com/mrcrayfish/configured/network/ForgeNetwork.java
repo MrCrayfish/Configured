@@ -62,7 +62,7 @@ public class ForgeNetwork
                 .encoder(MessageFramework.Response::encode)
                 .decoder(MessageFramework.Response::decode)
                 .consumerNetworkThread((message, ctx) -> {
-                    MessageFramework.Response.handle(message, ctx::enqueueWork, ctx.getConnection()::disconnect);
+                    MessageFramework.Response.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
                     ctx.setPacketHandled(true);
                 }).add();
         }

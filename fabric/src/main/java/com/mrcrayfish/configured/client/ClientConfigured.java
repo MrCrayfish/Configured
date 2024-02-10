@@ -45,7 +45,7 @@ public class ClientConfigured implements ClientModInitializer
         if(Services.PLATFORM.isModLoaded("framework"))
         {
             ClientPlayNetworking.registerGlobalReceiver(MessageFramework.Response.ID, (client, handler, buf, responseSender) -> {
-                MessageFramework.Response.handle(MessageFramework.Response.decode(buf), client::execute, handler::onDisconnect);
+                MessageFramework.Response.handle(MessageFramework.Response.decode(buf), client::execute, client.player, handler::onDisconnect);
             });
         }
     }

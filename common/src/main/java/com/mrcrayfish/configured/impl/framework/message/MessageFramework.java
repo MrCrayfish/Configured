@@ -78,7 +78,7 @@ public class MessageFramework
             return new Response(buf.readByteArray());
         }
 
-        public static void handle(Response message, Consumer<Runnable> executor, Consumer<Component> disconnect)
+        public static void handle(Response message, Consumer<Runnable> executor, @Nullable Player player, Consumer<Component> disconnect)
         {
             executor.accept(() -> FrameworkClientHandler.handleResponse(message, disconnect));
         }

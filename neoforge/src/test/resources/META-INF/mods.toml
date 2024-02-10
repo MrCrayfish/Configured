@@ -1,0 +1,20 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+license = "GNU Lesser General Public License v3.0"
+issueTrackerURL = "https://github.com/MrCrayfish/Configured/issues"
+
+[[mods]]
+modId = "config_test"
+version = "1.0.0"
+displayName = "Config Test"
+authors = "MrCrayfish"
+
+[modproperties.config_test]
+    configuredBackground = "minecraft:textures/block/stone.png"
+
+[[dependencies.config_test]]
+modId = "configured"
+type = "required"
+versionRange = "[2.2.0,)"
+ordering = "NONE"
+side = "BOTH"
