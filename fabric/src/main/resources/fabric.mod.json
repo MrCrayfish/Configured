@@ -38,7 +38,8 @@
         "java": ">=17"
     },
     "breaks": {
-        "catalogue": "<${catalogue_version}"
+        "catalogue": "<${catalogue_version}",
+        "framework": "<${framework_version}"
     },
     "accessWidener": "configured.accesswidener",
     "custom": {
