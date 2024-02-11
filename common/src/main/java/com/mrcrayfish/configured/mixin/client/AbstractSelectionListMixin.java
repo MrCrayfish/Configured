@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(AbstractSelectionList.class)
 public abstract class AbstractSelectionListMixin
 {
-    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 0)
     public ResourceLocation beforeEnableDepthTest(ResourceLocation original)
+    @ModifyArg(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 0)
     {
         if(original.equals(Screen.BACKGROUND_LOCATION) && this instanceof IBackgroundTexture texture)
         {
