@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public class ScreenMixin
 {
     @ModifyArg(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIFFIIII)V", ordinal = 0), index = 0)
-    public ResourceLocation afterSetTexture(ResourceLocation location)
+    public ResourceLocation configuredModifyBlitBackgroundTexture(ResourceLocation location)
     {
         return IBackgroundTexture.loadTexture(this, location);
     }

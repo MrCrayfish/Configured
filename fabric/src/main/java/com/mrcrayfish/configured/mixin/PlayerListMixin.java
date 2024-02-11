@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PlayerListMixin
 {
     @Inject(method = "placeNewPlayer", at = @At(value = "TAIL"))
-    private void frameworkOnPlayerJoin(Connection connection, ServerPlayer player, CallbackInfo ci)
+    private void configuredNewPlayer(Connection connection, ServerPlayer player, CallbackInfo ci)
     {
         Events.onPlayerLoggedIn(player);
     }
