@@ -32,16 +32,11 @@ public class NeoForgeConfigProvider implements IModConfigProvider
 
     private static void addForgeConfigSetToMap(ModContext context, ModConfig.Type type, Consumer<IModConfig> consumer)
     {
-        Set<ModConfig> configSet = getForgeConfigSets().get(type);
+        Set<ModConfig> configSet = ConfigTracker.INSTANCE.configSets().get(type);
         Set<IModConfig> filteredConfigSets = configSet.stream()
                 .filter(config -> config.getModId().equals(context.modId()) && config.getSpec() instanceof ModConfigSpec)
                 .map(NeoForgeConfig::new)
                 .collect(Collectors.toSet());
         filteredConfigSets.forEach(consumer);
-    }
-
-    private static EnumMap<ModConfig.Type, Set<ModConfig>> getForgeConfigSets()
-    {
-        return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
     }
 }
