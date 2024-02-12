@@ -4,6 +4,7 @@ import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
+import com.mrcrayfish.configured.util.ForgeConfigHelper;
 import com.mrcrayfish.configured.util.OptiFineHelper;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ConfigTracker;
@@ -41,16 +42,16 @@ public class ForgeConfigProvider implements IModConfigProvider
             return;
         }
 
-        Set<ModConfig> configSet = getForgeConfigSets().get(type);
-        Set<IModConfig> filteredConfigSets = configSet.stream()
-                .filter(config -> config.getModId().equals(context.modId()) && config.getSpec() instanceof ForgeConfigSpec)
-                .map(ForgeConfig::new)
-                .collect(Collectors.toSet());
-        filteredConfigSets.forEach(consumer);
-    }
-
-    private static EnumMap<ModConfig.Type, Set<ModConfig>> getForgeConfigSets()
-    {
-        return ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "configSets");
+        for(ModConfig config : ConfigTracker.INSTANCE.configSets().get(type))
+        {
+            if(config.getModId().equals(config.getModId()))
+            {
+                ForgeConfigSpec spec = ForgeConfigHelper.findConfigSpec(config.getSpec());
+                if(spec != null)
+                {
+                    consumer.accept(new ForgeConfig(config, spec));
+                }
+            }
+        }
     }
 }

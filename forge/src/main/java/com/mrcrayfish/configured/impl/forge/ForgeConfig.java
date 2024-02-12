@@ -37,18 +37,15 @@ public class ForgeConfig implements IModConfig
     });
 
     protected final ModConfig config;
+    protected final ForgeConfigSpec spec;
     protected final List<ForgeValueEntry> allConfigValues;
 
-    public ForgeConfig(ModConfig config)
+    public ForgeConfig(ModConfig config, ForgeConfigSpec spec)
     {
+        Objects.requireNonNull(spec, "ForgeConfigSpec cannot be null");
         this.config = config;
-        this.allConfigValues = getAllConfigValues(config);
-    }
-
-    protected ForgeConfig(ModConfig config, List<ForgeValueEntry> allConfigValues)
-    {
-        this.config = config;
-        this.allConfigValues = allConfigValues;
+        this.spec = spec;
+        this.allConfigValues = getAllConfigValues(this.spec);
     }
 
     @Override
@@ -94,7 +91,7 @@ public class ForgeConfig implements IModConfig
         else if(!changedValues.isEmpty())
         {
             Constants.LOG.info("Sending config reloading event for {}", this.config.getFileName());
-            this.config.getSpec().afterReload();
+            this.spec.afterReload();
             ForgeConfigHelper.fireForgeConfigEvent(this.config, new ModConfigEvent.Reloading(this.config));
         }
     }
@@ -102,7 +99,7 @@ public class ForgeConfig implements IModConfig
     @Override
     public IConfigEntry getRoot()
     {
-        return new ForgeFolderEntry(((ForgeConfigSpec) this.config.getSpec()).getValues(), (ForgeConfigSpec) this.config.getSpec());
+        return new ForgeFolderEntry(this.spec.getValues(), this.spec);
     }
 
     @Override
@@ -207,9 +204,9 @@ public class ForgeConfig implements IModConfig
         }
     }
 
-    protected List<ForgeValueEntry> getAllConfigValues(ModConfig config)
+    protected static List<ForgeValueEntry> getAllConfigValues(ForgeConfigSpec spec)
     {
-        return ForgeConfigHelper.gatherAllForgeConfigValues(config).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
+        return ForgeConfigHelper.gatherAllForgeConfigValues(spec.getValues(), spec).stream().map(pair -> new ForgeValueEntry(pair.getLeft(), pair.getRight())).toList();
     }
 
     protected record ForgeValueEntry(ForgeConfigSpec.ConfigValue<?> value, ForgeConfigSpec.ValueSpec spec) {}
