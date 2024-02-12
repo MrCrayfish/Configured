@@ -4,6 +4,7 @@ import com.electronwill.nightconfig.core.AbstractConfig;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.core.utils.UnmodifiableConfigWrapper;
 import com.google.common.collect.ImmutableList;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ConfigTracker;
@@ -14,6 +15,8 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -89,8 +92,7 @@ public class ForgeConfigHelper
     @Nullable
     public static ModConfig getForgeConfig(String fileName)
     {
-        ConcurrentHashMap<String, ModConfig> configMap = ObfuscationReflectionHelper.getPrivateValue(ConfigTracker.class, ConfigTracker.INSTANCE, "fileMap");
-        return configMap != null ? configMap.get(fileName) : null;
+        return ConfigTracker.INSTANCE.fileMap().get(fileName);
     }
 
     /**
@@ -118,5 +120,27 @@ public class ForgeConfigHelper
         {
             e.printStackTrace();
         }
+    }
+
+    @Nullable
+    public static ForgeConfigSpec findConfigSpec(UnmodifiableConfig config)
+    {
+        if(config instanceof ForgeConfigSpec spec)
+            return spec;
+
+        /* Find ForgeConfigSpec instances that have been wrapped, Night Config provides a commonly
+         * used default implementation for this which we use here Night Config also has more config
+         * wrapper classes, which all seem to extend this one fortunately */
+        if(config instanceof UnmodifiableConfigWrapper)
+        {
+            try
+            {
+                Field field = UnmodifiableConfigWrapper.class.getDeclaredField("config");
+                field.setAccessible(true);
+                return findConfigSpec((UnmodifiableConfig) MethodHandles.lookup().unreflectGetter(field).invoke(config));
+            }
+            catch(Throwable ignored) {}
+        }
+        return null;
     }
 }
