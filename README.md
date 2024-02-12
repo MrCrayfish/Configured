@@ -1,7 +1,8 @@
 ![Configured_Banner](https://github.com/MrCrayfish/Configured/assets/4958241/d9ddfa31-7ff3-4489-b4b2-77723e0e361f)
 
 
-![Forge](https://github.com/MrCrayfish/Configured/assets/4958241/5f1efaa6-2649-43e3-83aa-3c7891d922bc) ![Fabric](https://github.com/MrCrayfish/Configured/assets/4958241/47926b83-c53a-4074-a2ca-fdcfb9eba1fc) [![Download on Website](https://github.com/MrCrayfish/Configured/assets/4958241/460bd882-4918-4241-a0be-c701f71b7f07)](https://mrcrayfish.com/mods/configured) [![Curseforge](http://cf.way2muchnoise.eu/full_configured_downloads.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/configured) 
+![Forge](https://github.com/MrCrayfish/Configured/assets/4958241/5f1efaa6-2649-43e3-83aa-3c7891d922bc) ![Fabric](https://github.com/MrCrayfish/Configured/assets/4958241/47926b83-c53a-4074-a2ca-fdcfb9eba1fc) ![_x__xampp_htdocs_mrcrayfish (3)](https://github.com/MrCrayfish/Configured/assets/4958241/e9b19f76-71af-4903-8059-bce00b5c55ce) [![Download on Website](https://github.com/MrCrayfish/Configured/assets/4958241/460bd882-4918-4241-a0be-c701f71b7f07)](https://mrcrayfish.com/mods/configured) [![Curseforge](http://cf.way2muchnoise.eu/full_configured_downloads.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/configured)
+ 
 
 
 # Configured
