@@ -19,15 +19,16 @@ Configured is a simple and lightweight mod that dynamically creates configuratio
 * Lightweight and just works! Add it to your modpack without any problems.
 
 ## Supported Config Systems
-* Forge (Supports editing client, common, and world configs)
-* Framework (Supports editing client, common, server, and world configs)
+* Forge (all mods using either client, common, and/or world configs)
+* NeoForge (all mods using client, common, and/or world configs)
+* Framework (all mods using client, common, server, and/or world configs)
 * JEI (Supports editing clients configs)
 
 ## Developers
 
 This mod has support to change the background texture of the config screen through the mod's metadata. Below you can find an example for each modloader.
 
-**Forge** - Add this under your `[[mods]]` section in your `mods.toml`
+**Forge/NeoForge** - Add this under your `[[mods]]` section in your `mods.toml`
 ```toml
 [modproperties.<your_mod_id>]
   configuredBackground="minecraft:textures/block/stone.png"
