@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(AbstractSelectionList.class)
 public abstract class AbstractSelectionListMixin
 {
-    @ModifyArg(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 0)
+    @ModifyArg(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 0)
     public ResourceLocation configuredModifyBlitBackgroundTexture(ResourceLocation original)
     {
         if(original.equals(Screen.BACKGROUND_LOCATION) && this instanceof IBackgroundTexture texture)
