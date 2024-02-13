@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured.integration;
 
-import com.google.common.collect.ImmutableMap;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.ModContext;
@@ -12,10 +11,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 /**
  * Provides a config screen factory and provider to Catalogue (Fabric)
@@ -33,12 +30,5 @@ public final class CatalogueConfigFactory
             return null;
         ResourceLocation backgroundTexture = Services.CONFIG.getBackgroundTexture(modId);
         return ConfigScreenHelper.createSelectionScreen(currentScreen, Component.literal(container.getMetadata().getName()), modConfigMap, backgroundTexture);
-    }
-
-    // Do not change signature
-    public static Map<String, BiFunction<Screen, ModContainer, Screen>> createConfigProvider()
-    {
-        Map<String, BiFunction<Screen, ModContainer, Screen>> providers = new HashMap<>();
-        return ImmutableMap.copyOf(providers);
     }
 }

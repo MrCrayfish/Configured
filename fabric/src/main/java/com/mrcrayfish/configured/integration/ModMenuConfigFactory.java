@@ -3,7 +3,6 @@ package com.mrcrayfish.configured.integration;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.client.ClientHandler;
-import com.mrcrayfish.configured.platform.Services;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.loader.api.FabricLoader;
@@ -18,14 +17,6 @@ import java.util.Set;
  */
 public final class ModMenuConfigFactory implements ModMenuApi
 {
-    @Override
-    public ConfigScreenFactory<?> getModConfigScreenFactory()
-    {
-        return screen -> {
-            return FabricLoader.getInstance().getModContainer(Constants.MOD_ID).map(container -> CatalogueConfigFactory.createConfigScreen(screen, container)).orElse(null);
-        };
-    }
-
     @Override
     public Map<String, ConfigScreenFactory<?>> getProvidedConfigScreenFactories()
     {
