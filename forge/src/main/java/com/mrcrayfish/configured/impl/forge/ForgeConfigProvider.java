@@ -44,7 +44,7 @@ public class ForgeConfigProvider implements IModConfigProvider
 
         for(ModConfig config : ConfigTracker.INSTANCE.configSets().get(type))
         {
-            if(config.getModId().equals(config.getModId()))
+            if(config.getModId().equals(context.modId()))
             {
                 ForgeConfigSpec spec = ForgeConfigHelper.findConfigSpec(config.getSpec());
                 if(spec != null)
