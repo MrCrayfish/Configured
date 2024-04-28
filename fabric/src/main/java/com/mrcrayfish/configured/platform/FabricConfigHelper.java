@@ -19,7 +19,6 @@ import java.util.function.Consumer;
  */
 public class FabricConfigHelper implements IConfigHelper
 {
-    private static final ResourceLocation BACKGROUND_LOCATION = new ResourceLocation("textures/gui/options_background.png");
     private static final LevelResource SERVER_CONFIG_RESOURCE = new LevelResource("serverconfig");
 
     @Override
@@ -99,32 +98,5 @@ public class FabricConfigHelper implements IConfigHelper
             Constants.LOG.error("Failed to load config provider from mod: {}", container.getMetadata().getId());
             throw new RuntimeException("Failed to load config provider", e);
         }
-    }
-
-    @Override
-    public ResourceLocation getBackgroundTexture(String modId)
-    {
-        ModContainer container = FabricLoader.getInstance().getModContainer(modId).orElse(null);
-        if(container != null)
-        {
-            CustomValue value = container.getMetadata().getCustomValue("configured");
-            if(value != null && value.getType() == CustomValue.CvType.OBJECT)
-            {
-                CustomValue.CvObject configuredObj = value.getAsObject();
-                CustomValue backgroundValue = configuredObj.get("background");
-                if(backgroundValue != null && backgroundValue.getType() == CustomValue.CvType.STRING)
-                {
-                    try
-                    {
-                        return new ResourceLocation(backgroundValue.getAsString());
-                    }
-                    catch(ResourceLocationException e)
-                    {
-                        return BACKGROUND_LOCATION;
-                    }
-                }
-            }
-        }
-        return BACKGROUND_LOCATION;
     }
 }

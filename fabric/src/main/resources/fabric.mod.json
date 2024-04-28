@@ -11,7 +11,7 @@
         "issues": "${mod_issues}"
     },
     "license": "${mod_license}",
-    "icon": "${mod_id}_icon.png",
+    "icon": "assets/${mod_id}/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
@@ -28,7 +28,6 @@
         ]
     },
     "mixins": [
-        "configured.common.mixins.json",
         "configured.fabric.mixins.json"
     ],
     "depends": {
@@ -50,12 +49,11 @@
             "providers": [
                 "com.mrcrayfish.configured.impl.framework.FrameworkConfigProvider",
                 "com.mrcrayfish.configured.impl.jei.JeiConfigProvider"
-            ],
-            "background": "minecraft:textures/block/stone.png"
+            ]
         },
         "catalogue": {
-            "banner": "${mod_id}_banner.png",
-            "background": "${mod_id}_background.png",
+            "banner": "assets/${mod_id}/banner.png",
+            "background": "assets/${mod_id}/background.png",
             "configFactory": "com.mrcrayfish.configured.integration.CatalogueConfigFactory"
         }
     }

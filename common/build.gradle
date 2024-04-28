@@ -24,8 +24,8 @@ dependencies {
     implementation "com.google.code.findbugs:jsr305:3.0.2"
     compileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
     testCompileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    testCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}" // TODO temp until 1.20.5 is available
+    testCompileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}" // TODO temp until 1.20.5 is available
     library "com.electronwill.night-config:core:3.6.6"
     library "com.electronwill.night-config:toml:3.6.6"
 }

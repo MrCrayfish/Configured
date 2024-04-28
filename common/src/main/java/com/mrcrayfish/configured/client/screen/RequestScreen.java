@@ -28,9 +28,9 @@ public class RequestScreen extends ListMenuScreen implements IEditing
     private final IModConfig config;
     private IModConfig response;
 
-    protected RequestScreen(Screen parent, Component title, ResourceLocation background, IModConfig config)
+    protected RequestScreen(Screen parent, Component title, IModConfig config)
     {
-        super(parent, title, background, 20);
+        super(parent, title, 20);
         this.config = config;
     }
 
@@ -85,7 +85,7 @@ public class RequestScreen extends ListMenuScreen implements IEditing
 
         if(!this.failed && this.response != null && this.time >= 10)
         {
-            this.minecraft.setScreen(new ConfigScreen(this.parent, this.title, this.response, this.background));
+            this.minecraft.setScreen(new ConfigScreen(this.parent, this.title, this.response));
             this.response = null;
         }
     }

@@ -14,6 +14,4 @@ public interface IConfigHelper
     LevelResource getServerConfigResource();
 
     Set<IModConfigProvider> getProviders();
-
-    ResourceLocation getBackgroundTexture(String modId);
 }

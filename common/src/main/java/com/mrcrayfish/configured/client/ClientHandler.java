@@ -6,22 +6,15 @@ import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
-import com.mrcrayfish.configured.client.screen.IBackgroundTexture;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.screens.Screen;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,29 +59,5 @@ public class ClientHandler
             e.printStackTrace();
         }
         return Stream.empty();
-    }
-
-    /**
-     * Linked via ASM. Do not delete!
-     */
-    @SuppressWarnings("unused")
-    public static void updateAbstractListTexture(AbstractSelectionList<?> list)
-    {
-        if(list instanceof IBackgroundTexture)
-        {
-            RenderSystem.setShaderTexture(0, ((IBackgroundTexture) list).getBackgroundTexture());
-        }
-    }
-
-    /**
-     * Linked via ASM. Do not delete!
-     */
-    @SuppressWarnings("unused")
-    public static void updateScreenTexture(Screen screen)
-    {
-        if(screen instanceof IBackgroundTexture)
-        {
-            RenderSystem.setShaderTexture(0, ((IBackgroundTexture) screen).getBackgroundTexture());
-        }
     }
 }

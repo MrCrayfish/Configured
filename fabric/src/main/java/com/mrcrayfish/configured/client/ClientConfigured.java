@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,14 +39,19 @@ public class ClientConfigured implements ClientModInitializer
             });
         }
 
-        ClientPlayNetworking.registerGlobalReceiver(MessageSessionData.ID, (client, handler, buf, responseSender) -> {
-            MessageSessionData.handle(MessageSessionData.decode(buf), client::execute);
+        PayloadTypeRegistry.playC2S().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
+        PayloadTypeRegistry.playS2C().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(MessageSessionData.TYPE, (payload, context) -> {
+            MessageSessionData.handle(payload, Minecraft.getInstance()::execute);
         });
 
         if(Services.PLATFORM.isModLoaded("framework"))
         {
-            ClientPlayNetworking.registerGlobalReceiver(MessageFramework.Response.ID, (client, handler, buf, responseSender) -> {
-                MessageFramework.Response.handle(MessageFramework.Response.decode(buf), client::execute, client.player, handler::onDisconnect);
+            PayloadTypeRegistry.playC2S().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
+            PayloadTypeRegistry.playS2C().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
+            ClientPlayNetworking.registerGlobalReceiver(MessageFramework.Response.TYPE, (payload, context) -> {
+                Minecraft mc = context.client();
+                MessageFramework.Response.handle(payload, mc::execute, mc.player, context.responseSender()::disconnect);
             });
         }
     }

@@ -40,33 +40,25 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public abstract class ListMenuScreen extends TooltipScreen implements IBackgroundTexture
+public abstract class ListMenuScreen extends TooltipScreen
 {
     public static final ResourceLocation CONFIGURED_LOGO = new ResourceLocation(Constants.MOD_ID, "textures/gui/logo.png");
 
     protected final Screen parent;
-    protected final ResourceLocation background;
     protected final int itemHeight;
     protected EntryList list;
     protected List<Item> entries;
     protected FocusedEditBox activeTextField;
     protected FocusedEditBox searchTextField;
 
-    protected ListMenuScreen(Screen parent, Component title, ResourceLocation background, int itemHeight)
+    protected ListMenuScreen(Screen parent, Component title, int itemHeight)
     {
         super(title);
-        this.parent = parent;
-        this.background = background;
+        this.parent = parent;;
         this.itemHeight = itemHeight;
     }
 
     protected abstract void constructEntries(List<Item> entries);
-
-    @Override
-    public ResourceLocation getBackgroundTexture()
-    {
-        return this.background;
-    }
 
     @Override
     protected void init()
@@ -178,7 +170,7 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    protected class EntryList extends ContainerObjectSelectionList<Item> implements IBackgroundTexture
+    protected class EntryList extends ContainerObjectSelectionList<Item>
     {
         public EntryList(List<Item> entries)
         {
@@ -196,12 +188,6 @@ public abstract class ListMenuScreen extends TooltipScreen implements IBackgroun
         public int getRowWidth()
         {
             return 260;
-        }
-
-        @Override
-        public ResourceLocation getBackgroundTexture()
-        {
-            return ListMenuScreen.this.background;
         }
 
         // Overridden simply to make it public

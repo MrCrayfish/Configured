@@ -8,7 +8,7 @@ version = "${mod_version}"
 displayName = "${mod_name}"
 updateJSONURL = "https://mrcrayfish.com/api/mod_update/neoforge/${mod_id}"
 displayURL = "${mod_homepage}"
-logoFile = "${mod_id}_icon.png"
+logoFile = "assets/${mod_id}/banner.png"
 authors = "${mod_author}"
 description = '''${mod_desc}'''
 
@@ -41,9 +41,8 @@ ordering = "NONE"
 side = "BOTH"
 
 [modproperties.${mod_id}]
-catalogueImageIcon = "${mod_id}_icon.png"
-catalogueBackground = "${mod_id}_background.png"
-configuredBackground = "minecraft:textures/block/stone.png"
+catalogueImageIcon = "assets/${mod_id}/icon.png"
+catalogueBackground = "assets/${mod_id}/background.png"
 configuredProviders = [
     "com.mrcrayfish.configured.impl.neoforge.NeoForgeConfigProvider",
     "com.mrcrayfish.configured.impl.framework.FrameworkConfigProvider",

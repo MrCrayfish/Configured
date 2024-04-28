@@ -3,6 +3,7 @@ package test.config;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -28,9 +29,9 @@ public class ConfigTest
         TEST = testSpecPair.getLeft();
     }
 
-    public ConfigTest(IEventBus bus)
+    public ConfigTest(ModContainer container, IEventBus bus)
     {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, testSpec, "configured_test_config.toml");
+        container.registerConfig(ModConfig.Type.CLIENT, testSpec, "configured_test_config.toml");
     }
 
     public static class Test

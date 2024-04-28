@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.io.ByteArrayInputStream;
 
@@ -81,7 +82,7 @@ public class NeoForgeServerPlayHandler
 
         Constants.LOG.debug("Successfully processed config update for '" + payload.fileName() + "'");
 
-        SyncNeoForgeConfigPayload.of(payload.fileName(), payload.data()).sendToAll();
+        PacketDistributor.sendToAllPlayers(new SyncNeoForgeConfigPayload(payload.fileName(), payload.data()));
         ServerPlayHelper.sendMessageToOperators(Component.translatable("configured.chat.config_updated", player.getName(), config.getFileName()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), player);
     }
 }

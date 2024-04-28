@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.2-SNAPSHOT'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
 }
 
 base {
@@ -44,13 +44,13 @@ dependencies {
     library include("com.electronwill.night-config:core:3.6.6")
     library include("com.electronwill.night-config:toml:3.6.6")
 
-    // JEI
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
+    // JEI TODO temp until 1.20.5 is available
+    modCompileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-1.20.4-fabric-api:${jei_version}"
+    //modRuntimeOnly "mezz.jei:jei-1.20.4-fabric:${jei_version}"
 
     // ModMenu
-    modApi "com.terraformersmc:modmenu:9.0.0"
+    modApi "com.terraformersmc:modmenu:10.0.0-beta.1"
 
     implementation project(":common")
 }

@@ -84,28 +84,4 @@ public class NeoForgeConfigHelper implements IConfigHelper
             return null;
         }
     }
-
-    @Override
-    public ResourceLocation getBackgroundTexture(String modId)
-    {
-        ModContainer container = ModList.get().getModContainerById(modId).orElse(null);
-        if(container != null)
-        {
-            String configBackground = (String) container.getModInfo().getModProperties().get("configuredBackground");
-            if(configBackground != null)
-            {
-                return new ResourceLocation(configBackground);
-            }
-            if(container.getModInfo() instanceof ModInfo modInfo)
-            {
-                // Fallback to old method to getting config background (since mods might not have updated)
-                Optional<String> optional = modInfo.getConfigElement("configBackground");
-                if(optional.isPresent())
-                {
-                    return new ResourceLocation(optional.get());
-                }
-            }
-        }
-        return BACKGROUND_LOCATION;
-    }
 }

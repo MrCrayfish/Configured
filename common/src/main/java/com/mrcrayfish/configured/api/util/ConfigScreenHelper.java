@@ -7,7 +7,6 @@ import com.mrcrayfish.configured.client.screen.ModConfigSelectionScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
 import java.util.Set;
@@ -28,9 +27,9 @@ public class ConfigScreenHelper
      * @param background of the config screen
      * @return a new screen with config selection included
      */
-    public static Screen createSelectionScreen(Screen parent, Component title, Map<ConfigType, Set<IModConfig>> configs, ResourceLocation background)
+    public static Screen createSelectionScreen(Screen parent, Component title, Map<ConfigType, Set<IModConfig>> configs)
     {
-        return new ModConfigSelectionScreen(parent, title, background, configs);
+        return new ModConfigSelectionScreen(parent, title, configs);
     }
 
     /**
@@ -42,9 +41,9 @@ public class ConfigScreenHelper
      * @param background of the config screen
      * @return Screen for 1 single config file
      */
-    public static Screen createSelectionScreen(Component title, IModConfig config, ResourceLocation background)
+    public static Screen createSelectionScreen(Component title, IModConfig config)
     {
-        return createSelectionScreen(Minecraft.getInstance().screen, title, config, background);
+        return createSelectionScreen(Minecraft.getInstance().screen, title, config);
     }
 
     /**
@@ -56,8 +55,8 @@ public class ConfigScreenHelper
      * @param background of the config screen
      * @return Screen for 1 single config file
      */
-    public static Screen createSelectionScreen(Screen parent, Component title, IModConfig config, ResourceLocation background)
+    public static Screen createSelectionScreen(Screen parent, Component title, IModConfig config)
     {
-        return new ConfigScreen(parent, title, config, background);
+        return new ConfigScreen(parent, title, config);
     }
 }

@@ -1,8 +1,12 @@
 package com.mrcrayfish.configured;
 
 import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 /**
  * Author: MrCrayfish
@@ -14,11 +18,20 @@ public class Configured implements ModInitializer
     {
         Bootstrap.init();
 
-        ServerPlayNetworking.registerGlobalReceiver(MessageFramework.Sync.ID, (server, player, handler, buf, responseSender) -> {
-            MessageFramework.Sync.handle(MessageFramework.Sync.decode(buf), server::execute, player, handler::disconnect);
+        // Yeah, I don't care that this is ugly
+        PayloadTypeRegistry.playC2S().register(MessageFramework.Sync.TYPE, MessageFramework.Sync.STREAM_CODEC);
+        PayloadTypeRegistry.playS2C().register(MessageFramework.Sync.TYPE, MessageFramework.Sync.STREAM_CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(MessageFramework.Sync.TYPE, (payload, context) -> {
+            ServerPlayer player = context.player();
+            MinecraftServer server = player.server;
+            MessageFramework.Sync.handle(payload, server::execute, player, context.responseSender()::disconnect);
         });
-        ServerPlayNetworking.registerGlobalReceiver(MessageFramework.Request.ID, (server, player, handler, buf, responseSender) -> {
-            MessageFramework.Request.handle(MessageFramework.Request.decode(buf), server::execute, player, handler::disconnect);
+        PayloadTypeRegistry.playC2S().register(MessageFramework.Request.TYPE, MessageFramework.Request.STREAM_CODEC);
+        PayloadTypeRegistry.playS2C().register(MessageFramework.Request.TYPE, MessageFramework.Request.STREAM_CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(MessageFramework.Request.TYPE, (payload, context) -> {
+            ServerPlayer player = context.player();
+            MinecraftServer server = player.server;
+            MessageFramework.Request.handle(payload, server::execute, player, context.responseSender()::disconnect);
         });
     }
 }

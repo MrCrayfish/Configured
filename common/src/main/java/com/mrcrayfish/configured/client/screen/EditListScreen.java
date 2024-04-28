@@ -32,18 +32,17 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEditing
+public class EditListScreen<T> extends Screen implements IEditing
 {
     private final Screen parent;
     private final IModConfig config;
     private final List<StringHolder> initialValues = new ArrayList<>();
     private final List<StringHolder> values = new ArrayList<>();
-    private final ResourceLocation background;
     private final IConfigValue<List<T>> holder;
     private final IListType<T> listType;
     private ObjectList list;
 
-    public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<T>> holder, ResourceLocation background)
+    public EditListScreen(Screen parent, IModConfig config, Component titleIn, IConfigValue<List<T>> holder)
     {
         super(titleIn);
         this.parent = parent;
@@ -52,14 +51,12 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         this.listType = ListTypes.getType(holder);
         this.initialValues.addAll(holder.get().stream().map(o -> new StringHolder(this.listType.getStringParser().apply(o))).toList());
         this.values.addAll(this.initialValues);
-        this.background = background;
     }
 
     @Override
     protected void init()
     {
         this.list = new ObjectList();
-        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.addWidget(this.list);
         if(!this.config.isReadOnly())
         {
@@ -69,7 +66,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
                 this.minecraft.setScreen(this.parent);
             }));
             this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 22, 33, 90, Component.translatable("configured.gui.add_value"), (button) -> {
-                this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, this.background, Component.translatable("configured.gui.edit_value"), "", s -> {
+                this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, Component.translatable("configured.gui.edit_value"), "", s -> {
                     T value = this.listType.getValueParser().apply(s);
                     if(value != null)
                     {
@@ -123,12 +120,6 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         return this.config;
     }
 
-    @Override
-    public ResourceLocation getBackgroundTexture()
-    {
-        return this.background;
-    }
-
     public boolean isModified()
     {
         if(this.initialValues.size() != this.values.size())
@@ -147,7 +138,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
         return false;
     }
 
-    public class ObjectList extends ContainerObjectSelectionList<StringEntry> implements IBackgroundTexture
+    public class ObjectList extends ContainerObjectSelectionList<StringEntry>
     {
         public ObjectList()
         {
@@ -197,12 +188,6 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
                 });
             });
         }*/
-
-        @Override
-        public ResourceLocation getBackgroundTexture()
-        {
-            return EditListScreen.this.background;
-        }
     }
 
     public class StringEntry extends ContainerObjectSelectionList.Entry<StringEntry>
@@ -218,7 +203,7 @@ public class EditListScreen<T> extends Screen implements IBackgroundTexture, IEd
             this.holder = holder;
 
             this.editButton = new IconButton(0, 0, 1, 22, 20, CommonComponents.EMPTY, onPress -> {
-                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, EditListScreen.this.background, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
+                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     T value = EditListScreen.this.listType.getValueParser().apply(s);
                     if(value != null)
                     {

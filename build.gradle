@@ -6,7 +6,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'signing'
 
-    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
     java.withSourcesJar()
     java.withJavadocJar()
 
@@ -67,7 +67,7 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
-        it.options.getRelease().set(17)
+        it.options.getRelease().set(21)
     }
 
     processResources {
@@ -93,7 +93,7 @@ subprojects {
                 "mod_source": mod_source,
                 "mod_issues": mod_issues
         ]
-        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', '*.mixins.json']) {
+        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/neoforge.mods.toml', 'META-INF/mods.toml', '*.mixins.json']) {
             expand expandProps
         }
         inputs.properties(expandProps)

@@ -18,6 +18,7 @@ import net.neoforged.fml.config.ConfigFileTypeHandler;
 import net.neoforged.fml.config.IConfigEvent;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -196,7 +197,7 @@ public class NeoForgeConfig implements IModConfig
         {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             TomlFormat.instance().createWriter().write(this.config.getConfigData(), stream);
-            SyncNeoForgeConfigPayload.of(this.config.getFileName(), stream.toByteArray()).sendToServer();
+            PacketDistributor.sendToServer(new SyncNeoForgeConfigPayload(this.config.getFileName(), stream.toByteArray()));
             stream.close();
         }
         catch(IOException e)

@@ -77,16 +77,16 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     protected Button restoreButton;
     protected CheckBoxButton deepSearchCheckBox;
 
-    private ConfigScreen(Screen parent, Component title, IModConfig config, ResourceLocation background, IConfigEntry folderEntry)
+    private ConfigScreen(Screen parent, Component title, IModConfig config, IConfigEntry folderEntry)
     {
-        super(parent, title, background, 24);
+        super(parent, title, 24);
         this.config = config;
         this.folderEntry = folderEntry;
     }
 
-    public ConfigScreen(Screen parent, Component title, IModConfig config, ResourceLocation background)
+    public ConfigScreen(Screen parent, Component title, IModConfig config)
     {
-        super(parent, title, background, 24);
+        super(parent, title, 24);
         this.config = config;
         this.folderEntry = config.getRoot();
     }
@@ -207,7 +207,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                         if(!result) return true;
                         this.minecraft.setScreen(this.parent);
                         return false;
-                    }).setBackground(this.background));
+                    }));
                 }
                 else
                 {
@@ -254,7 +254,6 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.updateButtons();
             return true;
         });
-        confirmScreen.setBackground(this.background);
         confirmScreen.setPositiveText(Component.translatable("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
         Minecraft.getInstance().setScreen(confirmScreen);
@@ -342,7 +341,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             super(createLabelForFolderEntry(entry));
             this.button = new IconButton(10, 5, 11, 33, 0, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.getLabel());
-                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, ConfigScreen.this.background, entry));
+                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, entry));
             });
             if(entry.getTooltip() != null)
             {
@@ -634,7 +633,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
-            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, ConfigScreen.this.background, this.label, holder.get(), s -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder.get(), s -> {
                 return holder.isValid(s) ? Pair.of(true, CommonComponents.EMPTY) : Pair.of(false, holder.getValidationHint());
             }, s -> {
                 holder.set(s);
@@ -661,7 +660,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
-            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder, ConfigScreen.this.background)));
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder)));
             this.eventListeners.add(this.button);
         }
 
@@ -683,7 +682,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.change");
-            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, ConfigScreen.this.background, holder.get(), holder, e -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder.get(), holder, e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));

@@ -42,9 +42,9 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 {
     private final Map<ConfigType, Set<IModConfig>> configMap;
 
-    public ModConfigSelectionScreen(Screen parent, Component title, ResourceLocation background, Map<ConfigType, Set<IModConfig>> configMap)
+    public ModConfigSelectionScreen(Screen parent, Component title, Map<ConfigType, Set<IModConfig>> configMap)
     {
-        super(parent, title, background, 30);
+        super(parent, title, 30);
         this.configMap = configMap;
     }
 
@@ -149,7 +149,6 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 this.updateRestoreDefaultButton();
                 return true;
             });
-            confirmScreen.setBackground(ModConfigSelectionScreen.this.background);
             confirmScreen.setPositiveText(Component.translatable("configured.gui.restore").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
             Minecraft.getInstance().setScreen(confirmScreen);
@@ -186,12 +185,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 {
                     if(ConfigHelper.isWorldConfig(config))
                     {
-                        Minecraft.getInstance().setScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, ModConfigSelectionScreen.this.background, config, this.title));
+                        Minecraft.getInstance().setScreen(new WorldSelectionScreen(ModConfigSelectionScreen.this, config, this.title));
                     }
                     else if(config.getType() != ConfigType.DEDICATED_SERVER)
                     {
                         Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
-                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
+                        Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config));
                     }
                     return;
                 }
@@ -202,7 +201,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                     if(Services.PLATFORM.isModLoaded(config.getModId()))
                     {
                         Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
-                        Minecraft.getInstance().setScreen(new RequestScreen(ModConfigSelectionScreen.this, newTitle, ModConfigSelectionScreen.this.background, config));
+                        Minecraft.getInstance().setScreen(new RequestScreen(ModConfigSelectionScreen.this, newTitle, config));
                     }
                     return;
                 }
@@ -211,7 +210,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
                 if(Services.PLATFORM.isModLoaded(config.getModId())) // Why did I need to check this?
                 {
                     Component newTitle = ModConfigSelectionScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.title);
-                    Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config, ModConfigSelectionScreen.this.background));
+                    Minecraft.getInstance().setScreen(new ConfigScreen(ModConfigSelectionScreen.this, newTitle, config));
                 }
             });
         }

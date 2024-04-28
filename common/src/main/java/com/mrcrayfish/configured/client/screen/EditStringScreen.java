@@ -20,11 +20,10 @@ import java.util.function.Function;
 /**
  * Author: MrCrayfish
  */
-public class EditStringScreen extends TooltipScreen implements IBackgroundTexture, IEditing
+public class EditStringScreen extends TooltipScreen implements IEditing
 {
     private final Screen parent;
     private final IModConfig config;
-    private final ResourceLocation background;
     private final String originalValue;
     private final Function<String, Pair<Boolean, Component>> validator;
     private final Consumer<String> onSave;
@@ -33,12 +32,11 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
     private Component validationHint;
     private String value;
 
-    protected EditStringScreen(Screen parent, IModConfig config, ResourceLocation background, Component component, String originalValue, Function<String, Pair<Boolean, Component>> validator, Consumer<String> onSave)
+    protected EditStringScreen(Screen parent, IModConfig config, Component component, String originalValue, Function<String, Pair<Boolean, Component>> validator, Consumer<String> onSave)
     {
         super(component);
         this.parent = parent;
         this.config = config;
-        this.background = background;
         this.originalValue = originalValue;
         this.validator = validator;
         this.onSave = onSave;
@@ -88,7 +86,7 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
         this.resetTooltip();
 
         super.render(graphics, mouseX, mouseY, partialTicks);
-        ConfirmationScreen.drawListBackground(0.0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
+        ConfirmationScreen.drawListBackground(graphics, 0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
         this.textField.render(graphics, mouseX, mouseY, partialTicks);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFF);
 
@@ -111,11 +109,5 @@ public class EditStringScreen extends TooltipScreen implements IBackgroundTextur
     public IModConfig getActiveConfig()
     {
         return this.config;
-    }
-
-    @Override
-    public ResourceLocation getBackgroundTexture()
-    {
-        return this.background;
     }
 }

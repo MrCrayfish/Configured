@@ -44,9 +44,9 @@ public class WorldSelectionScreen extends ListMenuScreen
 
     private final IModConfig config;
 
-    public WorldSelectionScreen(Screen parent, ResourceLocation background, IModConfig config, Component title)
+    public WorldSelectionScreen(Screen parent, IModConfig config, Component title)
     {
-        super(parent, Component.translatable("configured.gui.edit_world_config", title.plainCopy().withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD)), background, 30);
+        super(parent, Component.translatable("configured.gui.edit_world_config", title.plainCopy().withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD)), 30);
         this.config = config;
     }
 
@@ -215,7 +215,7 @@ public class WorldSelectionScreen extends ListMenuScreen
                     if(Services.PLATFORM.isModLoaded(T.getModId())) {
                         Component configName = Component.literal(ModConfigSelectionScreen.createLabelFromModConfig(WorldSelectionScreen.this.config));
                         Component newTitle = Component.literal(worldName).copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(configName);
-                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, newTitle, T, WorldSelectionScreen.this.background));
+                        WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, newTitle, T));
                     }
                 });
             }

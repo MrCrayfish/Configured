@@ -66,10 +66,7 @@ public class FabricPlatformHelper implements IPlatformHelper
     {
         boolean developer = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getStringUUID());
         boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
-        MessageSessionData msg = new MessageSessionData(developer, lan);
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        MessageSessionData.encode(msg, buf);
-        ServerPlayNetworking.send(player, MessageSessionData.ID, buf);
+        ServerPlayNetworking.send(player, new MessageSessionData(developer, lan));
     }
 
     @Override
@@ -77,11 +74,7 @@ public class FabricPlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-
-        MessageFramework.Sync message = new MessageFramework.Sync(id, data);
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        MessageFramework.Sync.encode(message, buf);
-        ClientPlayNetworking.send(MessageFramework.Sync.ID, buf);
+        ClientPlayNetworking.send(new MessageFramework.Sync(id, data));
     }
 
     @Override
@@ -89,11 +82,7 @@ public class FabricPlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-
-        MessageFramework.Request message = new MessageFramework.Request(id);
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        MessageFramework.Request.encode(message, buf);
-        ClientPlayNetworking.send(MessageFramework.Request.ID, buf);
+        ClientPlayNetworking.send(new MessageFramework.Request(id));
     }
 
     @Override
@@ -101,16 +90,12 @@ public class FabricPlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-
-        MessageFramework.Response message = new MessageFramework.Response(data);
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        MessageFramework.Response.encode(message, buf);
-        ServerPlayNetworking.send(player, MessageFramework.Response.ID, buf);
+        ServerPlayNetworking.send(player, new MessageFramework.Response(data));
     }
 
     @Override
     public boolean isConnectionActive(ClientPacketListener listener)
     {
-        return ClientPlayNetworking.getReceived().contains(MessageSessionData.ID);
+        return ClientPlayNetworking.getReceived().contains(MessageSessionData.TYPE.id());
     }
 }

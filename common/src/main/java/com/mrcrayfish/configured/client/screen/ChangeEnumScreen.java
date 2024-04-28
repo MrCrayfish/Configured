@@ -31,25 +31,23 @@ import java.util.stream.Collectors;
 /**
  * Author: MrCrayfish
  */
-public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTexture, IEditing
+public class ChangeEnumScreen extends TooltipScreen implements IEditing
 {
     private final Screen parent;
     private final IModConfig config;
     private final Consumer<Enum<?>> onSave;
-    private final ResourceLocation background;
     private final IConfigValue<Enum<?>> holder;
     private Enum<?> selectedValue;
     private EnumList list;
     private List<Entry> entries;
     private EditBox searchTextField;
 
-    protected ChangeEnumScreen(Screen parent, IModConfig config, Component title, ResourceLocation background, Enum<?> value, IConfigValue<Enum<?>> holder, Consumer<Enum<?>> onSave)
+    protected ChangeEnumScreen(Screen parent, IModConfig config, Component title, Enum<?> value, IConfigValue<Enum<?>> holder, Consumer<Enum<?>> onSave)
     {
         super(title);
         this.parent = parent;
         this.config = config;
         this.onSave = onSave;
-        this.background = background;
         this.holder = holder;
         this.selectedValue = value;
     }
@@ -59,7 +57,6 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
     {
         this.constructEntries();
         this.list = new EnumList(this.entries);
-        this.list.setRenderBackground(!ConfigHelper.isPlayingGame());
         this.list.setSelected(this.list.children().stream().filter(entry -> entry.getEnumValue() == this.selectedValue).findFirst().orElse(null));
         this.addWidget(this.list);
 
@@ -139,13 +136,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         return this.config;
     }
 
-    @Override
-    public ResourceLocation getBackgroundTexture()
-    {
-        return this.background;
-    }
-
-    public class EnumList extends AbstractSelectionList<Entry> implements IBackgroundTexture
+    public class EnumList extends AbstractSelectionList<Entry>
     {
         public EnumList(List<ChangeEnumScreen.Entry> entries)
         {
@@ -157,12 +148,6 @@ public class ChangeEnumScreen extends TooltipScreen implements IBackgroundTextur
         public void replaceEntries(Collection<ChangeEnumScreen.Entry> entries)
         {
             super.replaceEntries(entries);
-        }
-
-        @Override
-        public ResourceLocation getBackgroundTexture()
-        {
-            return ChangeEnumScreen.this.background;
         }
 
         @Override

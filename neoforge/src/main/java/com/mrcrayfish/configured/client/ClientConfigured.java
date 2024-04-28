@@ -13,18 +13,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.ConfigScreenHandler;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class ClientConfigured
 {
     // This is where the magic happens
@@ -34,7 +36,7 @@ public class ClientConfigured
         ModList.get().forEachModContainer((modId, container) ->
         {
             // Ignore mods that already implement their own custom factory
-            if(container.getCustomExtension(ConfigScreenHandler.ConfigScreenFactory.class).isPresent() && !Config.isForceConfiguredMenu())
+            if(container.getCustomExtension(IConfigScreenFactory.class).isPresent() && !Config.isForceConfiguredMenu())
                 return;
 
             Map<ConfigType, Set<IModConfig>> modConfigMap = ClientHandler.createConfigMap(new ModContext(modId));
@@ -43,11 +45,9 @@ public class ClientConfigured
                 int count = modConfigMap.values().stream().mapToInt(Set::size).sum();
                 Constants.LOG.info("Registering config factory for mod {}. Found {} config(s)", modId, count);
                 String displayName = container.getModInfo().getDisplayName();
-                ResourceLocation backgroundTexture = Services.CONFIG.getBackgroundTexture(modId);
-                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) ->
-                {
-                    return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
-                }));
+                container.registerExtensionPoint(IConfigScreenFactory.class, (mc, screen) -> {
+                    return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap);
+                });
             }
         });
     }

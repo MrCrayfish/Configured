@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -25,8 +26,10 @@ import java.util.function.Function;
  * <p>
  * Author: MrCrayfish
  */
-public class ConfirmationScreen extends Screen implements IBackgroundTexture
+public class ConfirmationScreen extends Screen
 {
+    private static final ResourceLocation MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/menu_list_background.png");
+    private static final ResourceLocation IN_GAME_MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_list_background.png");
     private static final int FADE_LENGTH = 4;
     private static final int BRIGHTNESS = 32;
     private static final int MESSAGE_PADDING = 10;
@@ -37,7 +40,6 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     private final Function<Boolean, Boolean> handler;
     private Component positiveText = CommonComponents.GUI_YES;
     private Component negativeText = CommonComponents.GUI_NO;
-    private ResourceLocation background = Screen.BACKGROUND_LOCATION;
     private int startY, endY;
 
     public ConfirmationScreen(Screen parent, Component message, Icon icon, Function<Boolean, Boolean> handler)
@@ -86,7 +88,7 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         graphics.blit(IconButton.ICONS, this.width / 2 - 10, this.startY - 30, 20, 20, this.icon.u(), this.icon.v(), 10, 10, 64, 64);
 
-        drawListBackground(0.0, this.width, this.startY, this.endY);
+        this.drawListBackground(graphics, 0, this.width, this.startY, this.endY);
 
         for(int i = 0; i < lines.size(); i++)
         {
@@ -95,12 +97,6 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
             // TODO wat dis
             //this.font.draw(poseStack, lines.get(i), this.width / 2 - lineWidth / 2, this.startY + MESSAGE_PADDING + i * (this.font.lineHeight + 2) + 1, 0xFFFFFF);
         }
-    }
-
-    @Override
-    public ResourceLocation getBackgroundTexture()
-    {
-        return this.background;
     }
 
     /**
@@ -121,17 +117,6 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
     public void setNegativeText(@Nullable Component negativeText)
     {
         this.negativeText = negativeText;
-    }
-
-    /**
-     * Sets the image to use as the background for this screen
-     *
-     * @param background a resource location pointing to a texture
-     */
-    public ConfirmationScreen setBackground(ResourceLocation background)
-    {
-        this.background = background;
-        return this;
     }
 
     public enum Icon
@@ -159,35 +144,16 @@ public class ConfirmationScreen extends Screen implements IBackgroundTexture
         }
     }
 
-    public static void drawListBackground(double startX, double endX, double startY, double endY)
+    public static void drawListBackground(GuiGraphics graphics, int startX, int endX, int startY, int endY)
     {
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
-
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, Screen.BACKGROUND_LOCATION);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.vertex(startX, endY, 0.0).uv((float) startX / 32.0F, (float) endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        buffer.vertex(endX, endY, 0.0).uv((float) endX / 32.0F, (float) endY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        buffer.vertex(endX, startY, 0.0).uv((float) endX / 32.0F, (float) startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        buffer.vertex(startX, startY, 0.0).uv((float) startX / 32.0F, (float) startY / 32.0F).color(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS, 255).endVertex();
-        tesselator.end();
-
-        RenderSystem.depthFunc(515);
-        RenderSystem.disableDepthTest();
+        boolean inGame = Minecraft.getInstance().level != null;
         RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        buffer.vertex(startX, startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(endX, startY + FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(endX, startY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(startX, startY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(startX, endY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(endX, endY, 0.0).color(0, 0, 0, 255).endVertex();
-        buffer.vertex(endX, endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(startX, endY - FADE_LENGTH, 0.0).color(0, 0, 0, 0).endVertex();
-        tesselator.end();
+        ResourceLocation backgroundTexture = !inGame ? MENU_LIST_BACKGROUND : IN_GAME_MENU_LIST_BACKGROUND;
+        ResourceLocation headerTexture = !inGame ? Screen.HEADER_SEPARATOR : Screen.INWORLD_HEADER_SEPARATOR;
+        ResourceLocation footerTexture = !inGame ? Screen.FOOTER_SEPARATOR : Screen.INWORLD_FOOTER_SEPARATOR;
+        graphics.blit(backgroundTexture, startX, startY, (float) endX, (float) endY, endX - startX, endY - startY, 32, 32);
+        graphics.blit(headerTexture, startX, startY - 2, 0, 0, endX - startX, 2, 32, 2);
+        graphics.blit(footerTexture, startX, endY, 0, 0, endX - startX, 2, 32, 2);
+        RenderSystem.disableBlend();
     }
 }

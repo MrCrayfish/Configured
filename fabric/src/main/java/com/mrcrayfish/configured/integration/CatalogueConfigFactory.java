@@ -28,7 +28,6 @@ public final class CatalogueConfigFactory
         Map<ConfigType, Set<IModConfig>> modConfigMap = ClientHandler.createConfigMap(new ModContext(modId));
         if(modConfigMap.isEmpty())
             return null;
-        ResourceLocation backgroundTexture = Services.CONFIG.getBackgroundTexture(modId);
-        return ConfigScreenHelper.createSelectionScreen(currentScreen, Component.literal(container.getMetadata().getName()), modConfigMap, backgroundTexture);
+        return ConfigScreenHelper.createSelectionScreen(currentScreen, Component.literal(container.getMetadata().getName()), modConfigMap);
     }
 }

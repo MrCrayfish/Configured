@@ -10,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.config.IConfigEvent;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 import java.io.ByteArrayInputStream;
 import java.util.function.Consumer;
@@ -59,10 +58,5 @@ public class NeoForgeClientPlayHandler
         {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void handleSyncServerConfigMessage(PlayPayloadContext context)
-    {
-
     }
 }

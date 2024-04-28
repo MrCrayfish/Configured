@@ -24,7 +24,7 @@ public class Configured
     {
         bus.addListener(this::onCommonSetup);
         bus.addListener(this::onLoadComplete);
-        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> IExtensionPoint.DisplayTest.IGNORESERVERONLY, (a, b) -> true));
+        //ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> IExtensionPoint.DisplayTest.IGNORESERVERONLY, (a, b) -> true));
         NeoForge.EVENT_BUS.addListener(this::onPlayerLoggedIn);
     }
 

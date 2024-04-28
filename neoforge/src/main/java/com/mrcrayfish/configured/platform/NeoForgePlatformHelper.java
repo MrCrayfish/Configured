@@ -2,9 +2,8 @@ package com.mrcrayfish.configured.platform;
 
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.api.Environment;
+import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
 import com.mrcrayfish.configured.network.message.MessageSessionData;
-import com.mrcrayfish.configured.network.payload.FrameworkPayload;
-import com.mrcrayfish.configured.network.payload.SessionDataPayload;
 import com.mrcrayfish.configured.platform.services.IPlatformHelper;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.resources.ResourceLocation;
@@ -13,6 +12,7 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLConfig;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 import java.nio.file.Path;
@@ -66,7 +66,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     {
         boolean developer = FMLLoader.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getStringUUID());
         boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
-        SessionDataPayload.of(developer, lan).sendToPlayer(player);
+        PacketDistributor.sendToPlayer(player, new MessageSessionData(developer, lan));
     }
 
     @Override
@@ -74,7 +74,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        FrameworkPayload.Sync.of(id, data).sendToServer();
+        PacketDistributor.sendToServer(new MessageFramework.Sync(id, data));
     }
 
     @Override
@@ -82,7 +82,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        FrameworkPayload.Request.of(id).sendToServer();
+        PacketDistributor.sendToServer(new MessageFramework.Request(id));
     }
 
     @Override
@@ -90,13 +90,13 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        FrameworkPayload.Response.of(data).sendToPlayer(player);
+        PacketDistributor.sendToPlayer(player, new MessageFramework.Response(data));
     }
 
     @Override
     @SuppressWarnings("UnstableApiUsage")
     public boolean isConnectionActive(ClientPacketListener listener)
     {
-        return NetworkRegistry.getInstance().isConnected(listener, MessageSessionData.ID);
+        return NetworkRegistry.hasChannel(listener, MessageSessionData.TYPE.id());
     }
 }
