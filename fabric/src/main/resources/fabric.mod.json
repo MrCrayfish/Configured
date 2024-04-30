@@ -31,10 +31,10 @@
         "configured.fabric.mixins.json"
     ],
     "depends": {
-        "fabricloader": ">=0.14",
+        "fabricloader": ">=0.15",
         "fabric": "*",
         "minecraft": "${minecraft_version}",
-        "java": ">=17"
+        "java": ">=21"
     },
     "breaks": {
         "catalogue": "<${catalogue_version}",
