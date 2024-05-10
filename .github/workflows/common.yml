@@ -1,0 +1,41 @@
+name: Build and Sign Mod (Common)
+on:
+  push:
+    paths:
+      - 'release_build_common'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Build
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 21
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'adopt'
+    - name: Validate Gradle Wrapper
+      uses: gradle/wrapper-validation-action@v1
+    - name: Read minecraft version from gradle.properties
+      id: mc_version
+      uses: Reedyuk/read-properties@v1.0.1
+      with:
+        path: './gradle.properties'
+        property: 'minecraft_version'
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: gradle-minecraft-${{ steps.mc_version.outputs.value }}
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+    - name: Build and Publish
+      env:
+        GPR_USER: "MrCrayfish"
+        GPR_KEY: ${{ secrets.GPR_TOKEN }}
+        SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        SIGNING_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        TARGET_LOADER: "common"
+      run: ./gradlew :common:build :common:publish
+    - name: Stop Gradle
+      run: ./gradlew --stop
