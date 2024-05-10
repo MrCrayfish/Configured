@@ -8,7 +8,6 @@ import com.mrcrayfish.configured.client.ClientHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModContainer;
 
 import java.util.Map;
@@ -25,12 +24,11 @@ public class ForgeConfigScreenHelper
      *
      * @param title      of the ConfigScreen that should be applied.
      * @param mod        the mod the configs should be loaded from
-     * @param background of the config screen
      * @return a new screen with config selection included
      */
-    public static Screen createForgeConfigSelectionScreen(Component title, ModContainer mod, ResourceLocation background)
+    public static Screen createForgeConfigSelectionScreen(Component title, ModContainer mod)
     {
-        return createForgeConfigSelectionScreen(Minecraft.getInstance().screen, title, mod, background);
+        return createForgeConfigSelectionScreen(Minecraft.getInstance().screen, title, mod);
     }
 
     /**
@@ -39,12 +37,11 @@ public class ForgeConfigScreenHelper
      * @param parent     screen that should be returned to after this new gui was closed
      * @param title      of the ConfigScreen that should be applied.
      * @param mod        the mod the configs should be loaded from
-     * @param background of the config screen
      * @return a new screen with config selection included
      */
-    public static Screen createForgeConfigSelectionScreen(Screen parent, Component title, ModContainer mod, ResourceLocation background)
+    public static Screen createForgeConfigSelectionScreen(Screen parent, Component title, ModContainer mod)
     {
         Map<ConfigType, Set<IModConfig>> configs = ClientHandler.createConfigMap(new ModContext(mod.getModId()));
-        return ConfigScreenHelper.createSelectionScreen(parent, title, configs, background);
+        return ConfigScreenHelper.createSelectionScreen(parent, title, configs);
     }
 }

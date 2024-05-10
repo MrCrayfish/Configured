@@ -5,7 +5,7 @@ plugins {
     id 'java'
     id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
@@ -20,7 +20,7 @@ mixin {
 
 minecraft {
     mappings channel: 'official', version: minecraft_version
-
+    reobf = false
     copyIdeResources = true
 
     if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
@@ -75,10 +75,14 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":common")
     testCompileOnly project(":common")
-    implementation fg.deobf("com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}")
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    testCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    implementation "com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}"
+    // JEI TODO temp until 1.20.5 is available
+    compileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}"
+    testCompileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}"
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+
+    // FROM FORGE: Hack fix for now, force jopt-simple to be exactly 5.0.4 because Mojang ships that version, but some transtive dependencies request 6.0+
+    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
 }
 
 Spec<Task> notForge = { Task it -> !it.name.startsWith("forge") && !it.name.contains("Test") } as Spec<Task>
@@ -90,8 +94,6 @@ tasks.withType(JavaCompile).matching(notForge).configureEach {
 tasks.withType(ProcessResources).matching(notForge).configureEach {
     from project(":common").sourceSets.main.resources
 }
-
-jar.finalizedBy('reobfJar')
 
 sourceSets.each {
     def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
@@ -163,4 +165,3 @@ tasks.register('signJar', SignJar) {
 }
 
 jar.finalizedBy 'signJar'
-signJar.mustRunAfter 'reobfJar'

@@ -53,10 +53,8 @@ public class ClientConfigured
                 int count = modConfigMap.values().stream().mapToInt(Set::size).sum();
                 Constants.LOG.info("Registering config factory for mod {}. Found {} config(s)", modId, count);
                 String displayName = container.getModInfo().getDisplayName();
-                ResourceLocation backgroundTexture = Services.CONFIG.getBackgroundTexture(modId);
-                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) ->
-                {
-                    return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap, backgroundTexture);
+                container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> {
+                    return ConfigScreenHelper.createSelectionScreen(screen, Component.literal(displayName), modConfigMap);
                 }));
             }
         });
