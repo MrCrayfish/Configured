@@ -1,6 +1,7 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
+        mavenCentral()
         maven {
             name = 'Forge'
             url = 'https://maven.minecraftforge.net/'
@@ -24,5 +25,16 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
+def includeModloader(String name) {
+    // If building with Github Actions, only include loader we want!
+    String targetLoader = Boolean.getBoolean("CI") ?: System.getenv("TARGET_LOADER")
+    if(targetLoader == null || targetLoader == name) {
+        include(name)
+    }
+}
+
 rootProject.name = 'Configured'
-include("common", "fabric", "neoforge") // TODO add back "forge"
+include("common")
+includeModloader("forge")
+includeModloader("fabric")
+includeModloader("neoforge")
