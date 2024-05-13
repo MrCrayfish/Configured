@@ -18,7 +18,6 @@ import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.SimpleChannel;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,56 +30,49 @@ import java.util.Optional;
  */
 public class ForgeNetwork
 {
-    private static SimpleChannel play;
+    private static SimpleChannel channel;
     private static @Nullable WeakReference<RegistryAccess> access = null;
 
     public static void init()
     {
-        play = ChannelBuilder.named(new ResourceLocation(Constants.MOD_ID, "play"))
+        channel = ChannelBuilder.named(new ResourceLocation(Constants.MOD_ID, "play"))
             .clientAcceptedVersions((status, version) -> true)
             .serverAcceptedVersions((status, version) -> true)
             .networkProtocolVersion(1)
             .simpleChannel();
 
-        play.messageBuilder(MessageSessionData.class, 1, NetworkDirection.PLAY_TO_CLIENT)
-            .encoder((msg, buf) -> MessageSessionData.STREAM_CODEC.encode(wrapBuf(buf), msg))
-            .decoder(buf -> MessageSessionData.STREAM_CODEC.decode(wrapBuf(buf)))
-            .consumerNetworkThread((message, ctx) -> {
-                MessageSessionData.handle(message, ctx::enqueueWork);
-                ctx.setPacketHandled(true);
-            }).add();
-
-        play.messageBuilder(MessageSyncForgeConfig.class, 2)
-            .encoder(MessageSyncForgeConfig::encode)
-            .decoder(MessageSyncForgeConfig::decode)
-            .consumerNetworkThread(MessageSyncForgeConfig::handle)
-            .add();
+        channel.play(protocol -> {
+            protocol.clientbound(flow -> {
+                flow.add(MessageSessionData.class, MessageSessionData.STREAM_CODEC, (message, ctx) -> {
+                    MessageSessionData.handle(message, ctx::enqueueWork);
+                    ctx.setPacketHandled(true);
+                });
+            });
+            protocol.bidirectional(flow -> {
+                flow.add(MessageSyncForgeConfig.class, MessageSyncForgeConfig.STREAM_CODEC, MessageSyncForgeConfig::handle);
+            });
+        });
 
         if(ModList.get().isLoaded("framework"))
         {
-            play.messageBuilder(MessageFramework.Sync.class, 10, NetworkDirection.PLAY_TO_SERVER)
-                .encoder((msg, buf) -> MessageFramework.Sync.STREAM_CODEC.encode(wrapBuf(buf), msg))
-                .decoder(buf -> MessageFramework.Sync.STREAM_CODEC.decode(wrapBuf(buf)))
-                .consumerNetworkThread((message, ctx) -> {
-                    MessageFramework.Sync.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
-                    ctx.setPacketHandled(true);
-                }).add();
-
-            play.messageBuilder(MessageFramework.Request.class, 11, NetworkDirection.PLAY_TO_SERVER)
-                .encoder((msg, buf) -> MessageFramework.Request.STREAM_CODEC.encode(wrapBuf(buf), msg))
-                .decoder(buf -> MessageFramework.Request.STREAM_CODEC.decode(wrapBuf(buf)))
-                .consumerNetworkThread((message, ctx) -> {
-                    MessageFramework.Request.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
-                    ctx.setPacketHandled(true);
-                }).add();
-
-            play.messageBuilder(MessageFramework.Response.class, 12, NetworkDirection.PLAY_TO_CLIENT)
-                .encoder((msg, buf) -> MessageFramework.Response.STREAM_CODEC.encode(wrapBuf(buf), msg))
-                .decoder(buf -> MessageFramework.Response.STREAM_CODEC.decode(wrapBuf(buf)))
-                .consumerNetworkThread((message, ctx) -> {
-                    MessageFramework.Response.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
-                    ctx.setPacketHandled(true);
-                }).add();
+            channel.play(protocol -> {
+                protocol.serverbound(flow -> {
+                    flow.add(MessageFramework.Sync.class, MessageFramework.Sync.STREAM_CODEC, (message, ctx) -> {
+                        MessageFramework.Sync.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
+                        ctx.setPacketHandled(true);
+                    });
+                    flow.add(MessageFramework.Request.class, MessageFramework.Request.STREAM_CODEC, (message, ctx) -> {
+                        MessageFramework.Request.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
+                        ctx.setPacketHandled(true);
+                    });
+                });
+                protocol.clientbound(flow -> {
+                   flow.add(MessageFramework.Response.class, MessageFramework.Response.STREAM_CODEC, (message, ctx) -> {
+                       MessageFramework.Response.handle(message, ctx::enqueueWork, ctx.getSender(), ctx.getConnection()::disconnect);
+                       ctx.setPacketHandled(true);
+                   });
+                });
+            });
         }
 
         MinecraftForge.EVENT_BUS.addListener((ServerStartingEvent event) -> {
@@ -104,8 +96,8 @@ public class ForgeNetwork
         })).orElseThrow(() -> new RuntimeException("Failed to retrieve registry access"));
     }
 
-    public static SimpleChannel getPlay()
+    public static SimpleChannel getChannel()
     {
-        return play;
+        return channel;
     }
 }

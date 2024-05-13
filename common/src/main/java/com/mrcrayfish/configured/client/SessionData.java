@@ -3,7 +3,7 @@ package com.mrcrayfish.configured.client;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.world.entity.player.Player;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class SessionData
 {

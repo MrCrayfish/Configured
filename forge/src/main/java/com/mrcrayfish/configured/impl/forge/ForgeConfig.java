@@ -196,7 +196,7 @@ public class ForgeConfig implements IModConfig
         {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             TomlFormat.instance().createWriter().write(this.config.getConfigData(), stream);
-            ForgeNetwork.getPlay().send(new MessageSyncForgeConfig(this.config.getFileName(), stream.toByteArray()), PacketDistributor.SERVER.noArg());
+            ForgeNetwork.getChannel().send(new MessageSyncForgeConfig(this.config.getFileName(), stream.toByteArray()), PacketDistributor.SERVER.noArg());
             stream.close();
         }
         catch(IOException e)

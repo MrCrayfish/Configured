@@ -2,20 +2,18 @@ import net.minecraftforge.gradle.common.tasks.SignJar
 import org.apache.commons.io.FilenameUtils
 
 plugins {
-    id 'java'
-    id 'eclipse'
-    id 'maven-publish'
+    id 'multiloader-loader'
     id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
-base {
-    archivesName = "${mod_id}-forge"
-}
-
-mixin {
-    add(sourceSets.main, "${mod_id}.refmap.json")
-    config("${mod_id}.common.mixins.json")
+sourceSets {
+    configuredTest {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += test.compileClasspath
+        runtimeClasspath += test.runtimeClasspath
+    }
 }
 
 minecraft {
@@ -23,23 +21,23 @@ minecraft {
     reobf = false
     copyIdeResources = true
 
-    if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
-        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    def at = file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers = at
     }
 
     runs {
         configureEach {
             workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.test"
+            ideaModule "${rootProject.name}.${project.name}.configuredTest"
             property 'forge.logging.markers', 'REGISTRIES,SCAN,LOADING'
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
-                create(mod_id) {
+                configured {
                     source sourceSets.main
                     source sourceSets.test
-                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -52,30 +50,22 @@ minecraft {
             property 'forge.enabledGameTestNamespaces', mod_id
             args '--nogui'
         }
-        data {
-            taskName "Data"
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-        }
     }
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
-repositories {
-    maven {
-        url = "https://api.modrinth.com/maven"
+// Fixes an issue where net.sf.jopt-simple:jopt-simple cannot be resolved
+configurations.configureEach {
+    resolutionStrategy {
+        it.force 'net.sf.jopt-simple:jopt-simple:5.0.4'
     }
-}
-
-configurations {
-    implementation.extendsFrom library
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    compileOnly project(":common")
-    testCompileOnly project(":common")
     implementation "com.mrcrayfish:framework-forge:${minecraft_version}-${framework_version}"
+
     // JEI TODO temp until 1.20.5 is available
     compileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}"
     testCompileOnly "mezz.jei:jei-1.20.4-common-api:${jei_version}"
@@ -83,72 +73,6 @@ dependencies {
 
     // FROM FORGE: Hack fix for now, force jopt-simple to be exactly 5.0.4 because Mojang ships that version, but some transtive dependencies request 6.0+
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
-}
-
-Spec<Task> notForge = { Task it -> !it.name.startsWith("forge") && !it.name.contains("Test") } as Spec<Task>
-
-tasks.withType(JavaCompile).matching(notForge).configureEach {
-    source(project(":common").sourceSets.main.allSource)
-}
-
-tasks.withType(ProcessResources).matching(notForge).configureEach {
-    from project(":common").sourceSets.main.resources
-}
-
-sourceSets.each {
-    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
-    it.output.resourcesDir = dir
-    it.java.destinationDirectory = dir
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
-
-            artifact jar
-            artifact sourcesJar
-
-            pom.withXml {
-                def depsNode = asNode().appendNode('dependencies')
-                [this.configurations.library].each {
-                    it.allDependencies.each {
-                        def depNode = depsNode.appendNode('dependency')
-                        depNode.appendNode('groupId', it.group)
-                        depNode.appendNode('artifactId', it.name)
-                        depNode.appendNode('version', it.version)
-                    }
-                }
-            }
-        }
-    }
-    repositories {
-        if (System.getenv("CI")) {
-            maven {
-                name = "GitHubPackages"
-                url = "https://maven.pkg.github.com/MrCrayfish/Maven"
-                credentials {
-                    username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
-                    password = project.findProperty("gpr.key") ?: System.getenv("GPR_KEY")
-                }
-            }
-        } else {
-            maven {
-                url "file://" + System.getenv("LOCAL_MAVEN")
-            }
-        }
-    }
-}
-
-signing {
-    if (System.getenv("SIGNING_KEY")) {
-        def signingKey = System.getenv("SIGNING_KEY")
-        def signingPassword = System.getenv("SIGNING_PASSPHRASE")
-        useInMemoryPgpKeys(signingKey, signingPassword)
-    }
-    sign publishing.publications.mavenJava
 }
 
 tasks.register('signJar', SignJar) {
@@ -165,3 +89,9 @@ tasks.register('signJar', SignJar) {
 }
 
 jar.finalizedBy 'signJar'
+
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
+}

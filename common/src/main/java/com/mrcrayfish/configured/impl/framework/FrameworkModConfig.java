@@ -22,7 +22,7 @@ import net.minecraft.Util;
 import net.minecraft.world.entity.player.Player;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;

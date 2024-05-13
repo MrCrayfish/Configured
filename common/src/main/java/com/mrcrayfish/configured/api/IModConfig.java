@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.api;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;

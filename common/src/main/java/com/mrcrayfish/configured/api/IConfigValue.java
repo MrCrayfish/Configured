@@ -2,7 +2,7 @@ package com.mrcrayfish.configured.api;
 
 import net.minecraft.network.chat.Component;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @param <T> A Temporary Data Holder that allows to make changes to a Config File without actually changing the config file.

@@ -1,31 +1,14 @@
 plugins {
-    id 'java'
-    id 'idea'
-    id 'maven-publish'
+    id 'multiloader-loader'
     id 'fabric-loom' version '1.6-SNAPSHOT'
 }
 
-base {
-    archivesName = "${mod_id}-fabric"
-}
-
 sourceSets {
-    test {
+    configuredTest {
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath
         compileClasspath += test.compileClasspath
         runtimeClasspath += test.runtimeClasspath
-    }
-}
-
-configurations {
-    implementation.extendsFrom library
-}
-
-repositories {
-    maven {
-        name = 'TerraformersMC'
-        url = 'https://maven.terraformersmc.com'
     }
 }
 
@@ -34,11 +17,9 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    implementation "com.google.code.findbugs:jsr305:3.0.2"
 
     // Framework
-    modCompileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
-    modRuntimeOnly "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
+    modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
 
     // NightConfig
     library include("com.electronwill.night-config:core:3.6.6")
@@ -51,118 +32,34 @@ dependencies {
 
     // ModMenu
     modApi "com.terraformersmc:modmenu:10.0.0-beta.1"
+}
 
-    implementation project(":common")
+fabricApi {
+    configureDataGeneration {
+        outputDirectory.set(file("src/generated"))
+    }
 }
 
 loom {
-    if(file("src/main/resources/${mod_id}.accesswidener").exists()) {
-        accessWidenerPath.set(file("src/main/resources/${mod_id}.accesswidener"))
+    def aw = file("src/main/resources/${mod_id}.accesswidener")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
     }
     mixin {
         defaultRefmapName.set("${mod_id}.refmap.json")
     }
     runs {
-        client {
-            client()
-            setConfigName("Fabric Client")
-            ideConfigGenerated(true)
-            runDir("run")
-        }
         testClient {
-            inherit client
+            client()
             setConfigName("Fabric Test Client")
-            setSource(sourceSets.test)
-        }
-        server {
-            server()
-            setConfigName("Fabric Server")
-            ideConfigGenerated(true)
-            runDir("run")
+            setSource(sourceSets.configuredTest)
         }
         testServer {
             inherit server
             setConfigName("Fabric Test Server")
-            setSource(sourceSets.test)
-        }
-        datagen {
-            inherit client
-            setConfigName("Fabric Data")
-            vmArg "-Dfabric-api.datagen"
-            vmArg "-Dfabric-api.datagen.output-dir=${file("src/generated/resources")}"
-            vmArg "-Dfabric-api.datagen.modid=${mod_id}"
-            runDir "build/datagen"
+            setSource(sourceSets.configuredTest)
         }
     }
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
-
-tasks.withType(JavaCompile).configureEach {
-    source(project(":common").sourceSets.main.allSource)
-}
-tasks.withType(Javadoc).configureEach {
-    source(project(":common").sourceSets.main.allJava)
-}
-tasks.named("sourcesJar", Jar) {
-    from(project(":common").sourceSets.main.allSource)
-}
-
-processResources {
-    from project(":common").sourceSets.main.resources
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
-
-            artifact remapJar
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-
-            pom.withXml {
-                def depsNode = asNode().appendNode('dependencies')
-                [this.configurations.library].each {
-                    it.allDependencies.each {
-                        def depNode = depsNode.appendNode('dependency')
-                        depNode.appendNode('groupId', it.group)
-                        depNode.appendNode('artifactId', it.name)
-                        depNode.appendNode('version', it.version)
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        if (System.getenv("CI")) {
-            maven {
-                name = "GitHubPackages"
-                url = "https://maven.pkg.github.com/MrCrayfish/Maven"
-                credentials {
-                    username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
-                    password = project.findProperty("gpr.key") ?: System.getenv("GPR_KEY")
-                }
-            }
-        } else {
-            maven {
-                url "file://" + System.getenv("LOCAL_MAVEN")
-            }
-        }
-    }
-}
-
-signing {
-    if (System.getenv("SIGNING_KEY")) {
-        def signingKey = System.getenv("SIGNING_KEY")
-        def signingPassword = System.getenv("SIGNING_PASSPHRASE")
-        useInMemoryPgpKeys(signingKey, signingPassword)
-    }
-    sign publishing.publications.mavenJava
-}
-
-loom.disableDeprecatedPomGeneration(publishing.publications.mavenJava)

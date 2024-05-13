@@ -2,7 +2,7 @@ package com.mrcrayfish.configured.client.screen.list;
 
 import com.mrcrayfish.configured.api.IConfigValue;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public interface IListConfigValue<T> extends IConfigValue<List<T>>

@@ -66,7 +66,7 @@ public class ForgePlatformHelper implements IPlatformHelper
     {
         boolean developer = FMLLoader.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getStringUUID());
         boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
-        ForgeNetwork.getPlay().send(new MessageSessionData(developer, lan), PacketDistributor.PLAYER.with(player));
+        ForgeNetwork.getChannel().send(new MessageSessionData(developer, lan), PacketDistributor.PLAYER.with(player));
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        ForgeNetwork.getPlay().send(new MessageFramework.Sync(id, data), PacketDistributor.SERVER.noArg());
+        ForgeNetwork.getChannel().send(new MessageFramework.Sync(id, data), PacketDistributor.SERVER.noArg());
     }
 
     @Override
@@ -82,7 +82,7 @@ public class ForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        ForgeNetwork.getPlay().send(new MessageFramework.Request(id), PacketDistributor.SERVER.noArg());
+        ForgeNetwork.getChannel().send(new MessageFramework.Request(id), PacketDistributor.SERVER.noArg());
     }
 
     @Override
@@ -90,12 +90,12 @@ public class ForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        ForgeNetwork.getPlay().send(new MessageFramework.Response(data), PacketDistributor.PLAYER.with(player));
+        ForgeNetwork.getChannel().send(new MessageFramework.Response(data), PacketDistributor.PLAYER.with(player));
     }
 
     @Override
     public boolean isConnectionActive(ClientPacketListener listener)
     {
-        return ForgeNetwork.getPlay().isRemotePresent(listener.getConnection());
+        return ForgeNetwork.getChannel().isRemotePresent(listener.getConnection());
     }
 }

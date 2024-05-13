@@ -2,7 +2,7 @@ package com.mrcrayfish.configured.api;
 
 import net.minecraft.network.chat.Component;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 

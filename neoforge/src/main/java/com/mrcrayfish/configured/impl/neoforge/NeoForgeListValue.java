@@ -4,7 +4,7 @@ import com.mrcrayfish.configured.client.screen.list.IListConfigValue;
 import com.mrcrayfish.configured.client.screen.list.IListType;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;

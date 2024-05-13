@@ -2,21 +2,41 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        maven {
-            name = 'Forge'
-            url = 'https://maven.minecraftforge.net/'
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = 'Fabric'
+                    url = "https://maven.fabricmc.net"
+                }
+            }
+            filter {
+                includeGroup("net.fabricmc")
+                includeGroup("fabric-loom")
+            }
         }
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = 'NeoForge'
+                    url = "https://maven.neoforged.net/releases"
+                }
+            }
+            filter {
+                includeGroupAndSubgroups("net.neoforged")
+                includeGroup("codechicken")
+            }
         }
-        maven {
-            name = 'NeoForge'
-            url = 'https://maven.neoforged.net/releases/'
-        }
-        maven {
-            name = 'Sponge Snapshots'
-            url = 'https://repo.spongepowered.org/repository/maven-public/'
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = 'Sponge Snapshots'
+                    url = "https://repo.spongepowered.org/repository/maven-public"
+                }
+            }
+            filter {
+                includeGroupAndSubgroups("org.spongepowered")
+                includeGroupAndSubgroups("net.minecraftforge")
+            }
         }
     }
 }
