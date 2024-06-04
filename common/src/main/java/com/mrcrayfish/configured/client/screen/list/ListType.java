@@ -1,5 +1,6 @@
 package com.mrcrayfish.configured.client.screen.list;
 
+import com.mrcrayfish.configured.Constants;
 import net.minecraft.network.chat.Component;
 
 import java.util.function.Function;
@@ -13,7 +14,7 @@ public class ListType<T> implements IListType<T>
     public ListType(Function<T, String> stringParser, Function<String, T> valueParser, String hintKey)
     {
         this.stringParser = stringParser;
-        this.valueParser = valueParser;
+        this.valueParser = new ErrorSuppressingParserWrapper<>(valueParser);
         this.hintKey = hintKey;
     }
 
@@ -33,5 +34,22 @@ public class ListType<T> implements IListType<T>
     public Component getHint()
     {
         return Component.translatable(this.hintKey);
+    }
+
+    private record ErrorSuppressingParserWrapper<T>(Function<String, T> wrapped) implements Function<String, T>
+    {
+        @Override
+        public T apply(String s)
+        {
+            try
+            {
+                return this.wrapped.apply(s);
+            }
+            catch(RuntimeException e)
+            {
+                Constants.LOG.debug(String.format("Suppressing error parsing value: %s", s), e);
+                return null;
+            }
+        }
     }
 }
