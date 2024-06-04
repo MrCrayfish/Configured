@@ -5,7 +5,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import org.jetbrains.annotations.Nullable;
@@ -158,27 +157,22 @@ public class ForgeValue<T> implements IConfigValue<T>
     }
 
     /**
-     * Reflection to get Forge's range of a value
+     * Gets Forge's range of a value
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("unchecked")
     public void loadRange()
     {
         if(this.range == null)
         {
-            try
+            ForgeConfigSpec.Range<?> range = this.valueSpec.getRange();
+            if(range != null)
             {
-                Object range = ObfuscationReflectionHelper.getPrivateValue(ForgeConfigSpec.ValueSpec.class, this.valueSpec, "range");
-                if(range != null)
-                {
-                    Class rangeClass = Class.forName("net.minecraftforge.common.ForgeConfigSpec$Range");
-                    Object min = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "min");
-                    Object max = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "max");
-                    this.range = Pair.of((T) min, (T) max);
-                    return;
-                }
+                this.range = Pair.of((T) range.getMin(), (T) range.getMax());
             }
-            catch(ClassNotFoundException ignored) {}
-            this.range = Pair.of(null, null);
+            else
+            {
+                this.range = Pair.of(null, null);
+            }
         }
     }
 }
