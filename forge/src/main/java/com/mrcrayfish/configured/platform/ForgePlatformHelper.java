@@ -64,7 +64,7 @@ public class ForgePlatformHelper implements IPlatformHelper
     @Override
     public void sendSessionData(ServerPlayer player)
     {
-        boolean developer = FMLLoader.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getStringUUID());
+        boolean developer = FMLLoader.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getUUID());
         boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
         ForgeNetwork.getChannel().send(new MessageSessionData(developer, lan), PacketDistributor.PLAYER.with(player));
     }

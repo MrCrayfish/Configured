@@ -10,9 +10,9 @@ minecraft {
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
     compileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}" // TODO temp until 1.20.5 is available
-    library "com.electronwill.night-config:core:3.6.6"
-    library "com.electronwill.night-config:toml:3.6.6"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "com.electronwill.night-config:core:3.7.1"
+    compileOnly "com.electronwill.night-config:toml:3.7.1"
 }
 
 configurations {

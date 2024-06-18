@@ -21,10 +21,6 @@ dependencies {
     // Framework
     modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
 
-    // NightConfig
-    library include("com.electronwill.night-config:core:3.6.6")
-    library include("com.electronwill.night-config:toml:3.6.6")
-
     // JEI
     modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     modCompileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"

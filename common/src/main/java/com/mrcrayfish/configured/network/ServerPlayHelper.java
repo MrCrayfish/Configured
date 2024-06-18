@@ -37,7 +37,7 @@ public class ServerPlayHelper
             return false;
         }
 
-        if(!Config.getDevelopers().contains(player.getStringUUID()) || !server.getPlayerList().isOp(player.getGameProfile()))
+        if(!Config.getDevelopers().contains(player.getUUID()) || !server.getPlayerList().isOp(player.getGameProfile()))
         {
             Constants.LOG.warn("{} tried to request or update a server config, however they are not a developer", player.getName().getString());
             player.connection.disconnect(Component.translatable("configured.multiplayer.disconnect.unauthorized_request"));
