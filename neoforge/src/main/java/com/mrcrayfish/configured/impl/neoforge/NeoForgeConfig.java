@@ -35,6 +35,7 @@ public class NeoForgeConfig implements IModConfig
         map.put(ModConfig.Type.CLIENT, ConfigType.CLIENT);
         map.put(ModConfig.Type.COMMON, ConfigType.UNIVERSAL);
         map.put(ModConfig.Type.SERVER, ConfigType.WORLD_SYNC);
+        map.put(ModConfig.Type.STARTUP, ConfigType.UNIVERSAL);
     });
 
     protected final ModConfig config;

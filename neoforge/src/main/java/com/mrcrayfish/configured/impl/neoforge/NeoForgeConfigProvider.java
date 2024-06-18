@@ -27,6 +27,7 @@ public class NeoForgeConfigProvider implements IModConfigProvider
         addForgeConfigSetToMap(context, ModConfig.Type.CLIENT, configs::add);
         addForgeConfigSetToMap(context, ModConfig.Type.COMMON, configs::add);
         addForgeConfigSetToMap(context, ModConfig.Type.SERVER, configs::add);
+        addForgeConfigSetToMap(context, ModConfig.Type.STARTUP, configs::add);
         return configs;
     }
 
