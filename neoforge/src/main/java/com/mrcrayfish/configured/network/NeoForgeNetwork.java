@@ -18,7 +18,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 @EventBusSubscriber(modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class NeoForgeNetwork
 {
-    public static final ResourceLocation ID = new ResourceLocation(Constants.MOD_ID, "play");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "play");
     public static final int VERSION = 1;
 
     @SubscribeEvent

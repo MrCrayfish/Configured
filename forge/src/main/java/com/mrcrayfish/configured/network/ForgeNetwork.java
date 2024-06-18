@@ -35,7 +35,7 @@ public class ForgeNetwork
 
     public static void init()
     {
-        channel = ChannelBuilder.named(new ResourceLocation(Constants.MOD_ID, "play"))
+        channel = ChannelBuilder.named(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "play"))
             .clientAcceptedVersions((status, version) -> true)
             .serverAcceptedVersions((status, version) -> true)
             .networkProtocolVersion(1)

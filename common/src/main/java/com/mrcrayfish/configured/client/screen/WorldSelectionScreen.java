@@ -40,7 +40,7 @@ import java.util.List;
 public class WorldSelectionScreen extends ListMenuScreen
 {
     private static final LevelResource SERVER_CONFIG_FOLDER = Services.CONFIG.getServerConfigResource();
-    private static final ResourceLocation MISSING_ICON = new ResourceLocation("textures/misc/unknown_server.png");
+    private static final ResourceLocation MISSING_ICON = ResourceLocation.withDefaultNamespace("textures/misc/unknown_server.png");
 
     private final IModConfig config;
 
@@ -130,7 +130,7 @@ public class WorldSelectionScreen extends ListMenuScreen
             super(summary.getLevelName());
             this.worldName = Component.literal(summary.getLevelName());
             this.folderName = Component.literal(summary.getLevelId()).withStyle(ChatFormatting.DARK_GRAY);
-            this.iconId = new ResourceLocation("minecraft", "worlds/" + Util.sanitizeName(summary.getLevelId(), ResourceLocation::validPathChar) + "/" + Hashing.sha1().hashUnencodedChars(summary.getLevelId()) + "/icon");
+            this.iconId = ResourceLocation.withDefaultNamespace("worlds/" + Util.sanitizeName(summary.getLevelId(), ResourceLocation::validPathChar) + "/" + Hashing.sha1().hashUnencodedChars(summary.getLevelId()) + "/icon");
             this.iconFile = summary.getIcon();
             if (!Files.isRegularFile(this.iconFile)) {
                 this.iconFile = null;

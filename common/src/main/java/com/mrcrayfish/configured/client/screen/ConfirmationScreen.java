@@ -28,8 +28,8 @@ import java.util.function.Function;
  */
 public class ConfirmationScreen extends Screen
 {
-    private static final ResourceLocation MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/menu_list_background.png");
-    private static final ResourceLocation IN_GAME_MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_list_background.png");
+    private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png");
+    private static final ResourceLocation IN_GAME_MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/inworld_menu_list_background.png");
     private static final int FADE_LENGTH = 4;
     private static final int BRIGHTNESS = 32;
     private static final int MESSAGE_PADDING = 10;

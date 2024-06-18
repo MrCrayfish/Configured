@@ -25,7 +25,7 @@ public class MessageFramework
 {
     public record Sync(ResourceLocation id, byte[] data) implements CustomPacketPayload
     {
-        public static final CustomPacketPayload.Type<Sync> TYPE = new Type<>(new ResourceLocation(Constants.MOD_ID, "sync_framework_config"));
+        public static final CustomPacketPayload.Type<Sync> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_framework_config"));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Sync> STREAM_CODEC = StreamCodec.composite(
             ResourceLocation.STREAM_CODEC,
@@ -52,7 +52,7 @@ public class MessageFramework
 
     public record Request(ResourceLocation id) implements CustomPacketPayload
     {
-        public static final CustomPacketPayload.Type<Request> TYPE = new CustomPacketPayload.Type<>(new ResourceLocation(Constants.MOD_ID, "request_framework_config"));
+        public static final CustomPacketPayload.Type<Request> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "request_framework_config"));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Request> STREAM_CODEC = StreamCodec.composite(
             ResourceLocation.STREAM_CODEC,
@@ -77,7 +77,7 @@ public class MessageFramework
 
     public record Response(byte[] data) implements CustomPacketPayload
     {
-        public static final CustomPacketPayload.Type<Response> TYPE = new CustomPacketPayload.Type<>(new ResourceLocation(Constants.MOD_ID, "response_framework_config"));
+        public static final CustomPacketPayload.Type<Response> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "response_framework_config"));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Response> STREAM_CODEC = StreamCodec.composite(
             ConfiguredCodecs.BYTE_ARRAY,
