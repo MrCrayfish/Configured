@@ -28,6 +28,10 @@ dependencies {
 
     // ModMenu
     modApi "com.terraformersmc:modmenu:${modmenu_version}"
+
+    // Night Config
+    compileOnly "com.electronwill.night-config:core:3.7.1"
+    compileOnly "com.electronwill.night-config:toml:3.7.1"
 }
 
 fabricApi {
