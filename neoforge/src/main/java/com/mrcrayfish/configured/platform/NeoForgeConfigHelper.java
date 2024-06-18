@@ -20,7 +20,6 @@ import java.util.Set;
  */
 public class NeoForgeConfigHelper implements IConfigHelper
 {
-    private static final ResourceLocation BACKGROUND_LOCATION = new ResourceLocation("textures/gui/options_background.png");
     private static final LevelResource SERVER_CONFIG_RESOURCE = new LevelResource("serverconfig");
 
     @Override

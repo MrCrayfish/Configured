@@ -19,7 +19,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public record SyncNeoForgeConfigPayload(String fileName, byte[] data) implements CustomPacketPayload
 {
-    public static final CustomPacketPayload.Type<SyncNeoForgeConfigPayload> TYPE = new Type<>(new ResourceLocation(Constants.MOD_ID, "sync_neoforge_config"));
+    public static final CustomPacketPayload.Type<SyncNeoForgeConfigPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_neoforge_config"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncNeoForgeConfigPayload> STREAM_CODEC = StreamCodec.composite(
         ByteBufCodecs.STRING_UTF8,

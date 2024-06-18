@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.client.screen.widget;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mrcrayfish.configured.Constants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Checkbox;
@@ -15,7 +16,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class CheckBoxButton extends AbstractButton
 {
-    public static final ResourceLocation ICONS = new ResourceLocation("configured:textures/gui/icons.png");
+    public static final ResourceLocation ICONS = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icons.png");
 
     private final OnPress onPress;
     private boolean selected;
@@ -41,14 +42,7 @@ public class CheckBoxButton extends AbstractButton
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
-        RenderSystem.enableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha); //TODO need this
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         graphics.blit(ICONS, this.getX(), this.getY(), this.isHoveredOrFocused() ? 50 : 36, this.isSelected() ? 49 : 35, 14, 14, 64, 64);
-        //this.renderBg(poseStack, minecraft, mouseX, mouseY); //TODO wat this?
     }
 
     @Override

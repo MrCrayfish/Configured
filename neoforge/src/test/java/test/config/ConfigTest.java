@@ -65,7 +65,9 @@ public class ConfigTest
             this.longList = builder.comment("This is an Long list").defineList("longList", Arrays.asList(5L, 10L), o -> o instanceof Long);
             this.doubleList = builder.comment("This is an Double list").defineList("doubleList", Arrays.asList(0.5, 1.0), o -> o instanceof Double);
             this.stringList = builder.comment("This is a String list").defineList("stringList", Arrays.asList("test", "yo"), o -> o instanceof String);
-            this.listOfItems = builder.comment("This is a List of Item Locations").defineList("listOfItems", Arrays.asList("minecraft:apple", "minecraft:iron_ingot"), o -> o instanceof String && ResourceLocation.isValidResourceLocation(o.toString()) && !new ResourceLocation(o.toString()).getPath().isEmpty());
+            this.listOfItems = builder.comment("This is a List of Item Locations").defineList("listOfItems", Arrays.asList("minecraft:apple", "minecraft:iron_ingot"), o -> {
+                return o instanceof String && ResourceLocation.tryParse(o.toString()) != null && !ResourceLocation.parse(o.toString()).getPath().isEmpty();
+            });
             builder.pop();
         }
     }

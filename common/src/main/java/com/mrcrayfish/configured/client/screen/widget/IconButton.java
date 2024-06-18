@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.client.screen.widget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.configured.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -17,7 +18,7 @@ import net.minecraft.util.Mth;
  */
 public class IconButton extends ConfiguredButton
 {
-    public static final ResourceLocation ICONS = new ResourceLocation("configured:textures/gui/icons.png");
+    public static final ResourceLocation ICONS = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icons.png");
 
     private final Component label;
     private final int u, v;

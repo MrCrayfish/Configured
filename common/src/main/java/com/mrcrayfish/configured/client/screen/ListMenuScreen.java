@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  */
 public abstract class ListMenuScreen extends TooltipScreen
 {
-    public static final ResourceLocation CONFIGURED_LOGO = new ResourceLocation(Constants.MOD_ID, "textures/gui/logo.png");
+    public static final ResourceLocation CONFIGURED_LOGO = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/logo.png");
 
     protected final Screen parent;
     protected final int itemHeight;

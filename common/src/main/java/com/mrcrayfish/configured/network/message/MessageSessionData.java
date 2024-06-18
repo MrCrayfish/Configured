@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public record MessageSessionData(boolean developer, boolean lan) implements CustomPacketPayload
 {
-    public static final CustomPacketPayload.Type<MessageSessionData> TYPE = new Type<>(new ResourceLocation(Constants.MOD_ID, "session_data"));
+    public static final CustomPacketPayload.Type<MessageSessionData> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "session_data"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MessageSessionData> STREAM_CODEC = StreamCodec.composite(
         ByteBufCodecs.BOOL,
