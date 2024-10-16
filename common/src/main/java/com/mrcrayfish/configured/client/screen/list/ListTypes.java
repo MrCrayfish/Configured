@@ -1,6 +1,9 @@
 package com.mrcrayfish.configured.client.screen.list;
 
 import com.google.common.collect.Streams;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mrcrayfish.configured.api.IConfigValue;
 
 import java.util.Collections;
@@ -17,9 +20,9 @@ public class ListTypes
     private static final IListType<?> UNKNOWN = new ListType<>(Object::toString, o -> o, "configured.parser.not_a_value");
 
     public static final IListType<Boolean> BOOLEAN = new ListType<>(Object::toString, Boolean::valueOf, "configured.parser.not_a_boolean");
-    public static final IListType<Integer> INTEGER = new ListType<>(Object::toString, Integer::parseInt, "configured.parser.not_a_number");
-    public static final IListType<Long> LONG = new ListType<>(Object::toString, Long::parseLong, "configured.parser.not_a_number");
-    public static final IListType<Double> DOUBLE = new ListType<>(Object::toString, Double::parseDouble, "configured.parser.not_a_number");
+    public static final IListType<Integer> INTEGER = new ListType<>(Object::toString, Ints::tryParse, "configured.parser.not_a_number");
+    public static final IListType<Long> LONG = new ListType<>(Object::toString, Longs::tryParse, "configured.parser.not_a_number");
+    public static final IListType<Double> DOUBLE = new ListType<>(Object::toString, Doubles::tryParse, "configured.parser.not_a_number");
     public static final IListType<String> STRING = new ListType<>(Function.identity(), Function.identity(), "configured.parser.not_a_value");
 
     @SuppressWarnings("unchecked")
