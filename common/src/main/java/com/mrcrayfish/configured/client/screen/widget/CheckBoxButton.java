@@ -4,6 +4,7 @@ import com.mrcrayfish.configured.Constants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.resources.ResourceLocation;
@@ -39,7 +40,7 @@ public class CheckBoxButton extends AbstractButton
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
-        graphics.blit(RenderType::guiTextured, ICONS, this.getX(), this.getY(), this.isHoveredOrFocused() ? 50 : 36, this.isSelected() ? 49 : 35, 14, 14, 64, 64);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, ICONS, this.getX(), this.getY(), this.isHoveredOrFocused() ? 50 : 36, this.isSelected() ? 49 : 35, 14, 14, 64, 64);
     }
 
     @Override

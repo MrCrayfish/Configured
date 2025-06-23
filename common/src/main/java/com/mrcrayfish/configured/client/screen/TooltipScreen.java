@@ -53,10 +53,9 @@ public abstract class TooltipScreen extends Screen
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(Component text)
+    public void setActiveTooltip(GuiGraphics graphics, Component text, int mouseX, int mouseY)
     {
-        this.resetTooltip();
-        this.tooltipText = this.minecraft.font.split(text, 200);
+        graphics.setTooltipForNextFrame(this.minecraft.font.split(text, 200), mouseX, mouseY);
     }
 
     /**
@@ -66,23 +65,10 @@ public abstract class TooltipScreen extends Screen
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(Component text, @Nullable TooltipStyle style)
+    public void setActiveTooltip(GuiGraphics graphics, Component text, int mouseX, int mouseY, @Nullable TooltipStyle style)
     {
-        this.resetTooltip();
-        this.tooltipText = this.minecraft.font.split(text, 200);
+        graphics.setTooltipForNextFrame(this.minecraft.font.split(text, 200), mouseX, mouseY);
         this.tooltipStyle = style;
-    }
-
-    protected void drawTooltip(GuiGraphics graphics, int mouseX, int mouseY)
-    {
-        if(this.tooltipText != null)
-        {
-            // Use new tooltip system instead
-            this.setTooltipForNextRenderPass(this.tooltipText);
-
-            // Yep, this is strange. See the forge events below!
-            //this.renderComponentTooltip(poseStack, DUMMY_TOOLTIP, mouseX, mouseY);
-        }
     }
 
     public record ListMenuTooltipComponent(FormattedCharSequence text) implements TooltipComponent

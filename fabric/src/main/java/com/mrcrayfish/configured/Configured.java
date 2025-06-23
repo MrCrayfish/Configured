@@ -23,15 +23,19 @@ public class Configured implements ModInitializer
         PayloadTypeRegistry.playS2C().register(MessageFramework.Sync.TYPE, MessageFramework.Sync.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(MessageFramework.Sync.TYPE, (payload, context) -> {
             ServerPlayer player = context.player();
-            MinecraftServer server = player.server;
-            MessageFramework.Sync.handle(payload, server::execute, player, context.responseSender()::disconnect);
+            MinecraftServer server = player.getServer();
+            if(server != null) {
+                MessageFramework.Sync.handle(payload, server::execute, player, context.responseSender()::disconnect);
+            }
         });
         PayloadTypeRegistry.playC2S().register(MessageFramework.Request.TYPE, MessageFramework.Request.STREAM_CODEC);
         PayloadTypeRegistry.playS2C().register(MessageFramework.Request.TYPE, MessageFramework.Request.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(MessageFramework.Request.TYPE, (payload, context) -> {
             ServerPlayer player = context.player();
-            MinecraftServer server = player.server;
-            MessageFramework.Request.handle(payload, server::execute, player, context.responseSender()::disconnect);
+            MinecraftServer server = player.getServer();
+            if(server != null) {
+                MessageFramework.Request.handle(payload, server::execute, player, context.responseSender()::disconnect);
+            }
         });
     }
 }

@@ -136,7 +136,7 @@ public class NeoForgeConfig implements IModConfig
         {
             try
             {
-                NeoForgeConfigHelper.openConfig(this.config, path);
+                NeoForgeConfigHelper.openConfig(this.config, path.toAbsolutePath());
                 if(this.config.getLoadedConfig() != null)
                 {
                     return ActionResult.success();

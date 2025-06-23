@@ -3,6 +3,7 @@ package com.mrcrayfish.configured.client.screen.widget;
 import com.mrcrayfish.configured.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -51,9 +52,9 @@ public class IconButton extends ConfiguredButton
         if(renderIcon)
         {
             int j = ARGB.white(brightness);
-            graphics.blit(RenderType::guiTextured, ICONS, iconX, iconY, this.u, this.v, 11, 11, 64, 64, j); //TODO what happen to blit offset
+            graphics.blit(RenderPipelines.GUI_TEXTURED, ICONS, iconX, iconY, this.u, this.v, 11, 11, 64, 64, j); //TODO what happen to blit offset
         }
-        int textColor = (this.active ? 0xFFFFFF : 0xA0A0A0) | Mth.ceil(this.alpha * 255.0F) << 24;
+        int textColor = (this.active ? 0xFFFFFFFF : 0xFFA0A0A0) | Mth.ceil(this.alpha * 255.0F) << 24;
         graphics.drawString(mc.font, this.label, iconX + 14, iconY + 1, textColor);
     }
 

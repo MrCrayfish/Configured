@@ -16,6 +16,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -90,11 +91,11 @@ public abstract class ListMenuScreen extends TooltipScreen
         }).collect(Collectors.toList());
     }
 
-    protected void updateTooltip(int mouseX, int mouseY)
+    protected void updateTooltip(GuiGraphics graphics, int mouseX, int mouseY)
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(Component.translatable("configured.gui.info"));
+            this.setActiveTooltip(graphics, Component.translatable("configured.gui.info"), mouseX, mouseY);
         }
     }
 
@@ -112,37 +113,19 @@ public abstract class ListMenuScreen extends TooltipScreen
         this.searchTextField.render(graphics, mouseX, mouseY, partialTicks);
 
         // Draw title
-        graphics.drawCenteredString(this.font, this.title,this.width / 2, 7, 0xFFFFFF);
+        graphics.drawCenteredString(this.font, this.title,this.width / 2, 7, 0xFFFFFFFF);
 
         // Draws the foreground. Allows subclasses to draw onto the screen at the appropriate time.
         this.renderForeground(graphics, mouseX, mouseY, partialTicks);
 
         // Draws the Configured logo in the top left of the screen
-        graphics.blit(RenderType::guiTextured, CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
 
         // Draws the search icon next to the search text field
-        graphics.blit(RenderType::guiTextured, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
 
         // Gives a chance for child classes to set the active tooltip
-        this.updateTooltip(mouseX, mouseY);
-
-        // Draws the active tooltip otherwise tries to draw button tooltips
-        if(this.tooltipText != null)
-        {
-            this.drawTooltip(graphics, mouseX, mouseY);
-        }
-        else
-        {
-            for(GuiEventListener widget : this.children())
-            {
-                if(widget instanceof Button && ((Button) widget).isHoveredOrFocused())
-                {
-                    //TODO check
-                    //((Button) widget).renderToolTip(poseStack, mouseX, mouseY);
-                    break;
-                }
-            }
-        }
+        this.updateTooltip(graphics, mouseX, mouseY);
     }
 
     protected void renderForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {}
@@ -291,7 +274,7 @@ public abstract class ListMenuScreen extends TooltipScreen
         @Override
         public void render(GuiGraphics graphics, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFF);
+            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFFFF);
         }
     }
 
@@ -317,7 +300,7 @@ public abstract class ListMenuScreen extends TooltipScreen
                 HoverEvent event = style.getHoverEvent();
                 if(event instanceof HoverEvent.ShowText(Component value))
                 {
-                    ListMenuScreen.this.setActiveTooltip(value, TooltipStyle.LINK);
+                    ListMenuScreen.this.setActiveTooltip(graphics, value, mouseX, mouseY, TooltipStyle.LINK);
                 }
             }
         }
@@ -358,9 +341,8 @@ public abstract class ListMenuScreen extends TooltipScreen
             super.renderWidget(graphics, mouseX, mouseY, partialTick);
             if(this.clearable && !this.getValue().isEmpty())
             {
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha); // TODO test alpha
                 boolean hovered = ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, mouseX, mouseY);
-                graphics.blit(RenderType::guiTextured, IconButton.ICONS, this.getX() + this.width - 15, this.getY() + 5, hovered ? 9 : 0, 55, 9, 9, 9, 9, 64, 64);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + this.width - 15, this.getY() + 5, hovered ? 9 : 0, 55, 9, 9, 9, 9, 64, 64);
             }
         }
 

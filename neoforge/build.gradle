@@ -40,9 +40,9 @@ dependencies {
 
     // JEI
     // TODO revert back to minecraft property once jei has updated
-    compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
-    testCompileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
-    //runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
+    compileOnly "mezz.jei:jei-1.21.5-common-api:${jei_version}"
+    testCompileOnly "mezz.jei:jei-1.21.5-common-api:${jei_version}"
+    //runtimeOnly "mezz.jei:jei-1.21.5-neoforge:${jei_version}"
 }
 
 tasks.register('signJar', PotentiallySignJar) {

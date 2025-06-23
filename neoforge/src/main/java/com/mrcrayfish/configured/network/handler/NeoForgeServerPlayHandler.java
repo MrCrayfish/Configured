@@ -1,36 +1,27 @@
 package com.mrcrayfish.configured.network.handler;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.concurrent.SynchronizedConfig;
 import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.core.io.ParsingMode;
 import com.electronwill.nightconfig.toml.TomlFormat;
-import com.google.common.base.Joiner;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ActionResult;
-import com.mrcrayfish.configured.api.ExecutionContext;
 import com.mrcrayfish.configured.impl.neoforge.NeoForgeConfig;
 import com.mrcrayfish.configured.network.ServerPlayHelper;
 import com.mrcrayfish.configured.network.payload.SyncNeoForgeConfigPayload;
-import com.mrcrayfish.configured.util.ConfigHelper;
 import com.mrcrayfish.configured.util.NeoForgeConfigHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.fml.Logging;
-import net.neoforged.fml.ModList;
-import net.neoforged.fml.config.IConfigSpec;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.io.ByteArrayInputStream;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 /**
  * Author: MrCrayfish
@@ -123,14 +114,19 @@ public class NeoForgeServerPlayHandler
             return;
         }
 
-        Constants.LOG.debug("Successfully processed config update for '" + payload.fileName() + "'");
+        Constants.LOG.debug("Successfully processed config update for '{}'", payload.fileName());
         ServerPlayHelper.sendMessageToOperators(Component.translatable("configured.chat.config_updated", player.getName(), modConfig.getFileName()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), player);
 
         // Kick all other players and ask them to rejoin
-        player.server.getPlayerList().getPlayers().forEach(player1 -> {
-            if(!player1.equals(player)) {
-                player1.connection.disconnect(Component.translatable("configured.gui.neoforge.server_configs_updated"));
-            }
-        });
+        MinecraftServer server = player.getServer();
+        if(server != null)
+        {
+            server.getPlayerList().getPlayers().forEach(player1 -> {
+                if(!player1.equals(player)) {
+                    player1.connection.disconnect(Component.translatable("configured.gui.neoforge.server_configs_updated"));
+                }
+            });
+        }
+
     }
 }

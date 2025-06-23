@@ -7,26 +7,22 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.api.util.ConfigScreenHelper;
 import com.mrcrayfish.configured.client.screen.TooltipScreen;
-import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
  */
-@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ClientConfigured
 {
     // This is where the magic happens

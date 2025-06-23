@@ -17,6 +17,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
@@ -285,14 +286,13 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         @Override
         public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
         {
-            graphics.drawString(Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFF);
-            graphics.drawString(Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFF);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            graphics.blit(RenderType::guiTextured, IconButton.ICONS, left + 4, top, this.getIconU(), this.getIconV(), 18, 22, 9, 11, 64, 64);
+            graphics.drawString(Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFFFF);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, left + 4, top, this.getIconU(), this.getIconV(), 18, 22, 9, 11, 64, 64);
 
             if(this.config.isReadOnly())
             {
-                graphics.blit(RenderType::guiTextured, IconButton.ICONS, left + 1, top + 15, 0, 33, 11, 11, 11, 11, 64, 64);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, left + 1, top + 15, 0, 33, 11, 11, 11, 11, 64, 64);
             }
 
             this.modifyButton.setX(left + width - 83);
@@ -308,12 +308,12 @@ public class ModConfigSelectionScreen extends ListMenuScreen
 
             if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 15, 11, 11, mouseX, mouseY))
             {
-                ModConfigSelectionScreen.this.setActiveTooltip(Component.translatable("configured.gui.read_only_config"), TooltipStyle.HINT);
+                ModConfigSelectionScreen.this.setActiveTooltip(graphics, Component.translatable("configured.gui.read_only_config"), mouseX, mouseY, TooltipStyle.HINT);
             }
 
             if(!this.modifyButton.active && this.modifyButton.isHoveredOrFocused())
             {
-                this.screen.setActiveTooltip(this.modifyTooltip, TooltipStyle.ERROR);
+                this.screen.setActiveTooltip(graphics, this.modifyTooltip, mouseX, mouseY, TooltipStyle.ERROR);
             }
         }
 

@@ -18,6 +18,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.FaviconTexture;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.CommonComponents;
@@ -92,20 +93,16 @@ public class WorldSelectionScreen extends ListMenuScreen
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
     {
         super.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.pose().pushPose();
-        graphics.pose().translate(this.width - 30, 15, 0);
-        graphics.pose().scale(2.5F, 2.5F, 2.5F);
-        graphics.drawString(this.font, Component.literal("?").withStyle(ChatFormatting.BOLD), 0, 0, 0xFFFFFF);
-        graphics.pose().popPose();
-    }
 
-    @Override
-    protected void updateTooltip(int mouseX, int mouseY)
-    {
-        super.updateTooltip(mouseX, mouseY);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(this.width - 30, 15);
+        graphics.pose().scale(2.5F, 2.5F);
+        graphics.drawString(this.font, Component.literal("?").withStyle(ChatFormatting.BOLD), 0, 0, 0xFFFFFFFF);
+        graphics.pose().popMatrix();
+
         if(ScreenUtil.isMouseWithin(this.width - 30, 15, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(Component.translatable("configured.gui.server_config_info"));
+            this.setActiveTooltip(graphics, Component.translatable("configured.gui.server_config_info"), mouseX, mouseY);
         }
     }
 
@@ -202,10 +199,9 @@ public class WorldSelectionScreen extends ListMenuScreen
         {
             if(x % 2 != 0) graphics.fill(left, top, left + width, top + 24, 0x55000000);
             if(this.modifyButton.isMouseOver(mouseX, mouseY)) graphics.fill(left - 1, top - 1, left + 25, top + 25, 0xFFFFFFFF);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            graphics.blit(RenderType::guiTextured, this.icon.textureLocation(), left, top, 0, 0, 24, 24, 32, 32, 32, 32);
-            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFF);
-            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFF);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon.textureLocation(), left, top, 0, 0, 24, 24, 32, 32, 32, 32);
+            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFFFF);
+            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFFFF);
             this.modifyButton.setX(left + width - 61);
             this.modifyButton.setY(top + 2);
             this.modifyButton.render(graphics, mouseX, mouseY, partialTicks);
@@ -234,7 +230,7 @@ public class WorldSelectionScreen extends ListMenuScreen
             try(LevelStorageSource.LevelStorageAccess storageAccess = Minecraft.getInstance().getLevelSource().createAccess(worldFileName))
             {
                 // TODO move to config specific
-                Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER);
+                Path worldConfigPath = storageAccess.getLevelPath(SERVER_CONFIG_FOLDER).toAbsolutePath();
                 PathUtils.createParentDirectories(worldConfigPath);
                 if(!Files.isDirectory(worldConfigPath))
                     Files.createDirectory(worldConfigPath);

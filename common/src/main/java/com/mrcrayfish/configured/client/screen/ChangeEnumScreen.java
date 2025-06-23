@@ -17,6 +17,7 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -122,15 +123,13 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
         super.render(graphics, mouseX, mouseY, partialTicks);
         this.list.render(graphics, mouseX, mouseY, partialTicks);
         this.searchTextField.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.blit(RenderType::guiTextured, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 7, 0xFFFFFF);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        graphics.blit(RenderType::guiTextured, ListMenuScreen.CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, 7, 0xFFFFFFFF);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, ListMenuScreen.CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(Component.translatable("configured.gui.info"));
+            this.setActiveTooltip(graphics, Component.translatable("configured.gui.info"), mouseX, mouseY);
         }
-        this.drawTooltip(graphics, mouseX, mouseY);
     }
 
     @Override
@@ -202,7 +201,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
         public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
         {
             Component label = Component.literal(this.label.getString()).withStyle(ChangeEnumScreen.this.list.getSelected() == this ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
-            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, left + 5, top + 4, 0xFFFFFF);
+            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, left + 5, top + 4, 0xFFFFFFFF);
         }
 
         @Override

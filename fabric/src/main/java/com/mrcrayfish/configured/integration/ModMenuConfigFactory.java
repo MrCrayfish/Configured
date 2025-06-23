@@ -21,7 +21,7 @@ public final class ModMenuConfigFactory implements ModMenuApi
     public ConfigScreenFactory<?> getModConfigScreenFactory()
     {
         // TODO remove once fixed in ModMenu (https://github.com/TerraformersMC/ModMenu/issues/797)
-        return null;
+        return screen -> null;
     }
 
     @Override

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -89,21 +90,18 @@ public class EditStringScreen extends TooltipScreen implements IEditing
         super.render(graphics, mouseX, mouseY, partialTicks);
         ConfirmationScreen.drawListBackground(graphics, 0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
         this.textField.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFF);
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFFFF);
 
         boolean showValidationHint = this.validationHint != null;
         if(showValidationHint)
         {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            graphics.blit(RenderType::guiTextured, IconButton.ICONS, this.textField.getX() - 20, this.textField.getY() + 3, 11, 11, 16, 16, 11, 11, 64, 64);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.textField.getX() - 20, this.textField.getY() + 3, 11, 11, 16, 16, 11, 11, 64, 64);
 
             if(ScreenUtil.isMouseWithin(this.textField.getX() - 20, this.textField.getY() + 3, 16, 16, mouseX, mouseY))
             {
-                this.setActiveTooltip(this.validationHint, TooltipStyle.ERROR);
+                this.setActiveTooltip(graphics, this.validationHint, mouseX, mouseY, TooltipStyle.ERROR);
             }
         }
-
-        this.drawTooltip(graphics, mouseX, mouseY);
     }
 
     @Override

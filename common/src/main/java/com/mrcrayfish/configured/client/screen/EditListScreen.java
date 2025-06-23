@@ -107,7 +107,7 @@ public class EditListScreen<T> extends Screen implements IEditing
     {
         super.render(graphics, mouseX, mouseY, partialTicks);
         this.list.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 14, 0xFFFFFF);
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, 14, 0xFFFFFFFF);
     }
 
     @Override
@@ -227,7 +227,7 @@ public class EditListScreen<T> extends Screen implements IEditing
         public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
         {
             if(x % 2 != 0) graphics.fill(left, top, left + width, top + 24, 0x55000000);
-            graphics.drawString(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFF);
+            graphics.drawString(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFFFF);
             this.editButton.visible = true;
             this.editButton.setX(left + width - 44);
             this.editButton.setY(top + 2);
