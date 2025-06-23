@@ -48,6 +48,7 @@ public class ConfigTest
         public final ForgeConfigSpec.ConfigValue<List<? extends Long>> longList;
         public final ForgeConfigSpec.ConfigValue<List<? extends Double>> doubleList;
         public final ForgeConfigSpec.EnumValue<ChatFormatting> restrictedEnums;
+        public final ForgeConfigSpec.ConfigValue<String> stringWithPattern;
 
         public Test(ForgeConfigSpec.Builder builder)
         {
@@ -59,6 +60,7 @@ public class ConfigTest
             this.longValue = builder.comment("This is a Long value").defineInRange("longValue", 0L, 0L, 10L);
             this.enumValue = builder.comment("This is an Enum value").defineEnum("enumValue", ChatFormatting.BLACK);
             this.restrictedEnums = builder.comment("An enum value but with restricted values").defineEnum("restrictedEnums", ChatFormatting.RED, ChatFormatting.RED, ChatFormatting.GREEN, ChatFormatting.BLUE);
+            this.stringWithPattern = builder.comment("A string value with pattern \\d+").define("stringWithPattern", "0", o -> o instanceof String s && s.matches("\\d+"));
             builder.pop();
             builder.translation("forge_config.config_test.client.lists").push("lists");
             this.intList = builder.comment("This is an Integer list").defineList("intList", Arrays.asList(5, 10), o -> o instanceof Integer);

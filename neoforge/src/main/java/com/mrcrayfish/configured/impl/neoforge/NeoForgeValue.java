@@ -157,14 +157,22 @@ public class NeoForgeValue<T> implements IConfigValue<T>
     }
 
     /**
-     * Reflection to get Forge's range of a value
+     * Gets Forge's range of a value
      */
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     public void loadRange()
     {
         if(this.range == null)
         {
-            this.range = Pair.of((T) this.valueSpec.getRange().getMin(), (T) this.valueSpec.getRange().getMax());
+            ModConfigSpec.Range<?> range = this.valueSpec.getRange();
+            if(range != null)
+            {
+                this.range = Pair.of((T) range.getMin(), (T) range.getMax());
+            }
+            else
+            {
+                this.range = Pair.of(null, null);
+            }
         }
     }
 }
