@@ -10,14 +10,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class NeoForgeValue<T> implements IConfigValue<T>
 {
     public final ModConfigSpec.ConfigValue<T> configValue;
     public final ModConfigSpec.ValueSpec valueSpec;
     protected final T initialValue;
+    protected final Pair<?, ?> range;
     protected T value;
-    protected Pair<T, T> range;
     protected Component validationHint;
 
     public NeoForgeValue(ModConfigSpec.ConfigValue<T> configValue, ModConfigSpec.ValueSpec valueSpec)
@@ -26,6 +27,9 @@ public class NeoForgeValue<T> implements IConfigValue<T>
         this.valueSpec = valueSpec;
         this.initialValue = configValue.get();
         this.set(configValue.get());
+        this.range = Optional.ofNullable(valueSpec.getRange())
+                .map(r -> Pair.of(r.getMin(), r.getMax()))
+                .orElse(Pair.of(null, null));
     }
 
     @Override
@@ -106,8 +110,7 @@ public class NeoForgeValue<T> implements IConfigValue<T>
     {
         if(this.validationHint == null)
         {
-            this.loadRange();
-            if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
+            if(this.range.getLeft() != null && this.range.getRight() != null)
             {
                 this.validationHint = Component.translatable("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
             }
@@ -154,17 +157,5 @@ public class NeoForgeValue<T> implements IConfigValue<T>
             return list.get(list.size() - 1);
         }
         return defaultValue;
-    }
-
-    /**
-     * Reflection to get Forge's range of a value
-     */
-    @SuppressWarnings({"unchecked"})
-    public void loadRange()
-    {
-        if(this.range == null)
-        {
-            this.range = Pair.of((T) this.valueSpec.getRange().getMin(), (T) this.valueSpec.getRange().getMax());
-        }
     }
 }
