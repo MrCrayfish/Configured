@@ -22,11 +22,8 @@ public class NeoForgeNetwork
     private static void onRegisterPayloadHandler(RegisterPayloadHandlersEvent event)
     {
         final PayloadRegistrar registrar = event.registrar(Constants.MOD_ID).optional().versioned(Integer.toString(VERSION));
-        registrar.playToClient(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC, (payload, context) -> {
-            MessageSessionData.handle(payload, context::enqueueWork);
-        });
+        registrar.playToClient(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
         registrar.playToServer(SyncNeoForgeConfigPayload.TYPE, SyncNeoForgeConfigPayload.STREAM_CODEC, SyncNeoForgeConfigPayload::handle);
-
 
         if(ModList.get().isLoaded("framework"))
         {
@@ -36,9 +33,7 @@ public class NeoForgeNetwork
             registrar.playToServer(MessageFramework.Request.TYPE, MessageFramework.Request.STREAM_CODEC, (payload, context) -> {
                 MessageFramework.Request.handle(payload, context::enqueueWork, context.player(), context::disconnect);
             });
-            registrar.playToClient(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC, (payload, context) -> {
-                MessageFramework.Response.handle(payload, context::enqueueWork, context.player(), context::disconnect);
-            });
+            registrar.playToClient(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
         }
     }
 }

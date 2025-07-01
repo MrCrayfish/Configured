@@ -20,6 +20,7 @@ import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
@@ -292,7 +293,7 @@ public class NeoForgeConfig implements IModConfig
         {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             TomlFormat.instance().createWriter().write(data, stream);
-            PacketDistributor.sendToServer(new SyncNeoForgeConfigPayload(this.config.getFileName(), stream.toByteArray()));
+            ClientPacketDistributor.sendToServer(new SyncNeoForgeConfigPayload(this.config.getFileName(), stream.toByteArray()));
             stream.close();
         }
         catch(IOException e)

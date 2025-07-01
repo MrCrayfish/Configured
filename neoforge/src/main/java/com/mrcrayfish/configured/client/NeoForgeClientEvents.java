@@ -3,17 +3,22 @@ package com.mrcrayfish.configured.client;
 import com.mojang.datafixers.util.Either;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.client.screen.TooltipScreen;
+import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.gui.ModListScreen;
+import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -73,5 +78,20 @@ public class NeoForgeClientEvents
     public static void onScreenOpen(ScreenEvent.Opening event)
     {
         EditingTracker.instance().onScreenOpen(event.getScreen());
+    }
+
+    @SubscribeEvent
+    private static void onRegisterClientPayloadHandler(RegisterClientPayloadHandlersEvent event)
+    {
+        event.register(MessageSessionData.TYPE, (payload, context) -> {
+            MessageSessionData.handle(payload, context::enqueueWork);
+        });
+
+        if(ModList.get().isLoaded("framework"))
+        {
+            event.register(MessageFramework.Response.TYPE, (payload, context) -> {
+                MessageFramework.Response.handle(payload, context::enqueueWork, context.player(), context::disconnect);
+            });
+        }
     }
 }

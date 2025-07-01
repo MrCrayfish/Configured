@@ -12,6 +12,7 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLConfig;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
@@ -74,7 +75,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        PacketDistributor.sendToServer(new MessageFramework.Sync(id, data));
+        ClientPacketDistributor.sendToServer(new MessageFramework.Sync(id, data));
     }
 
     @Override
@@ -82,7 +83,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     {
         if(!this.isModLoaded("framework"))
             return;
-        PacketDistributor.sendToServer(new MessageFramework.Request(id));
+        ClientPacketDistributor.sendToServer(new MessageFramework.Request(id));
     }
 
     @Override
