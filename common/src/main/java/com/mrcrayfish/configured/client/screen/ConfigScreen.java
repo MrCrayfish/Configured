@@ -1,15 +1,11 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Constants;
-import com.mrcrayfish.configured.api.ActionResult;
-import com.mrcrayfish.configured.api.ConfigType;
-import com.mrcrayfish.configured.api.IConfigEntry;
-import com.mrcrayfish.configured.api.IConfigValue;
-import com.mrcrayfish.configured.api.IModConfig;
+import com.mrcrayfish.configured.api.*;
 import com.mrcrayfish.configured.client.EditingTracker;
+import com.mrcrayfish.configured.client.screen.list.IListType;
 import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import com.mrcrayfish.configured.client.screen.widget.CheckBoxButton;
 import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
@@ -27,26 +23,15 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.*;
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -660,12 +645,19 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     public class ListItem extends ConfigItem<List<?>>
     {
         private final Button button;
+        private final IListType<?> listType;
 
+        @SuppressWarnings({"rawtypes", "unchecked"})
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
             this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder)));
+            this.listType = ListTypes.getType((IConfigValue) holder);
+            if(this.listType == ListTypes.getUnknown())
+            {
+                this.button.active = false;
+            }
             this.eventListeners.add(this.button);
         }
 
@@ -676,6 +668,10 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.button.setX(left + width - 69);
             this.button.setY(top);
             this.button.render(graphics, mouseX, mouseY, partialTicks);
+            if(this.listType == ListTypes.getUnknown() && this.button.isHovered())
+            {
+                ConfigScreen.this.setActiveTooltip(graphics, Component.translatable("configured.gui.unsupported_property"), mouseX, mouseY, TooltipStyle.ERROR);
+            }
         }
     }
 

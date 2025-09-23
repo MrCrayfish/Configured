@@ -56,6 +56,7 @@
     "configured.gui.update_error.unloaded": "Failed to update the config due to it not being loaded",
     "configured.gui.neoforge.players_kicked": "All players will be required to rejoin the server to receive the new changes. Upon saving, all players will be kicked. Are you sure you want to save?",
     "configured.gui.neoforge.server_configs_updated": "The server configs were updated. Please rejoin to receive the new changes",
+    "configured.gui.unsupported_property": "Unsupported property. Edit the raw config file to change this property",
     "configured.validator.range_hint": "Value must be between %s and %s (inclusive)",
     "configured.validator.not_a_number": "The entered value is not a valid number",
     "configured.parser.not_a_number": "The entered text is not a valid number",

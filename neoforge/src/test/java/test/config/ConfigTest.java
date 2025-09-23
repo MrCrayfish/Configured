@@ -1,5 +1,6 @@
 package test.config;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Author: MrCrayfish
@@ -71,6 +73,7 @@ public class ConfigTest
         public final ModConfigSpec.ConfigValue<List<? extends Long>> longList;
         public final ModConfigSpec.ConfigValue<List<? extends Double>> doubleList;
         public final ModConfigSpec.EnumValue<ChatFormatting> restrictedEnums;
+        public final ModConfigSpec.ConfigValue<List<? extends CommentedConfig>> unsupportedList;
 
         public Test(ModConfigSpec.Builder builder)
         {
@@ -91,6 +94,7 @@ public class ConfigTest
             this.listOfItems = builder.comment("This is a List of Item Locations").defineList("listOfItems", Arrays.asList("minecraft:apple", "minecraft:iron_ingot"), () -> "", o -> {
                 return o instanceof String && ResourceLocation.tryParse(o.toString()) != null && !ResourceLocation.parse(o.toString()).getPath().isEmpty();
             });
+            this.unsupportedList = builder.comment("This is an unsupported list").defineList("unsupportedList", List.of(CommentedConfig.inMemory()), CommentedConfig::inMemory, o -> o instanceof CommentedConfig);
             builder.pop();
         }
     }
