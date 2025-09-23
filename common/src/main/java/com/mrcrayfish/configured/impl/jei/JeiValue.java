@@ -69,7 +69,7 @@ public class JeiValue<T> implements IConfigValue<T>
     @Override
     public Component getComment()
     {
-        return Component.literal(this.configValue.getDescription());
+        return this.configValue.getLocalizedDescription();
     }
 
     @Nullable
