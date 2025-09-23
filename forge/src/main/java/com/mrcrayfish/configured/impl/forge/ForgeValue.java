@@ -18,7 +18,6 @@ public class ForgeValue<T> implements IConfigValue<T>
     public final ForgeConfigSpec.ValueSpec valueSpec;
     protected final T initialValue;
     protected T value;
-    protected Pair<T, T> range;
     protected Component validationHint;
 
     public ForgeValue(ForgeConfigSpec.ConfigValue<T> configValue, ForgeConfigSpec.ValueSpec valueSpec)
@@ -107,10 +106,10 @@ public class ForgeValue<T> implements IConfigValue<T>
     {
         if(this.validationHint == null)
         {
-            this.loadRange();
-            if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
+            ForgeConfigSpec.Range<?> range = this.valueSpec.getRange();
+            if(range != null)
             {
-                this.validationHint = Component.translatable("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
+                this.validationHint = Component.translatable("configured.validator.range_hint", range.getMin().toString(), range.getMax().toString());
             }
         }
         return this.validationHint;
@@ -155,30 +154,5 @@ public class ForgeValue<T> implements IConfigValue<T>
             return list.get(list.size() - 1);
         }
         return defaultValue;
-    }
-
-    /**
-     * Reflection to get Forge's range of a value
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public void loadRange()
-    {
-        if(this.range == null)
-        {
-            try
-            {
-                Object range = ObfuscationReflectionHelper.getPrivateValue(ForgeConfigSpec.ValueSpec.class, this.valueSpec, "range");
-                if(range != null)
-                {
-                    Class rangeClass = Class.forName("net.minecraftforge.common.ForgeConfigSpec$Range");
-                    Object min = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "min");
-                    Object max = ObfuscationReflectionHelper.getPrivateValue(rangeClass, range, "max");
-                    this.range = Pair.of((T) min, (T) max);
-                    return;
-                }
-            }
-            catch(ClassNotFoundException ignored) {}
-            this.range = Pair.of(null, null);
-        }
     }
 }

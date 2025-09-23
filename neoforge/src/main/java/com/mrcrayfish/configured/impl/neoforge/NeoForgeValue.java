@@ -17,7 +17,6 @@ public class NeoForgeValue<T> implements IConfigValue<T>
     public final ModConfigSpec.ValueSpec valueSpec;
     protected final T initialValue;
     protected T value;
-    protected Pair<T, T> range;
     protected Component validationHint;
 
     public NeoForgeValue(ModConfigSpec.ConfigValue<T> configValue, ModConfigSpec.ValueSpec valueSpec)
@@ -106,10 +105,10 @@ public class NeoForgeValue<T> implements IConfigValue<T>
     {
         if(this.validationHint == null)
         {
-            this.loadRange();
-            if(this.range != null && this.range.getLeft() != null && this.range.getRight() != null)
+            ModConfigSpec.Range<?> range = this.valueSpec.getRange();
+            if(range != null)
             {
-                this.validationHint = Component.translatable("configured.validator.range_hint", this.range.getLeft().toString(), this.range.getRight().toString());
+                this.validationHint = Component.translatable("configured.validator.range_hint", range.getMin().toString(), range.getMax().toString());
             }
         }
         return this.validationHint;
@@ -154,17 +153,5 @@ public class NeoForgeValue<T> implements IConfigValue<T>
             return list.get(list.size() - 1);
         }
         return defaultValue;
-    }
-
-    /**
-     * Reflection to get Forge's range of a value
-     */
-    @SuppressWarnings({"unchecked"})
-    public void loadRange()
-    {
-        if(this.range == null)
-        {
-            this.range = Pair.of((T) this.valueSpec.getRange().getMin(), (T) this.valueSpec.getRange().getMax());
-        }
     }
 }
