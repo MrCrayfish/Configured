@@ -1,6 +1,6 @@
 plugins {
     id 'multiloader-loader'
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'fabric-loom'
 }
 
 sourceSets {
@@ -30,8 +30,8 @@ dependencies {
     modApi "com.terraformersmc:modmenu:${modmenu_version}"
 
     // Night Config
-    compileOnly "com.electronwill.night-config:core:3.7.1"
-    compileOnly "com.electronwill.night-config:toml:3.7.1"
+    compileOnly "com.electronwill.night-config:core:${nightconfig_version}"
+    compileOnly "com.electronwill.night-config:toml:${nightconfig_version}"
 }
 
 fabricApi {
