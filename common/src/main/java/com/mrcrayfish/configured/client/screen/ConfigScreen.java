@@ -10,6 +10,8 @@ import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.EditingTracker;
+import com.mrcrayfish.configured.client.screen.list.IListType;
+import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import com.mrcrayfish.configured.client.screen.widget.CheckBoxButton;
 import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
@@ -155,7 +157,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 }
                 else
                 {
-                    Constants.LOG.info("Unsupported config value: " + value.getName());
+                    Constants.LOG.info("Unsupported config value: {}", value.getName());
                 }
             }
             return null;
@@ -678,12 +680,19 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
     public class ListItem extends ConfigItem<List<?>>
     {
         private final Button button;
+        private final IListType<?> listType;
 
+        @SuppressWarnings({"rawtypes", "unchecked"})
         public ListItem(IConfigValue<List<?>> holder)
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
             this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder)));
+            this.listType = ListTypes.getType((IConfigValue) holder);
+            if(this.listType == ListTypes.getUnknown())
+            {
+                this.button.active = false;
+            }
             this.eventListeners.add(this.button);
         }
 
@@ -694,6 +703,10 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             this.button.setX(left + width - 69);
             this.button.setY(top);
             this.button.render(graphics, mouseX, mouseY, partialTicks);
+            if(this.listType == ListTypes.getUnknown() && this.button.isHovered())
+            {
+                ConfigScreen.this.setActiveTooltip(Component.translatable("configured.gui.unsupported_property"), 0xAADD0000);
+            }
         }
     }
 
