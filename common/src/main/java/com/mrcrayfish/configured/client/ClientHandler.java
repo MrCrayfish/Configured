@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ConfigType;
 import com.mrcrayfish.configured.api.IModConfig;
@@ -8,8 +7,7 @@ import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.gui.components.AbstractSelectionList;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -20,8 +18,8 @@ import java.util.stream.Stream;
 
 public class ClientHandler
 {
-    //TODO register this on fabric
-    public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, "key.categories.configured");
+    public static final KeyMapping.Category CONFIG_CATEGORY = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "configured"));
+    public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, CONFIG_CATEGORY);
     private static Set<IModConfigProvider> providers;
 
     public static void init()

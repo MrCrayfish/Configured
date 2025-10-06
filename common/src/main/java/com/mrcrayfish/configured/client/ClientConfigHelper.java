@@ -44,7 +44,7 @@ public class ClientConfigHelper
 
     public static boolean isServerOwnedByPlayer(@Nullable Player player)
     {
-        return player != null && Minecraft.getInstance().getSingleplayerServer() != null && Minecraft.getInstance().getSingleplayerServer().isSingleplayerOwner(player.getGameProfile());
+        return player != null && Minecraft.getInstance().getSingleplayerServer() != null && Minecraft.getInstance().getSingleplayerServer().isSingleplayerOwner(player.nameAndId());
     }
 
     public static boolean isPlayingRemotely()

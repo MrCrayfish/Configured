@@ -122,7 +122,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         }).flatMap(entry -> entry.getValue().stream()).collect(Collectors.toSet());
     }
 
-    public class FileItem extends Item
+    public class FileItem extends Item implements EntryBackground
     {
         protected final TooltipScreen screen;
         protected final IModConfig config;
@@ -167,7 +167,7 @@ public class ModConfigSelectionScreen extends ListMenuScreen
             MutableComponent trimmedFileName = Component.literal(fileName);
             if(Minecraft.getInstance().font.width(fileName) > 150)
             {
-                trimmedFileName = Component.literal(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140) + "...");
+                trimmedFileName = Component.literal(Minecraft.getInstance().font.plainSubstrByWidth(fileName, 140).trim() + "...");
             }
             return trimmedFileName;
         }
@@ -284,29 +284,29 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawString(Minecraft.getInstance().font, this.title, left + 28, top + 2, 0xFFFFFFFF);
-            graphics.drawString(Minecraft.getInstance().font, this.fileName, left + 28, top + 12, 0xFFFFFFFF);
-            graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, left + 4, top, this.getIconU(), this.getIconV(), 18, 22, 9, 11, 64, 64);
+            graphics.drawString(Minecraft.getInstance().font, this.title, this.getX() + 26, this.getY() + 6, 0xFFFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, this.fileName, this.getX() + 26, this.getY() + 16, 0xFFFFFFFF);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + 2, this.getY() + 4, this.getIconU(), this.getIconV(), 18, 22, 9, 11, 64, 64);
 
             if(this.config.isReadOnly())
             {
-                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, left + 1, top + 15, 0, 33, 11, 11, 11, 11, 64, 64);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() - 2, this.getY() + 19, 0, 33, 11, 11, 11, 11, 64, 64);
             }
 
-            this.modifyButton.setX(left + width - 83);
-            this.modifyButton.setY(top);
-            this.modifyButton.render(graphics, mouseX, mouseY, partialTicks);
+            this.modifyButton.setX(this.getX() + this.getWidth() - 83);
+            this.modifyButton.setY(this.getY() + 5);
+            this.modifyButton.render(graphics, mouseX, mouseY, partialTick);
 
             if(this.restoreButton != null)
             {
-                this.restoreButton.setX(left + width - 21);
-                this.restoreButton.setY(top);
-                this.restoreButton.render(graphics, mouseX, mouseY, partialTicks);
+                this.restoreButton.setX(this.getX() + this.getWidth() - 21);
+                this.restoreButton.setY(this.getY() + 5);
+                this.restoreButton.render(graphics, mouseX, mouseY, partialTick);
             }
 
-            if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(left - 1, top + 15, 11, 11, mouseX, mouseY))
+            if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(this.getX() - 2, this.getY() + 19, 11, 11, mouseX, mouseY))
             {
                 ModConfigSelectionScreen.this.setActiveTooltip(graphics, Component.translatable("configured.gui.read_only_config"), mouseX, mouseY, TooltipStyle.HINT);
             }

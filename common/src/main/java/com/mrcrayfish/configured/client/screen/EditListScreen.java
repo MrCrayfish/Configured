@@ -163,27 +163,28 @@ public class EditListScreen<T> extends Screen implements IEditing
         }
 
         @Override
-        public boolean removeEntry(StringEntry entry)
+        public void removeEntry(StringEntry entry)
         {
-            return super.removeEntry(entry);
+            super.removeEntry(entry);
         }
 
-        /*@Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+        @Override
+        protected void renderListItems(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
         {
-            super.render(graphics, mouseX, mouseY, partialTicks);
-            this.children().forEach(entry ->
+            List<StringEntry> entries = this.children();
+            for(int i = 0; i < entries.size(); i++)
             {
-                entry.children().forEach(o ->
+                var entry = entries.get(i);
+                if(entry.getY() + entry.getHeight() >= this.getY() && entry.getY() <= this.getBottom())
                 {
-                    if(o instanceof Button)
+                    if(i % 2 != 0)
                     {
-                        //TODO invesigate new tooltip system
-                        //((Button) o).renderToolTip(poseStack, mouseX, mouseY);
+                        graphics.fill(entry.getX() - 2, entry.getY(), entry.getX() + entry.getWidth() + 2, entry.getY() + entry.getHeight(), 0x55000000);
                     }
-                });
-            });
-        }*/
+                    this.renderItem(graphics, mouseX, mouseY, partialTick, entry);
+                }
+            }
+        }
     }
 
     public class StringEntry extends ContainerObjectSelectionList.Entry<StringEntry>
@@ -224,18 +225,17 @@ public class EditListScreen<T> extends Screen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            if(x % 2 != 0) graphics.fill(left, top, left + width, top + 24, 0x55000000);
-            graphics.drawString(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), left + 5, top + 8, 0xFFFFFFFF);
+            graphics.drawString(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), this.getX() + 5, this.getY() + 8, 0xFFFFFFFF);
             this.editButton.visible = true;
-            this.editButton.setX(left + width - 44);
-            this.editButton.setY(top + 2);
-            this.editButton.render(graphics, mouseX, mouseY, partialTicks);
+            this.editButton.setX(this.getX() + this.getWidth() - 44);
+            this.editButton.setY(this.getY() + 2);
+            this.editButton.render(graphics, mouseX, mouseY, partialTick);
             this.deleteButton.visible = true;
-            this.deleteButton.setX(left + width - 22);
-            this.deleteButton.setY(top + 2);
-            this.deleteButton.render(graphics, mouseX, mouseY, partialTicks);
+            this.deleteButton.setX(this.getX() + this.getWidth() - 22);
+            this.deleteButton.setY(this.getY() + 2);
+            this.deleteButton.render(graphics, mouseX, mouseY, partialTick);
         }
 
         @Override

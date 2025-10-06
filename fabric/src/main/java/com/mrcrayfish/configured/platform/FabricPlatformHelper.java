@@ -65,7 +65,7 @@ public class FabricPlatformHelper implements IPlatformHelper
     public void sendSessionData(ServerPlayer player)
     {
         boolean developer = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getUUID());
-        boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
+        boolean lan = !player.level().getServer().isDedicatedServer();
         ServerPlayNetworking.send(player, new MessageSessionData(developer, lan));
     }
 

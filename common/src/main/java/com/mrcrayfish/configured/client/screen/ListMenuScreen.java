@@ -16,6 +16,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.ClickEvent;
@@ -131,19 +132,19 @@ public abstract class ListMenuScreen extends TooltipScreen
     protected void renderForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {}
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button)
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick)
     {
-        if(ScreenUtil.isMouseWithin(10, 13, 23, 23, (int) mouseX, (int) mouseY))
+        if(ScreenUtil.isMouseWithin(10, 13, 23, 23, (int) event.x(), (int) event.y()))
         {
             Style style = Style.EMPTY.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://www.curseforge.com/minecraft/mc-mods/configured")));
             this.handleComponentClicked(style);
             return true;
         }
-        if(this.activeTextField != null && !this.activeTextField.isMouseOver(mouseX, mouseY))
+        if(this.activeTextField != null && !this.activeTextField.isMouseOver(event.x(), event.y()))
         {
             this.activeTextField.setFocused(false);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     protected class EntryList extends ContainerObjectSelectionList<Item>
@@ -177,22 +178,26 @@ public abstract class ListMenuScreen extends TooltipScreen
         public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
         {
             super.renderWidget(graphics, mouseX, mouseY, partialTicks);
-            this.renderToolTips(graphics, mouseX, mouseY);
         }
 
-        private void renderToolTips(GuiGraphics graphics, int mouseX, int mouseY)
+        @Override
+        protected void renderListItems(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
         {
-            this.children().forEach(item ->
+            List<Item> entries = this.children();
+            for(int i = 0; i < entries.size(); i++)
             {
-                item.children().forEach(o ->
+                var entry = entries.get(i);
+                if(entry.getY() + entry.getHeight() >= this.getY() && entry.getY() <= this.getBottom())
                 {
-                    if(o instanceof Button)
+                    if(i % 2 != 0 && entry instanceof EntryBackground)
                     {
-                        //TODO figure this out
-                        //((Button) o).renderToolTip(poseStack, mouseX, mouseY);
+                        graphics.fill(entry.getX() - 3, entry.getY(), entry.getX() + entry.getWidth() + 3, entry.getY() + 1, 0x33000000);
+                        graphics.fill(entry.getX() - 4, entry.getY() + 1, entry.getX() + entry.getWidth() + 4, entry.getY() + entry.getHeight() - 1, 0x33000000);
+                        graphics.fill(entry.getX() - 3, entry.getY() + entry.getHeight() - 1, entry.getX() + entry.getWidth() + 3, entry.getY() + entry.getHeight(), 0x33000000);
                     }
-                });
-            });
+                    this.renderItem(graphics, mouseX, mouseY, partialTick, entry);
+                }
+            }
         }
     }
 
@@ -219,7 +224,7 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
             if(this.isMouseOver(mouseX, mouseY))
             {
@@ -272,9 +277,9 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top + 5, 0xFFFFFFFF);
+            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, this.getX() + this.getWidth() / 2, this.getY() + (this.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF);
         }
     }
 
@@ -289,10 +294,10 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, left + width / 2, top, 0xFFFFFFFF);
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.bottomText, left + width / 2, top + 12, 0xFFFFFFFF);
+            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, this.getX() + this.getWidth() / 2, this.getY(), 0xFFFFFFFF);
+            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.bottomText, this.getX() + this.getWidth() / 2, this.getY() + 12, 0xFFFFFFFF);
 
             if(this.isMouseOver(mouseX, mouseY))
             {
@@ -347,15 +352,15 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button)
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick)
         {
-            if(this.clearable && !this.getValue().isEmpty() && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, (int) mouseX, (int) mouseY))
+            if(this.clearable && !this.getValue().isEmpty() && event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, (int) event.x(), (int) event.y()))
             {
                 this.playDownSound(ListMenuScreen.this.minecraft.getSoundManager());
                 this.setValue("");
                 return true;
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, doubleClick);
         }
     }
 

@@ -17,6 +17,7 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
@@ -198,14 +199,14 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
             Component label = Component.literal(this.label.getString()).withStyle(ChangeEnumScreen.this.list.getSelected() == this ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
-            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, left + 5, top + 4, 0xFFFFFFFF);
+            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, this.getX() + 5, this.getY() + 4, 0xFFFFFFFF);
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button)
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick)
         {
             ChangeEnumScreen.this.list.setSelected(this);
             ChangeEnumScreen.this.selectedValue = this.enumValue;

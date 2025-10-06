@@ -142,7 +142,7 @@ public class FrameworkServerHandler
         ExecutionContext context = new ExecutionContext(player);
         if(!context.isDedicatedServer())
         {
-            Constants.LOG.error("{} tried requesting a config on a non-dedicated server: {}", player.getGameProfile().getName(), message.id());
+            Constants.LOG.error("{} tried requesting a config on a non-dedicated server: {}", player.getGameProfile().name(), message.id());
             disconnect.accept(Component.translatable("configured.multiplayer.disconnect.bad_config_packet"));
             return;
         }
@@ -155,21 +155,21 @@ public class FrameworkServerHandler
         FrameworkConfigManager.FrameworkConfigImpl config = FrameworkConfigManager.getInstance().getConfig(message.id());
         if(config == null)
         {
-            Constants.LOG.error("{} tried requesting a Framework config that doesn't exist: {}", player.getGameProfile().getName(), message.id());
+            Constants.LOG.error("{} tried requesting a Framework config that doesn't exist: {}", player.getGameProfile().name(), message.id());
             disconnect.accept(Component.translatable("configured.multiplayer.disconnect.bad_config_packet"));
             return;
         }
 
         if(!config.getType().isServer() || config.getType().isSync() || config.getType() == ConfigType.DEDICATED_SERVER)
         {
-            Constants.LOG.error("{} tried requesting a Framework config that is not allowed to be requested: '{}'", player.getGameProfile().getName(), message.id());
+            Constants.LOG.error("{} tried requesting a Framework config that is not allowed to be requested: '{}'", player.getGameProfile().name(), message.id());
             disconnect.accept(Component.translatable("configured.multiplayer.disconnect.bad_config_packet"));
             return;
         }
 
         if(!config.isLoaded())
         {
-            Constants.LOG.error("{} tried requesting the Framework config '{}', however it is not loaded. Something went terribly wrong...", player.getGameProfile().getName(), message.id());
+            Constants.LOG.error("{} tried requesting the Framework config '{}', however it is not loaded. Something went terribly wrong...", player.getGameProfile().name(), message.id());
             disconnect.accept(Component.translatable("configured.multiplayer.disconnect.bad_config_packet"));
             return;
         }

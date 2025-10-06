@@ -348,13 +348,13 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean selected, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            super.render(graphics, index, top, left, width, height, mouseX, mouseY, selected, partialTicks);
-            this.button.setX(left - 1);
-            this.button.setY(top);
-            this.button.setWidth(width);
-            this.button.render(graphics, mouseX, mouseY, partialTicks);
+            super.renderContent(graphics, mouseX, mouseY, hovered, partialTick);
+            this.button.setX(this.getX() - 1);
+            this.button.setY(this.getY());
+            this.button.setWidth(this.getWidth());
+            this.button.render(graphics, mouseX, mouseY, partialTick);
         }
 
         private static Component createLabelForFolderEntry(IConfigEntry entry)
@@ -403,16 +403,16 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
             boolean showValidationHint = this.validationHint != null;
             int trimLength = showValidationHint ? 100 : 80;
             ChatFormatting labelStyle = this.holder.isChanged() ? Config.getChangedFormatting() : ChatFormatting.RESET;
-            graphics.drawString(Minecraft.getInstance().font, this.getTrimmedLabel(width - trimLength).withStyle(labelStyle), left, top + 6, 0xFFFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, this.getTrimmedLabel(this.getWidth() - trimLength).withStyle(labelStyle), this.getX(), this.getY() + 6, 0xFFFFFFFF);
 
             if(showValidationHint)
             {
-                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, left + width - 88, top + 3, 11, 11, 16, 16, 11, 11, 64, 64);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + this.getWidth() - 88, this.getY() + 3, 11, 11, 16, 16, 11, 11, 64, 64);
             }
 
             if(!ConfigScreen.this.config.isReadOnly())
@@ -420,9 +420,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 if(this.holder.requiresGameRestart() || this.holder.requiresWorldRestart())
                 {
                     boolean gameRestart = this.holder.requiresGameRestart();
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, left - 18, top + 5, gameRestart ? 51 : 11, 22, 11, 11, 11, 11, 64, 64);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() - 18, this.getY() + 5, gameRestart ? 51 : 11, 22, 11, 11, 11, 11, 64, 64);
 
-                    if(ScreenUtil.isMouseWithin(left - 18, top + 5, 11, 11, mouseX, mouseY))
+                    if(ScreenUtil.isMouseWithin(this.getX() - 18, this.getY() + 5, 11, 11, mouseX, mouseY))
                     {
                         String translationKey = gameRestart ? "configured.gui.requires_game_restart" : "configured.gui.requires_world_restart";
                         TooltipStyle style = gameRestart ? TooltipStyle.HINT : TooltipStyle.SUCCESS;
@@ -433,7 +433,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
 
             if(this.isMouseOver(mouseX, mouseY))
             {
-                if(showValidationHint && ScreenUtil.isMouseWithin(left + width - 92, top, 23, 20, mouseX, mouseY))
+                if(showValidationHint && ScreenUtil.isMouseWithin(this.getX() + this.getWidth() - 92, this.getY(), 23, 20, mouseX, mouseY))
                 {
                     ConfigScreen.this.setActiveTooltip(graphics, this.validationHint, mouseX, mouseY, TooltipStyle.ERROR);
                 }
@@ -444,9 +444,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             }
 
             this.resetButton.active = !this.holder.isDefault() && !ConfigScreen.this.config.isReadOnly();
-            this.resetButton.setX(left + width - 21);
-            this.resetButton.setY(top);
-            this.resetButton.render(graphics, mouseX, mouseY, partialTicks);
+            this.resetButton.setX(this.getX() + this.getWidth() - 21);
+            this.resetButton.setY(this.getY());
+            this.resetButton.render(graphics, mouseX, mouseY, partialTick);
         }
 
         private MutableComponent getTrimmedLabel(int maxWidth)
@@ -538,18 +538,18 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
+            super.renderContent(graphics, mouseX, mouseY, hovered, partialTick);
             long time = Util.getMillis();
             if(time - this.lastTick >= 50)
             {
                 //this.textField.tick(); // TODO what happened to this
                 this.lastTick = time;
             }
-            this.textField.setX(left + width - 68);
-            this.textField.setY(top + 1);
-            this.textField.render(graphics, mouseX, mouseY, partialTicks);
+            this.textField.setX(this.getX() + this.getWidth() - 68);
+            this.textField.setY(this.getY() + 1);
+            this.textField.render(graphics, mouseX, mouseY, partialTick);
         }
 
         @Override
@@ -600,12 +600,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.setX(left + width - 69);
-            this.button.setY(top);
-            this.button.render(graphics, mouseX, mouseY, partialTicks);
+            super.renderContent(graphics, mouseX, mouseY, hovered, partialTick);
+            this.button.setX(this.getX() + this.getWidth() - 69);
+            this.button.setY(this.getY());
+            this.button.render(graphics, mouseX, mouseY, partialTick);
         }
 
         @Override
@@ -633,12 +633,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.setX(left + width - 69);
-            this.button.setY(top);
-            this.button.render(graphics, mouseX, mouseY, partialTicks);
+            super.renderContent(graphics, mouseX, mouseY, hovered, partialTick);
+            this.button.setX(this.getX() + this.getWidth() - 69);
+            this.button.setY(this.getY());
+            this.button.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 
@@ -662,12 +662,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.setX(left + width - 69);
-            this.button.setY(top);
-            this.button.render(graphics, mouseX, mouseY, partialTicks);
+            super.renderContent(graphics, mouseX, mouseY, hovered, partialTick);
+            this.button.setX(this.getX() + this.getWidth() - 69);
+            this.button.setY(this.getY());
+            this.button.render(graphics, mouseX, mouseY, partialTick);
             if(this.listType == ListTypes.getUnknown() && this.button.isHovered())
             {
                 ConfigScreen.this.setActiveTooltip(graphics, Component.translatable("configured.gui.unsupported_property"), mouseX, mouseY, TooltipStyle.ERROR);
@@ -691,12 +691,12 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean hovered, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            super.render(graphics, index, top, left, width, p_230432_6_, mouseX, mouseY, hovered, partialTicks);
-            this.button.setX(left + width - 69);
-            this.button.setY(top);
-            this.button.render(graphics, mouseX, mouseY, partialTicks);
+            super.renderContent(graphics, mouseX, mouseY, hovered, partialTick);
+            this.button.setX(this.getX() + this.getWidth() - 69);
+            this.button.setY(this.getY());
+            this.button.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 

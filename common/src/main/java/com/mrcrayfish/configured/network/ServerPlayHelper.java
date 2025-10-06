@@ -17,11 +17,11 @@ public class ServerPlayHelper
 {
     public static void sendMessageToOperators(Component message, ServerPlayer player)
     {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         Preconditions.checkNotNull(server, "The server was null when broadcasting config changes. This should not be possible...");
         for(ServerPlayer serverPlayer : server.getPlayerList().getPlayers())
         {
-            if(server.getPlayerList().isOp(serverPlayer.getGameProfile()))
+            if(server.getPlayerList().isOp(serverPlayer.nameAndId()))
             {
                 serverPlayer.sendSystemMessage(message);
             }

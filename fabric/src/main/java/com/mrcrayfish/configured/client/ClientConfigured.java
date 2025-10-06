@@ -69,11 +69,11 @@ public class ClientConfigured implements ClientModInitializer
         Screen newScreen = null;
         if(FabricLoader.getInstance().isModLoaded("catalogue"))
         {
-            newScreen = createModListScreen("com.mrcrayfish.catalogue.client.screen.CatalogueModListScreen");
+            newScreen = this.createModListScreen("com.mrcrayfish.catalogue.client.screen.CatalogueModListScreen");
         }
         else if(FabricLoader.getInstance().isModLoaded("modmenu"))
         {
-            newScreen = createModListScreen("com.terraformersmc.modmenu.gui.ModsScreen");
+            newScreen = this.createModListScreen("com.terraformersmc.modmenu.gui.ModsScreen");
         }
         if(newScreen != null)
         {

@@ -195,16 +195,15 @@ public class WorldSelectionScreen extends ListMenuScreen
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int top, int left, int width, int p_230432_6_, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks)
+        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            if(x % 2 != 0) graphics.fill(left, top, left + width, top + 24, 0x55000000);
-            if(this.modifyButton.isMouseOver(mouseX, mouseY)) graphics.fill(left - 1, top - 1, left + 25, top + 25, 0xFFFFFFFF);
-            graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon.textureLocation(), left, top, 0, 0, 24, 24, 32, 32, 32, 32);
-            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, left + 30, top + 3, 0xFFFFFFFF);
-            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, left + 30, top + 13, 0xFFFFFFFF);
-            this.modifyButton.setX(left + width - 61);
-            this.modifyButton.setY(top + 2);
-            this.modifyButton.render(graphics, mouseX, mouseY, partialTicks);
+            if(this.modifyButton.isMouseOver(mouseX, mouseY)) graphics.fill(this.getX() - 1, this.getY() - 1, this.getX() + 25, this.getY() + 25, 0xFFFFFFFF);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon.textureLocation(), this.getX(), this.getY(), 0, 0, 24, 24, 32, 32, 32, 32);
+            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, this.getX() + 30, this.getY() + 3, 0xFFFFFFFF);
+            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, this.getX() + 30, this.getY() + 13, 0xFFFFFFFF);
+            this.modifyButton.setX(this.getX() + this.getWidth() - 61);
+            this.modifyButton.setY(this.getX() + 2);
+            this.modifyButton.render(graphics, mouseX, mouseY, partialTick);
         }
 
         private void loadWorldIcon()

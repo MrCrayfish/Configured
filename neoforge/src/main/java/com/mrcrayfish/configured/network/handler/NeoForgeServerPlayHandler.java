@@ -118,15 +118,12 @@ public class NeoForgeServerPlayHandler
         ServerPlayHelper.sendMessageToOperators(Component.translatable("configured.chat.config_updated", player.getName(), modConfig.getFileName()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), player);
 
         // Kick all other players and ask them to rejoin
-        MinecraftServer server = player.getServer();
-        if(server != null)
-        {
-            server.getPlayerList().getPlayers().forEach(player1 -> {
-                if(!player1.equals(player)) {
-                    player1.connection.disconnect(Component.translatable("configured.gui.neoforge.server_configs_updated"));
-                }
-            });
-        }
+        MinecraftServer server = player.level().getServer();
+        server.getPlayerList().getPlayers().forEach(player1 -> {
+            if(!player1.equals(player)) {
+                player1.connection.disconnect(Component.translatable("configured.gui.neoforge.server_configs_updated"));
+            }
+        });
 
     }
 }

@@ -10,6 +10,7 @@ import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -37,7 +38,7 @@ public class Configured
     {
         event.enqueueWork(() ->
         {
-            if(FMLLoader.getDist() == Dist.CLIENT)
+            if(FMLEnvironment.getDist() == Dist.CLIENT)
             {
                 ClientHandler.init();
                 ClientConfigured.generateConfigFactories();

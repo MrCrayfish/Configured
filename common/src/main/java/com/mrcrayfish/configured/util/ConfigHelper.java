@@ -155,8 +155,8 @@ public class ConfigHelper
         {
             if(Services.PLATFORM.getEnvironment() == Environment.DEDICATED_SERVER)
             {
-                MinecraftServer server = player.getServer();
-                return server != null && server.getPlayerList().isOp(player.getGameProfile());
+                MinecraftServer server = player.level().getServer();
+                return server != null && server.getPlayerList().isOp(player.nameAndId());
             }
             return player.hasPermissions(Commands.LEVEL_OWNERS);
         }

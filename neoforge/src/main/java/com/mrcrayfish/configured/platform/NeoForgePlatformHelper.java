@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLConfig;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
@@ -35,13 +36,13 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     @Override
     public boolean isDevelopmentEnvironment()
     {
-        return !FMLLoader.isProduction();
+        return !FMLEnvironment.isProduction();
     }
 
     @Override
     public Environment getEnvironment()
     {
-        return FMLLoader.getDist().isClient() ? Environment.CLIENT : Environment.DEDICATED_SERVER;
+        return FMLEnvironment.getDist().isClient() ? Environment.CLIENT : Environment.DEDICATED_SERVER;
     }
 
     @Override
@@ -65,8 +66,8 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     @Override
     public void sendSessionData(ServerPlayer player)
     {
-        boolean developer = FMLLoader.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getUUID());
-        boolean lan = player.getServer() != null && !player.getServer().isDedicatedServer();
+        boolean developer = FMLEnvironment.getDist().isDedicatedServer() && Config.isDeveloperEnabled() && Config.getDevelopers().contains(player.getUUID());
+        boolean lan = !player.level().getServer().isDedicatedServer();
         PacketDistributor.sendToPlayer(player, new MessageSessionData(developer, lan));
     }
 
