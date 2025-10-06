@@ -84,7 +84,9 @@ public class Config
         # [Developers]
         # A list of comma separated UUIDS of players who are authorised to edit remote
         # configs. The players must also have operator privileges.
-        # You can find the UUID of a player in the log file when they join your server.
+        # You can find the UUID of a player in the log file when they join your server or use https://mcuuid.net/
+        # EXAMPLE: developers=741c1d6f-84fa-47e8-99ad-78f97bb70eaa,8e91cfb3-5671-472f-a021-85d101025b1b
+        #
         developers=
         """;
 
