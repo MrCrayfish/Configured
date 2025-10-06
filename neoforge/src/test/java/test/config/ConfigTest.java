@@ -10,6 +10,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -73,7 +74,7 @@ public class ConfigTest
         public final ModConfigSpec.ConfigValue<List<? extends Long>> longList;
         public final ModConfigSpec.ConfigValue<List<? extends Double>> doubleList;
         public final ModConfigSpec.EnumValue<ChatFormatting> restrictedEnums;
-        public final ModConfigSpec.ConfigValue<List<? extends CommentedConfig>> unsupportedList;
+        public final ModConfigSpec.ConfigValue<List<? extends ArrayList<String>>> unsupportedList;
 
         public Test(ModConfigSpec.Builder builder)
         {
@@ -94,7 +95,7 @@ public class ConfigTest
             this.listOfItems = builder.comment("This is a List of Item Locations").defineList("listOfItems", Arrays.asList("minecraft:apple", "minecraft:iron_ingot"), () -> "", o -> {
                 return o instanceof String && ResourceLocation.tryParse(o.toString()) != null && !ResourceLocation.parse(o.toString()).getPath().isEmpty();
             });
-            this.unsupportedList = builder.comment("This is an unsupported list").defineList("unsupportedList", List.of(CommentedConfig.inMemory()), CommentedConfig::inMemory, o -> o instanceof CommentedConfig);
+            this.unsupportedList = builder.comment("This is an unsupported list").defineList("unsupportedList", List.of(new ArrayList<>()), ArrayList::new, o -> o instanceof ArrayList<?>);
             builder.pop();
         }
     }
