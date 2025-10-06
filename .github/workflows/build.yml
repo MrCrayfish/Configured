@@ -136,7 +136,7 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          name: '${{ steps.mod_data.outputs.minecraft_version }}-${{ steps.mod_data.outputs.mod_version }}'
+          name: '${{ steps.mod_data.outputs.mod_version }}+${{ steps.mod_data.outputs.minecraft_version }}'
           artifacts: "${{ steps.artifacts.outputs.neoforge }},${{ steps.artifacts.outputs.neoforge }}.asc,${{ steps.artifacts.outputs.fabric }},${{ steps.artifacts.outputs.fabric }}.asc,CHANGELOG.txt"
           bodyFile: "RELEASE_BODY.md"
       - name: Prepare Artifacts
