@@ -202,7 +202,7 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
         public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
             Component label = Component.literal(this.label.getString()).withStyle(ChangeEnumScreen.this.list.getSelected() == this ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
-            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, this.getX() + 5, this.getY() + 4, 0xFFFFFFFF);
+            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, this.getX() + 5, this.getY() + 6, 0xFFFFFFFF);
         }
 
         @Override
