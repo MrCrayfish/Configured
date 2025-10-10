@@ -25,8 +25,8 @@ dependencies {
 
     // JEI
     // TODO revert back to minecraft property once jei has updated
-    modCompileOnly "mezz.jei:jei-1.21.5-common-api:${jei_version}"
-    modCompileOnly "mezz.jei:jei-1.21.5-fabric-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-1.21.9-common-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-1.21.9-fabric-api:${jei_version}"
     //modRuntimeOnly "mezz.jei:jei-1.21.5-fabric:${jei_version}"
 
     // ModMenu

@@ -14,7 +14,7 @@ neoForge {
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
     compileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
-    compileOnly "mezz.jei:jei-1.21.5-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-1.21.9-common-api:${jei_version}"
     compileOnly "com.electronwill.night-config:core:3.7.1"
     compileOnly "com.electronwill.night-config:toml:3.7.1"
 }
