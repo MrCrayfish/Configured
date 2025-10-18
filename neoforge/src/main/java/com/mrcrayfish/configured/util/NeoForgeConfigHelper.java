@@ -42,7 +42,7 @@ import java.util.concurrent.locks.Lock;
 public class NeoForgeConfigHelper
 {
     private static final Method MOD_CONFIG_OPEN_CONFIG = ObfuscationReflectionHelper.findMethod(ConfigTracker.class, "openConfig", ModConfig.class, Path.class, Path.class);
-    private static final Method MOD_CONFIG_CLOSE_CONFIG = ObfuscationReflectionHelper.findMethod(ConfigTracker.class, "closeConfig", ModConfig.class);
+    private static final Method MOD_CONFIG_CLOSE_CONFIG = ObfuscationReflectionHelper.findMethod(ConfigTracker.class, "unloadConfig", ModConfig.class);
     private static final Field MOD_CONFIG_LOADED_CONFIG = ObfuscationReflectionHelper.findField(ModConfig.class, "loadedConfig");
     private static final Field MOD_CONFIG_LOCK = ObfuscationReflectionHelper.findField(ModConfig.class, "lock");
 
