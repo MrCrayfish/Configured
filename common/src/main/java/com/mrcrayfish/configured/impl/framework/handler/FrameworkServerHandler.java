@@ -174,8 +174,6 @@ public class FrameworkServerHandler
             return;
         }
 
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        TomlFormat.instance().createWriter().write(config.getConfig(), stream);
-        Services.PLATFORM.sendFrameworkConfigResponse(player, stream.toByteArray());
+        Services.PLATFORM.sendFrameworkConfigResponse(player, config.asBytes());
     }
 }
