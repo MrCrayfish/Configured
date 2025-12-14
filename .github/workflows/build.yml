@@ -63,20 +63,6 @@ jobs:
           encodedString: ${{ env.JKS }}
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: Data Generation (NeoForge)
-        env:
-          GPR_USER: "MrCrayfish"
-          GPR_KEY: ${{ secrets.GPR_TOKEN }}
-          PACKAGES_REPO: ${{ vars.PACKAGES_REPOSITORY }}
-          TARGET_LOADER: "neoforge"
-        run: ./gradlew :neoforge:runClientData
-      - name: Data Generation (Fabric)
-        env:
-          GPR_USER: "MrCrayfish"
-          GPR_KEY: ${{ secrets.GPR_TOKEN }}
-          PACKAGES_REPO: ${{ vars.PACKAGES_REPOSITORY }}
-          TARGET_LOADER: "fabric"
-        run: ./gradlew :fabric:runDatagen
       - name: Build (Common)
         env:
           GPR_USER: "MrCrayfish"
