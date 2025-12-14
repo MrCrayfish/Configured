@@ -6,7 +6,6 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
 import com.mrcrayfish.framework.api.config.EnumProperty;
 import com.mrcrayfish.framework.api.config.ListProperty;
-import com.mrcrayfish.framework.config.FrameworkConfigManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,34 +1,49 @@
-import net.neoforged.gradle.common.tasks.PotentiallySignJar
+import org.apache.commons.io.FilenameUtils
 
 plugins {
     id 'multiloader-loader'
-    id 'net.neoforged.gradle.userdev'
-}
-
-def at = file('src/main/resources/META-INF/accesstransformer.cfg')
-if (at.exists()) {
-    minecraft.accessTransformers.file at
+    id 'net.neoforged.moddev'
 }
 
 sourceSets {
-    test {
-        runs {
-            modIdentifier 'configuredTest'
-        }
-    }
+    testmod
 }
 
-runs {
-    configureEach {
-        modSource project.sourceSets.main
-        modSource project.sourceSets.test
+neoForge {
+    enable {
+        version = neoforge_version
+        disableRecompilation = System.getenv("CI") == "true"
     }
-    client {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+    addModdingDependenciesTo sourceSets.testmod
+
+    def at = file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers.from(at.absolutePath)
     }
-    server {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
+
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+
+    mods {
+        catalogue {
+            sourceSet sourceSets.main
+        }
+        testmod {
+            sourceSet sourceSets.testmod
+        }
+    }
+
+    runs {
+        configureEach {
+            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
+            ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
+        }
+        client {
+            client()
+        }
     }
 }
 
@@ -37,23 +52,37 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
     implementation "com.mrcrayfish:framework-neoforge:${minecraft_version}-${framework_version}"
+    testmodImplementation "com.mrcrayfish:framework-neoforge:${minecraft_version}-${framework_version}"
 
     // JEI
     // TODO revert back to minecraft property once jei has updated
-    compileOnly "mezz.jei:jei-1.21.9-common-api:${jei_version}"
-    testCompileOnly "mezz.jei:jei-1.21.9-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-1.21.10-common-api:${jei_version}"
+    testCompileOnly "mezz.jei:jei-1.21.10-common-api:${jei_version}"
     //runtimeOnly "mezz.jei:jei-1.21.5-neoforge:${jei_version}"
 }
 
-tasks.register('signJar', PotentiallySignJar) {
+tasks.register("signJar") {
     dependsOn jar
     onlyIf {
-        hasProperty('keyStore') || System.getenv("KEYSTORE")
+        findProperty('keyStore') || System.getenv("KEYSTORE")
     }
-    keyStore = findProperty('keyStore') ?: System.getenv("KEYSTORE")
-    alias = findProperty('keyStoreAlias') ?: System.getenv("KEYSTORE_ALIAS")
-    storePass = findProperty('keyStorePass') ?: System.getenv("KEYSTORE_PASS")
-    input = jar.archiveFile
+    doLast {
+        def unsignedJar = tasks.jar.archiveFile.get().asFile
+        def name = FilenameUtils.removeExtension(unsignedJar.getName())
+        def signedJar  = layout.buildDirectory.file("libs/%s-signed.jar".formatted(name)).get().asFile
+        def signingKeyAlias = findProperty('keyStoreAlias') ?: System.getenv("KEYSTORE_ALIAS")
+        def signingKeystore = findProperty('keyStore') ?: System.getenv("KEYSTORE")
+        def signingPassword = findProperty('keyStorePass') ?: System.getenv("KEYSTORE_PASS")
+        ant.signjar(
+            jar: unsignedJar,
+            signedJar: signedJar,
+            alias: signingKeyAlias,
+            keyStore: signingKeystore,
+            storePass: signingPassword,
+            storetype: 'jks'
+        )
+        println "Signed jar created at: $signedJar"
+    }
 }
 
 jar.finalizedBy 'signJar'
@@ -62,5 +91,24 @@ jar.finalizedBy 'signJar'
 tasks.configureEach { task ->
     if (task.name.startsWith("testJunit")) {
         task.enabled = false
+    }
+}
+
+// Implement mcgradleconventions loader attribute
+def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
+['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements'].each { variant ->
+    configurations.named("$variant") {
+        attributes {
+            attribute(loaderAttribute, 'neoforge')
+        }
+    }
+}
+sourceSets.configureEach {
+    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName, it.getTaskName(null, 'jarJar')].each { variant->
+        configurations.named("$variant") {
+            attributes {
+                attribute(loaderAttribute, 'neoforge')
+            }
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.mrcrayfish.configured;
 
-import com.mrcrayfish.configured.api.Environment;
 import com.mrcrayfish.configured.platform.Services;
 
 /**

@@ -6,12 +6,11 @@ import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
 import com.mrcrayfish.configured.network.message.MessageSessionData;
 import com.mrcrayfish.configured.platform.services.IPlatformHelper;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLConfig;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -72,7 +71,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     }
 
     @Override
-    public void sendFrameworkConfigToServer(ResourceLocation id, byte[] data)
+    public void sendFrameworkConfigToServer(Identifier id, byte[] data)
     {
         if(!this.isModLoaded("framework"))
             return;
@@ -80,7 +79,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper
     }
 
     @Override
-    public void sendFrameworkConfigRequest(ResourceLocation id)
+    public void sendFrameworkConfigRequest(Identifier id)
     {
         if(!this.isModLoaded("framework"))
             return;

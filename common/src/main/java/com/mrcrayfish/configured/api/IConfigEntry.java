@@ -1,8 +1,8 @@
 package com.mrcrayfish.configured.api;
 
 import net.minecraft.network.chat.Component;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 /**

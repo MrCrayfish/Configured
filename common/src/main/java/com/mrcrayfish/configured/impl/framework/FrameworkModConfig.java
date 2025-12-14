@@ -8,13 +8,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.mrcrayfish.configured.Constants;
-import com.mrcrayfish.configured.api.ConfigType;
-import com.mrcrayfish.configured.api.Environment;
-import com.mrcrayfish.configured.api.ExecutionContext;
-import com.mrcrayfish.configured.api.IConfigEntry;
-import com.mrcrayfish.configured.api.IConfigValue;
-import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.api.ActionResult;
+import com.mrcrayfish.configured.api.*;
 import com.mrcrayfish.configured.client.ClientSessionData;
 import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
 import com.mrcrayfish.configured.platform.Services;
@@ -23,21 +17,15 @@ import com.mrcrayfish.framework.api.config.AbstractProperty;
 import com.mrcrayfish.framework.api.config.event.FrameworkConfigEvents;
 import com.mrcrayfish.framework.config.FrameworkConfigManager;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.apache.commons.lang3.StringUtils;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Author: MrCrayfish

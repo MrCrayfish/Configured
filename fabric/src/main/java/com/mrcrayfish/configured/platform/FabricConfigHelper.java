@@ -6,8 +6,6 @@ import com.mrcrayfish.configured.platform.services.IConfigHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
-import net.minecraft.ResourceLocationException;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 
 import java.util.HashSet;

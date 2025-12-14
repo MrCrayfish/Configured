@@ -1,6 +1,7 @@
 package com.mrcrayfish.configured.api;
 
 import org.jetbrains.annotations.Nullable;
+
 import java.util.Optional;
 
 /**

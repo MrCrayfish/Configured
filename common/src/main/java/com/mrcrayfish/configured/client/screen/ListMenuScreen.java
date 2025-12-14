@@ -1,14 +1,12 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -18,12 +16,11 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -37,7 +34,7 @@ import java.util.stream.Collectors;
  */
 public abstract class ListMenuScreen extends TooltipScreen
 {
-    public static final ResourceLocation CONFIGURED_LOGO = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/logo.png");
+    public static final Identifier CONFIGURED_LOGO = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/logo.png");
 
     protected final Screen parent;
     protected final int itemHeight;
@@ -136,8 +133,8 @@ public abstract class ListMenuScreen extends TooltipScreen
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, (int) event.x(), (int) event.y()))
         {
-            Style style = Style.EMPTY.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://www.curseforge.com/minecraft/mc-mods/configured")));
-            this.handleComponentClicked(style);
+            var clickEvent = new ClickEvent.OpenUrl(URI.create("https://www.curseforge.com/minecraft/mc-mods/configured"));
+            defaultHandleClickEvent(clickEvent, this.minecraft, this);
             return true;
         }
         if(this.activeTextField != null && !this.activeTextField.isMouseOver(event.x(), event.y()))

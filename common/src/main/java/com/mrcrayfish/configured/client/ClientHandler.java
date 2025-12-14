@@ -7,7 +7,7 @@ import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 public class ClientHandler
 {
-    public static final KeyMapping.Category CONFIG_CATEGORY = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "configured"));
+    public static final KeyMapping.Category CONFIG_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "configured"));
     public static final KeyMapping KEY_OPEN_MOD_LIST = new KeyMapping("key.configured.open_mod_list", -1, CONFIG_CATEGORY);
     private static Set<IModConfigProvider> providers;
 

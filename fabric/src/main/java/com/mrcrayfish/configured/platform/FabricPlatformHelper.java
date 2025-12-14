@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.nio.file.Path;
@@ -70,7 +70,7 @@ public class FabricPlatformHelper implements IPlatformHelper
     }
 
     @Override
-    public void sendFrameworkConfigToServer(ResourceLocation id, byte[] data)
+    public void sendFrameworkConfigToServer(Identifier id, byte[] data)
     {
         if(!this.isModLoaded("framework"))
             return;
@@ -78,7 +78,7 @@ public class FabricPlatformHelper implements IPlatformHelper
     }
 
     @Override
-    public void sendFrameworkConfigRequest(ResourceLocation id)
+    public void sendFrameworkConfigRequest(Identifier id)
     {
         if(!this.isModLoaded("framework"))
             return;

@@ -20,14 +20,15 @@ public class JeiConfigProvider implements IModConfigProvider
     @Override
     public Set<IModConfig> getConfigurationsForMod(ModContext context)
     {
-        if(context.modId().equals("jei"))
+        // TODO reimplement
+        /*if(context.modId().equals("jei"))
         {
             return ConfiguredJeiPlugin.getJeiConfigManager().stream()
                     .map(IJeiConfigManager::getConfigFiles)
                     .flatMap(Collection::stream)
                     .map(file -> new JeiConfig("Client", ConfigType.CLIENT, file))
                     .collect(Collectors.toUnmodifiableSet());
-        }
+        }*/
         return ImmutableSet.of();
     }
 }

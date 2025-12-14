@@ -4,7 +4,7 @@ import com.mrcrayfish.configured.client.screen.list.IListConfigValue;
 import com.mrcrayfish.configured.client.screen.list.IListType;
 import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import com.mrcrayfish.framework.api.config.ListProperty;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 
 import java.util.HashMap;
 import java.util.List;

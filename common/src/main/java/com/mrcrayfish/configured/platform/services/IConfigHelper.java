@@ -1,7 +1,6 @@
 package com.mrcrayfish.configured.platform.services;
 
 import com.mrcrayfish.configured.api.IModConfigProvider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 
 import java.util.Set;

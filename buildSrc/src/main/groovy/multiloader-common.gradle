@@ -18,6 +18,7 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     // https://docs.gradle.org/current/userguide/declaring_repositories.html#declaring_content_exclusively_found_in_one_repository
     exclusiveContent {
         forRepository {
@@ -54,11 +55,6 @@ repositories {
         }
         filter {
             includeGroupAndSubgroups("com.mrcrayfish")
-        }
-    }
-    if (!System.getenv("CI") && System.getenv("LOCAL_MAVEN")) {
-        maven {
-            url "file://" + System.getenv("LOCAL_MAVEN")
         }
     }
     maven {
@@ -182,10 +178,8 @@ publishing {
                     password = findProperty("gpr.key") ?: System.getenv("GPR_KEY")
                 }
             }
-        } else if(System.getenv("LOCAL_MAVEN")) {
-            maven {
-                url "file://" + System.getenv("LOCAL_MAVEN")
-            }
+        } else {
+            mavenLocal()
         }
     }
 }

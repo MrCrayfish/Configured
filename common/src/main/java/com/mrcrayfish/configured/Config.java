@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.api.Environment;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,12 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**

@@ -6,7 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 
@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public record MessageSessionData(boolean developer, boolean lan) implements CustomPacketPayload
 {
-    public static final CustomPacketPayload.Type<MessageSessionData> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "session_data"));
+    public static final CustomPacketPayload.Type<MessageSessionData> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "session_data"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MessageSessionData> STREAM_CODEC = StreamCodec.composite(
         ByteBufCodecs.BOOL,

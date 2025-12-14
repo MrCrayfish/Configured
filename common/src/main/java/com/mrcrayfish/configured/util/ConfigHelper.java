@@ -12,14 +12,11 @@ import com.mrcrayfish.configured.platform.Services;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Author: MrCrayfish
@@ -158,7 +155,7 @@ public class ConfigHelper
                 MinecraftServer server = player.level().getServer();
                 return server != null && server.getPlayerList().isOp(player.nameAndId());
             }
-            return player.hasPermissions(Commands.LEVEL_OWNERS);
+            return player.permissions().hasPermission(Permissions.COMMANDS_OWNER);
         }
         return false;
     }

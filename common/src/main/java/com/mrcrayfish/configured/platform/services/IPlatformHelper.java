@@ -2,7 +2,7 @@ package com.mrcrayfish.configured.platform.services;
 
 import com.mrcrayfish.configured.api.Environment;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.nio.file.Path;
@@ -53,9 +53,9 @@ public interface IPlatformHelper
 
     void sendSessionData(ServerPlayer player);
 
-    void sendFrameworkConfigToServer(ResourceLocation id, byte[] data);
+    void sendFrameworkConfigToServer(Identifier id, byte[] data);
 
-    void sendFrameworkConfigRequest(ResourceLocation name);
+    void sendFrameworkConfigRequest(Identifier name);
 
     void sendFrameworkConfigResponse(ServerPlayer player, byte[] byteArray);
 }

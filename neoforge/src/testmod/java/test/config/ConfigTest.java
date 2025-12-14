@@ -1,8 +1,7 @@
 package test.config;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
 import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -13,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Author: MrCrayfish
@@ -93,7 +91,7 @@ public class ConfigTest
             this.doubleList = builder.comment("This is an Double list").defineList("doubleList", Arrays.asList(0.5, 1.0), () -> 0.5, o -> o instanceof Double);
             this.stringList = builder.comment("This is a String list").defineList("stringList", Arrays.asList("test", "yo"), () -> "", o -> o instanceof String);
             this.listOfItems = builder.comment("This is a List of Item Locations").defineList("listOfItems", Arrays.asList("minecraft:apple", "minecraft:iron_ingot"), () -> "", o -> {
-                return o instanceof String && ResourceLocation.tryParse(o.toString()) != null && !ResourceLocation.parse(o.toString()).getPath().isEmpty();
+                return o instanceof String && Identifier.tryParse(o.toString()) != null && !Identifier.parse(o.toString()).getPath().isEmpty();
             });
             this.unsupportedList = builder.comment("This is an unsupported list").defineList("unsupportedList", List.of(new ArrayList<>()), ArrayList::new, o -> o instanceof ArrayList<?>);
             builder.pop();

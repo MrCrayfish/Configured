@@ -3,16 +3,13 @@ package com.mrcrayfish.configured.platform;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.platform.services.IConfigHelper;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.loading.moddiscovery.ModInfo;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**

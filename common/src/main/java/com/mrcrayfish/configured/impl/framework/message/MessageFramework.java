@@ -4,18 +4,15 @@ import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.impl.framework.handler.FrameworkClientHandler;
 import com.mrcrayfish.configured.impl.framework.handler.FrameworkServerHandler;
 import com.mrcrayfish.configured.network.ConfiguredCodecs;
-import com.mrcrayfish.configured.network.message.MessageSessionData;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.util.function.Consumer;
 
 /**
@@ -23,12 +20,12 @@ import java.util.function.Consumer;
  */
 public class MessageFramework
 {
-    public record Sync(ResourceLocation id, byte[] data) implements CustomPacketPayload
+    public record Sync(Identifier id, byte[] data) implements CustomPacketPayload
     {
-        public static final CustomPacketPayload.Type<Sync> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_framework_config"));
+        public static final CustomPacketPayload.Type<Sync> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "sync_framework_config"));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Sync> STREAM_CODEC = StreamCodec.composite(
-            ResourceLocation.STREAM_CODEC,
+            Identifier.STREAM_CODEC,
             Sync::id,
             ConfiguredCodecs.BYTE_ARRAY,
             Sync::data,
@@ -50,12 +47,12 @@ public class MessageFramework
         }
     }
 
-    public record Request(ResourceLocation id) implements CustomPacketPayload
+    public record Request(Identifier id) implements CustomPacketPayload
     {
-        public static final CustomPacketPayload.Type<Request> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "request_framework_config"));
+        public static final CustomPacketPayload.Type<Request> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "request_framework_config"));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Request> STREAM_CODEC = StreamCodec.composite(
-            ResourceLocation.STREAM_CODEC,
+            Identifier.STREAM_CODEC,
             Request::id,
             Request::new
         );
@@ -77,7 +74,7 @@ public class MessageFramework
 
     public record Response(byte[] data) implements CustomPacketPayload
     {
-        public static final CustomPacketPayload.Type<Response> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "response_framework_config"));
+        public static final CustomPacketPayload.Type<Response> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "response_framework_config"));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Response> STREAM_CODEC = StreamCodec.composite(
             ConfiguredCodecs.BYTE_ARRAY,

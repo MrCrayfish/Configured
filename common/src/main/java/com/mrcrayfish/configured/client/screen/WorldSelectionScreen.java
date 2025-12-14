@@ -1,9 +1,7 @@
 package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.hash.Hashing;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ActionResult;
 import com.mrcrayfish.configured.api.IModConfig;
@@ -11,7 +9,6 @@ import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -19,11 +16,9 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.FaviconTexture;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageException;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -47,7 +42,7 @@ import java.util.List;
 public class WorldSelectionScreen extends ListMenuScreen
 {
     private static final LevelResource SERVER_CONFIG_FOLDER = Services.CONFIG.getServerConfigResource();
-    private static final ResourceLocation MISSING_ICON = ResourceLocation.withDefaultNamespace("textures/misc/unknown_server.png");
+    private static final Identifier MISSING_ICON = Identifier.withDefaultNamespace("textures/misc/unknown_server.png");
 
     private final IModConfig config;
 
@@ -202,7 +197,7 @@ public class WorldSelectionScreen extends ListMenuScreen
             graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, this.getX() + 30, this.getY() + 3, 0xFFFFFFFF);
             graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, this.getX() + 30, this.getY() + 13, 0xFFFFFFFF);
             this.modifyButton.setX(this.getX() + this.getWidth() - 61);
-            this.modifyButton.setY(this.getX() + 2);
+            this.modifyButton.setY(this.getY() + 2);
             this.modifyButton.render(graphics, mouseX, mouseY, partialTick);
         }
 

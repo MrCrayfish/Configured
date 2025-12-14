@@ -1,12 +1,8 @@
 package com.mrcrayfish.configured.client;
 
 import com.mrcrayfish.configured.Constants;
-import com.mrcrayfish.configured.api.ActionResult;
 import com.mrcrayfish.configured.api.IModConfig;
-import com.mrcrayfish.configured.client.screen.ActiveConfirmationScreen;
-import com.mrcrayfish.configured.client.screen.ConfirmationScreen;
 import com.mrcrayfish.configured.client.screen.IEditing;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
 /**

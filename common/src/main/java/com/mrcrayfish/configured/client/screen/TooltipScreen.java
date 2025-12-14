@@ -6,11 +6,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 
@@ -81,19 +81,19 @@ public abstract class TooltipScreen extends Screen
 
     public enum TooltipStyle
     {
-        SUCCESS(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "success")),
-        HINT(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "hint")),
-        ERROR(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "error")),
-        LINK(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "link"));
+        SUCCESS(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "success")),
+        HINT(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "hint")),
+        ERROR(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "error")),
+        LINK(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "link"));
 
-        private final ResourceLocation texture;
+        private final Identifier texture;
 
-        TooltipStyle(ResourceLocation texture)
+        TooltipStyle(Identifier texture)
         {
             this.texture = texture;
         }
 
-        public ResourceLocation getTexture()
+        public Identifier getTexture()
         {
             return this.texture;
         }

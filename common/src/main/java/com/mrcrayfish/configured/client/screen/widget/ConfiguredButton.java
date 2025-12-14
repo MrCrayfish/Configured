@@ -1,12 +1,11 @@
 package com.mrcrayfish.configured.client.screen.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.util.function.Predicate;
 
 /**
@@ -30,12 +29,13 @@ public class ConfiguredButton extends Button
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
     {
         if(this.visible)
         {
             this.setTooltip(this.tooltipPredicate.test(this) ? this.tooltip : null);
         }
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+        super.renderDefaultSprite(graphics);
+        super.renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
     }
 }

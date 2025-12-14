@@ -6,8 +6,8 @@ import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ExecutionContext;
-import com.mrcrayfish.configured.network.ServerPlayHelper;
 import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
+import com.mrcrayfish.configured.network.ServerPlayHelper;
 import com.mrcrayfish.configured.platform.Services;
 import com.mrcrayfish.framework.api.config.AbstractProperty;
 import com.mrcrayfish.framework.api.config.ConfigType;
@@ -20,7 +20,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.function.Consumer;
 
 /**

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.mrcrayfish.configured.Config;
 import com.mrcrayfish.configured.Constants;
 import com.mrcrayfish.configured.api.ExecutionContext;
-import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;

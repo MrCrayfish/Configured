@@ -1,8 +1,5 @@
 package com.mrcrayfish.configured.client;
 
-import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.Nullable;
-
 public class ClientSessionData
 {
     private static boolean developer;
