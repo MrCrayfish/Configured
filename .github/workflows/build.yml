@@ -155,3 +155,8 @@ jobs:
         with:
           name: '${{ steps.mod_data.outputs.mod_id }}-${{ steps.mod_data.outputs.minecraft_version }}-${{ steps.mod_data.outputs.mod_version }}'
           path: artifacts
+      - name: Delete tag on fail
+        if: failure()
+        run: |
+          echo "Cleaning up tag..."
+          git push origin :refs/tags/${{ github.ref_name }}
