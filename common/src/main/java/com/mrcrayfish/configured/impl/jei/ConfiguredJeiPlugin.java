@@ -12,11 +12,10 @@ import java.util.Optional;
 /**
  * @author mezz
  */
-@SuppressWarnings("unused")
-//@JeiPlugin // TODO reimplement
-public class ConfiguredJeiPlugin// implements IModPlugin
+@JeiPlugin
+public class ConfiguredJeiPlugin implements IModPlugin
 {
-    /*@Nullable
+    @Nullable
     private static IJeiConfigManager jeiConfigManager;
 
     public static Optional<IJeiConfigManager> getJeiConfigManager()
@@ -34,5 +33,5 @@ public class ConfiguredJeiPlugin// implements IModPlugin
     public void onConfigManagerAvailable(IJeiConfigManager configManager)
     {
         jeiConfigManager = configManager;
-    }*/
+    }
 }

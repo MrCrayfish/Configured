@@ -22,10 +22,9 @@ dependencies {
     modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
 
     // JEI
-    // TODO revert back to minecraft property once jei has updated
-    modCompileOnly "mezz.jei:jei-1.21.10-common-api:${jei_version}"
-    modCompileOnly "mezz.jei:jei-1.21.10-fabric-api:${jei_version}"
-    //modRuntimeOnly "mezz.jei:jei-1.21.5-fabric:${jei_version}"
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
+    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 
     // ModMenu
     modApi "com.terraformersmc:modmenu:${modmenu_version}"
