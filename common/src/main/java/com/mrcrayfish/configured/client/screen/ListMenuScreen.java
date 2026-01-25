@@ -225,7 +225,7 @@ public abstract class ListMenuScreen extends TooltipScreen
         {
             if(this.isMouseOver(mouseX, mouseY))
             {
-                ListMenuScreen.this.setActiveTooltip(this.tooltip);
+                ListMenuScreen.this.setActiveTooltip(graphics, this.tooltip, mouseX, mouseY);
             }
         }
 

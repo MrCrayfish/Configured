@@ -439,7 +439,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                 }
                 else if(mouseX < ConfigScreen.this.list.getRowLeft() + ConfigScreen.this.list.getRowWidth() - 69)
                 {
-                    ConfigScreen.this.setActiveTooltip(this.tooltip);
+                    ConfigScreen.this.setActiveTooltip(graphics, this.tooltip, mouseX, mouseY);
                 }
             }
 
