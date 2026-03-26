@@ -9,7 +9,7 @@ import com.mrcrayfish.configured.client.screen.list.ListTypes;
 import com.mrcrayfish.configured.client.screen.widget.ConfiguredButton;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -103,11 +103,11 @@ public class EditListScreen<T> extends Screen implements IEditing
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
     {
-        super.render(graphics, mouseX, mouseY, partialTicks);
-        this.list.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 14, 0xFFFFFFFF);
+        super.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        this.list.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        extractor.centeredText(this.font, this.title, this.width / 2, 14, 0xFFFFFFFF);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class EditListScreen<T> extends Screen implements IEditing
         }
 
         @Override
-        protected void renderListItems(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+        protected void extractListItems(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick)
         {
             List<StringEntry> entries = this.children();
             for(int i = 0; i < entries.size(); i++)
@@ -179,9 +179,9 @@ public class EditListScreen<T> extends Screen implements IEditing
                 {
                     if(i % 2 != 0)
                     {
-                        graphics.fill(entry.getX() - 2, entry.getY(), entry.getX() + entry.getWidth() + 2, entry.getY() + entry.getHeight(), 0x55000000);
+                        extractor.fill(entry.getX() - 2, entry.getY(), entry.getX() + entry.getWidth() + 2, entry.getY() + entry.getHeight(), 0x55000000);
                     }
-                    this.renderItem(graphics, mouseX, mouseY, partialTick, entry);
+                    this.extractItem(extractor, mouseX, mouseY, partialTick, entry);
                 }
             }
         }
@@ -225,17 +225,17 @@ public class EditListScreen<T> extends Screen implements IEditing
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor extractor, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawString(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), this.getX() + 5, this.getY() + 8, 0xFFFFFFFF);
+            extractor.text(EditListScreen.this.minecraft.font, Component.literal(this.holder.getValue()), this.getX() + 5, this.getY() + 8, 0xFFFFFFFF);
             this.editButton.visible = true;
             this.editButton.setX(this.getX() + this.getWidth() - 44);
             this.editButton.setY(this.getY() + 2);
-            this.editButton.render(graphics, mouseX, mouseY, partialTick);
+            this.editButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
             this.deleteButton.visible = true;
             this.deleteButton.setX(this.getX() + this.getWidth() - 22);
             this.deleteButton.setY(this.getY() + 2);
-            this.deleteButton.render(graphics, mouseX, mouseY, partialTick);
+            this.deleteButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
         }
 
         @Override

@@ -3,8 +3,8 @@ package com.mrcrayfish.configured.impl.neoforge;
 import com.mrcrayfish.configured.client.screen.list.IListConfigValue;
 import com.mrcrayfish.configured.client.screen.list.IListType;
 import net.neoforged.neoforge.common.ModConfigSpec;
-
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;

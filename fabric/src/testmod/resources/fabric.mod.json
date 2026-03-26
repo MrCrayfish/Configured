@@ -10,9 +10,9 @@
     "entrypoints": {},
     "depends": {
         "fabricloader": ">=0.15",
-        "fabric": "*",
+        "fabric-api": "*",
         "minecraft": ">=1.21",
-        "java": ">=21",
+        "java": ">=25",
         "framework": "*"
     },
     "custom": {

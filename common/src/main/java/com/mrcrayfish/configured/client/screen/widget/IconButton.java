@@ -2,7 +2,7 @@ package com.mrcrayfish.configured.client.screen.widget;
 
 import com.mrcrayfish.configured.Constants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -35,9 +35,9 @@ public class IconButton extends ConfiguredButton
     }
 
     @Override
-    public void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+    public void extractContents(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick)
     {
-        super.renderDefaultSprite(graphics);
+        super.extractDefaultSprite(extractor);
         Minecraft mc = Minecraft.getInstance();
         int contentWidth = 10 + mc.font.width(this.label) + (!this.label.getString().isEmpty() ? 4 : 0);
         boolean renderIcon = contentWidth <= this.width;
@@ -51,10 +51,10 @@ public class IconButton extends ConfiguredButton
         if(renderIcon)
         {
             int j = ARGB.white(brightness);
-            graphics.blit(RenderPipelines.GUI_TEXTURED, ICONS, iconX, iconY, this.u, this.v, 11, 11, 64, 64, j); //TODO what happen to blit offset
+            extractor.blit(RenderPipelines.GUI_TEXTURED, ICONS, iconX, iconY, this.u, this.v, 11, 11, 64, 64, j); //TODO what happen to blit offset
         }
         int textColor = (this.active ? 0xFFFFFFFF : 0xFFA0A0A0) | Mth.ceil(this.alpha * 255.0F) << 24;
-        graphics.drawString(mc.font, this.label, iconX + 14, iconY + 1, textColor);
+        extractor.text(mc.font, this.label, iconX + 14, iconY + 1, textColor);
     }
 
     @Override

@@ -3,11 +3,11 @@ package com.mrcrayfish.configured.client.screen;
 import com.mrcrayfish.configured.api.ActionResult;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-import net.minecraft.util.Util;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -69,12 +69,12 @@ public class RequestScreen extends ListMenuScreen implements IEditing
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float deltaTick)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float deltaTick)
     {
-        super.render(graphics, mouseX, mouseY, deltaTick);
+        super.extractRenderState(extractor, mouseX, mouseY, deltaTick);
         if(this.failed)
         {
-            graphics.drawCenteredString(this.font, this.message != null ? this.message : FAILED_LABEL, this.width / 2, this.height / 2, 8421504);
+            extractor.centeredText(this.font, this.message != null ? this.message : FAILED_LABEL, this.width / 2, this.height / 2, 8421504);
         }
         else if(this.requested)
         {
@@ -83,8 +83,8 @@ public class RequestScreen extends ListMenuScreen implements IEditing
                 case 1, 3 -> "o O o";
                 case 2 -> "o o O";
             };
-            graphics.drawCenteredString(this.font, REQUESTING_LABEL, this.width / 2, this.height / 2 - this.font.lineHeight, 0xFFFFFFFF);
-            graphics.drawCenteredString(this.font, label, this.width / 2, this.height / 2 + 5, 8421504);
+            extractor.centeredText(this.font, REQUESTING_LABEL, this.width / 2, this.height / 2 - this.font.lineHeight, 0xFFFFFFFF);
+            extractor.centeredText(this.font, label, this.width / 2, this.height / 2 + 5, 8421504);
         }
     }
 

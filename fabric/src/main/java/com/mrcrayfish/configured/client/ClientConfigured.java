@@ -5,7 +5,7 @@ import com.mrcrayfish.configured.network.message.MessageSessionData;
 import com.mrcrayfish.configured.platform.Services;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -29,7 +29,7 @@ public class ClientConfigured implements ClientModInitializer
 
         if(this.isModListInstalled())
         {
-            KeyBindingHelper.registerKeyBinding(ClientHandler.KEY_OPEN_MOD_LIST);
+            KeyMappingHelper.registerKeyMapping(ClientHandler.KEY_OPEN_MOD_LIST);
             ClientTickEvents.END_CLIENT_TICK.register(client ->
             {
                 while(ClientHandler.KEY_OPEN_MOD_LIST.consumeClick())
@@ -39,16 +39,16 @@ public class ClientConfigured implements ClientModInitializer
             });
         }
 
-        PayloadTypeRegistry.playC2S().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
-        PayloadTypeRegistry.playS2C().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
         ClientPlayNetworking.registerGlobalReceiver(MessageSessionData.TYPE, (payload, context) -> {
             MessageSessionData.handle(payload, Minecraft.getInstance()::execute);
         });
 
         if(Services.PLATFORM.isModLoaded("framework"))
         {
-            PayloadTypeRegistry.playC2S().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
-            PayloadTypeRegistry.playS2C().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
+            PayloadTypeRegistry.serverboundPlay().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
+            PayloadTypeRegistry.clientboundPlay().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
             ClientPlayNetworking.registerGlobalReceiver(MessageFramework.Response.TYPE, (payload, context) -> {
                 Minecraft mc = context.client();
                 MessageFramework.Response.handle(payload, mc::execute, mc.player, context.responseSender()::disconnect);

@@ -10,7 +10,7 @@ import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.FaviconTexture;
@@ -85,19 +85,19 @@ public class WorldSelectionScreen extends ListMenuScreen
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
     {
-        super.render(graphics, mouseX, mouseY, partialTicks);
+        super.extractRenderState(extractor, mouseX, mouseY, partialTicks);
 
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(this.width - 30, 15);
-        graphics.pose().scale(2.5F, 2.5F);
-        graphics.drawString(this.font, Component.literal("?").withStyle(ChatFormatting.BOLD), 0, 0, 0xFFFFFFFF);
-        graphics.pose().popMatrix();
+        extractor.pose().pushMatrix();
+        extractor.pose().translate(this.width - 30, 15);
+        extractor.pose().scale(2.5F, 2.5F);
+        extractor.text(this.font, Component.literal("?").withStyle(ChatFormatting.BOLD), 0, 0, 0xFFFFFFFF);
+        extractor.pose().popMatrix();
 
         if(ScreenUtil.isMouseWithin(this.width - 30, 15, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(graphics, Component.translatable("configured.gui.server_config_info"), mouseX, mouseY);
+            this.setActiveTooltip(extractor, Component.translatable("configured.gui.server_config_info"), mouseX, mouseY);
         }
     }
 
@@ -190,15 +190,15 @@ public class WorldSelectionScreen extends ListMenuScreen
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor extractor, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            if(this.modifyButton.isMouseOver(mouseX, mouseY)) graphics.fill(this.getX() - 1, this.getY() - 1, this.getX() + 25, this.getY() + 25, 0xFFFFFFFF);
-            graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon.textureLocation(), this.getX(), this.getY(), 0, 0, 24, 24, 32, 32, 32, 32);
-            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.worldName, this.getX() + 30, this.getY() + 3, 0xFFFFFFFF);
-            graphics.drawString(WorldSelectionScreen.this.minecraft.font, this.folderName, this.getX() + 30, this.getY() + 13, 0xFFFFFFFF);
+            if(this.modifyButton.isMouseOver(mouseX, mouseY)) extractor.fill(this.getX() - 1, this.getY() - 1, this.getX() + 25, this.getY() + 25, 0xFFFFFFFF);
+            extractor.blit(RenderPipelines.GUI_TEXTURED, this.icon.textureLocation(), this.getX(), this.getY(), 0, 0, 24, 24, 32, 32, 32, 32);
+            extractor.text(WorldSelectionScreen.this.minecraft.font, this.worldName, this.getX() + 30, this.getY() + 3, 0xFFFFFFFF);
+            extractor.text(WorldSelectionScreen.this.minecraft.font, this.folderName, this.getX() + 30, this.getY() + 13, 0xFFFFFFFF);
             this.modifyButton.setX(this.getX() + this.getWidth() - 61);
             this.modifyButton.setY(this.getY() + 2);
-            this.modifyButton.render(graphics, mouseX, mouseY, partialTick);
+            this.modifyButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
         }
 
         private void loadWorldIcon()

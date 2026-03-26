@@ -8,7 +8,7 @@ import com.mrcrayfish.configured.client.util.ScreenUtil;
 import com.mrcrayfish.configured.util.ConfigHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -270,36 +270,36 @@ public class ModConfigSelectionScreen extends ListMenuScreen
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor extractor, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawString(Minecraft.getInstance().font, this.title, this.getX() + 26, this.getY() + 6, 0xFFFFFFFF);
-            graphics.drawString(Minecraft.getInstance().font, this.fileName, this.getX() + 26, this.getY() + 16, 0xFFFFFFFF);
-            graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + 2, this.getY() + 4, this.getIconU(), this.getIconV(), 18, 22, 9, 11, 64, 64);
+            extractor.text(Minecraft.getInstance().font, this.title, this.getX() + 26, this.getY() + 6, 0xFFFFFFFF);
+            extractor.text(Minecraft.getInstance().font, this.fileName, this.getX() + 26, this.getY() + 16, 0xFFFFFFFF);
+            extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + 2, this.getY() + 4, this.getIconU(), this.getIconV(), 18, 22, 9, 11, 64, 64);
 
             if(this.config.isReadOnly())
             {
-                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() - 2, this.getY() + 19, 0, 33, 11, 11, 11, 11, 64, 64);
+                extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() - 2, this.getY() + 19, 0, 33, 11, 11, 11, 11, 64, 64);
             }
 
             this.modifyButton.setX(this.getX() + this.getWidth() - 83);
             this.modifyButton.setY(this.getY() + 5);
-            this.modifyButton.render(graphics, mouseX, mouseY, partialTick);
+            this.modifyButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
             if(this.restoreButton != null)
             {
                 this.restoreButton.setX(this.getX() + this.getWidth() - 21);
                 this.restoreButton.setY(this.getY() + 5);
-                this.restoreButton.render(graphics, mouseX, mouseY, partialTick);
+                this.restoreButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
             }
 
             if(this.config.isReadOnly() && ScreenUtil.isMouseWithin(this.getX() - 2, this.getY() + 19, 11, 11, mouseX, mouseY))
             {
-                ModConfigSelectionScreen.this.setActiveTooltip(graphics, Component.translatable("configured.gui.read_only_config"), mouseX, mouseY, TooltipStyle.HINT);
+                ModConfigSelectionScreen.this.setActiveTooltip(extractor, Component.translatable("configured.gui.read_only_config"), mouseX, mouseY, TooltipStyle.HINT);
             }
 
             if(!this.modifyButton.active && this.modifyButton.isHoveredOrFocused())
             {
-                this.screen.setActiveTooltip(graphics, this.modifyTooltip, mouseX, mouseY, TooltipStyle.ERROR);
+                this.screen.setActiveTooltip(extractor, this.modifyTooltip, mouseX, mouseY, TooltipStyle.ERROR);
             }
         }
 

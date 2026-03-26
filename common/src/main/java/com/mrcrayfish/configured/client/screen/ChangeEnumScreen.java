@@ -7,7 +7,7 @@ import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ObjectSelectionList;
@@ -109,18 +109,18 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
     {
         this.resetTooltip();
-        super.render(graphics, mouseX, mouseY, partialTicks);
-        this.list.render(graphics, mouseX, mouseY, partialTicks);
-        this.searchTextField.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 7, 0xFFFFFFFF);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, ListMenuScreen.CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
+        super.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        this.list.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        this.searchTextField.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
+        extractor.centeredText(this.font, this.title, this.width / 2, 7, 0xFFFFFFFF);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, ListMenuScreen.CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(graphics, Component.translatable("configured.gui.info"), mouseX, mouseY);
+            this.setActiveTooltip(extractor, Component.translatable("configured.gui.info"), mouseX, mouseY);
         }
     }
 
@@ -190,10 +190,10 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor extractor, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
             Component label = Component.literal(this.label.getString()).withStyle(ChangeEnumScreen.this.list.getSelected() == this ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
-            graphics.drawString(ChangeEnumScreen.this.minecraft.font, label, this.getX() + 5, this.getY() + 6, 0xFFFFFFFF);
+            extractor.text(ChangeEnumScreen.this.minecraft.font, label, this.getX() + 5, this.getY() + 6, 0xFFFFFFFF);
         }
 
         @Override

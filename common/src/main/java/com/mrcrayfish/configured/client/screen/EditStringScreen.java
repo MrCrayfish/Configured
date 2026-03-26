@@ -3,7 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -79,23 +79,23 @@ public class EditStringScreen extends TooltipScreen implements IEditing
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
     {
         this.resetTooltip();
 
-        super.render(graphics, mouseX, mouseY, partialTicks);
-        ConfirmationScreen.drawListBackground(graphics, 0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
-        this.textField.render(graphics, mouseX, mouseY, partialTicks);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFFFF);
+        super.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        ConfirmationScreen.extractListBackground(extractor, 0, this.width, this.textField.getY() - 10, this.textField.getY() + 20 + 10);
+        this.textField.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        extractor.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 50, 0xFFFFFFFF);
 
         boolean showValidationHint = this.validationHint != null;
         if(showValidationHint)
         {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.textField.getX() - 20, this.textField.getY() + 3, 11, 11, 16, 16, 11, 11, 64, 64);
+            extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.textField.getX() - 20, this.textField.getY() + 3, 11, 11, 16, 16, 11, 11, 64, 64);
 
             if(ScreenUtil.isMouseWithin(this.textField.getX() - 20, this.textField.getY() + 3, 16, 16, mouseX, mouseY))
             {
-                this.setActiveTooltip(graphics, this.validationHint, mouseX, mouseY, TooltipStyle.ERROR);
+                this.setActiveTooltip(extractor, this.validationHint, mouseX, mouseY, TooltipStyle.ERROR);
             }
         }
     }

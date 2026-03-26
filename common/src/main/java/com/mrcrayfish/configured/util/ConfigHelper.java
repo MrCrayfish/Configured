@@ -10,7 +10,6 @@ import com.mrcrayfish.configured.client.ClientConfigHelper;
 import com.mrcrayfish.configured.client.ClientSessionData;
 import com.mrcrayfish.configured.platform.Services;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.player.Player;

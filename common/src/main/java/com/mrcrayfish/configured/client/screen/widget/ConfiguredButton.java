@@ -1,6 +1,6 @@
 package com.mrcrayfish.configured.client.screen.widget;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -29,13 +29,13 @@ public class ConfiguredButton extends Button
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+    protected void extractContents(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick)
     {
         if(this.visible)
         {
             this.setTooltip(this.tooltipPredicate.test(this) ? this.tooltip : null);
         }
-        super.renderDefaultSprite(graphics);
-        super.renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+        super.extractDefaultSprite(extractor);
+        super.extractDefaultLabel(extractor.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
     }
 }

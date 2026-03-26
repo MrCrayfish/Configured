@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.world.level.storage.LevelResource;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -70,8 +71,11 @@ public class FabricConfigHelper implements IConfigHelper
         {
             String providerClass = providerValue.getAsString();
             Object obj = this.createProviderInstance(container, providerClass);
-            function.accept(obj);
-            Constants.LOG.info("Successfully loaded config provider: {}", providerClass);
+            if(obj != null)
+            {
+                function.accept(obj);
+                Constants.LOG.info("Successfully loaded config provider: {}", providerClass);
+            }
         }
         else
         {
@@ -79,6 +83,7 @@ public class FabricConfigHelper implements IConfigHelper
         }
     }
 
+    @Nullable
     private Object createProviderInstance(ModContainer container, String classPath)
     {
         try
@@ -93,8 +98,8 @@ public class FabricConfigHelper implements IConfigHelper
         }
         catch(Exception e)
         {
-            Constants.LOG.error("Failed to load config provider from mod: {}", container.getMetadata().getId());
-            throw new RuntimeException("Failed to load config provider", e);
+            Constants.LOG.error("Failed to load config provider from mod: {}", container.getMetadata().getId(), e);
+            return null;
         }
     }
 }

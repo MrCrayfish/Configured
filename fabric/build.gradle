@@ -2,7 +2,7 @@ import org.apache.commons.io.FilenameUtils
 
 plugins {
     id 'multiloader-loader'
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom'
 }
 
 sourceSets {
@@ -14,20 +14,19 @@ sourceSets {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
     // Framework
-    modImplementation "com.mrcrayfish:framework-fabric:${minecraft_version}-${framework_version}"
+    implementation "com.mrcrayfish:framework-fabric:${framework_version}+${minecraft_version}"
 
     // JEI
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
+    //compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    //compileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
+    //runtimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 
     // ModMenu
-    modApi "com.terraformersmc:modmenu:${modmenu_version}"
+    compileOnly "com.terraformersmc:modmenu:${modmenu_version}"
 
     // Night Config
     compileOnly "com.electronwill.night-config:core:${night_config_version}"
@@ -72,12 +71,12 @@ tasks.test.enabled = false
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 tasks.register("signJar") {
-    dependsOn remapJar
+    dependsOn jar
     onlyIf {
         findProperty('keyStore') || System.getenv("KEYSTORE")
     }
     doLast {
-        def unsignedJar = remapJar.archiveFile.get().asFile
+        def unsignedJar = jar.archiveFile.get().asFile
         def name = FilenameUtils.removeExtension(unsignedJar.getName())
         def signedJar  = layout.buildDirectory.file("libs/%s-signed.jar".formatted(name)).get().asFile
         def signingKeyAlias = findProperty('keyStoreAlias') ?: System.getenv("KEYSTORE_ALIAS")
@@ -111,13 +110,6 @@ sourceSets.configureEach {
             attributes {
                 attribute(loaderAttribute, 'fabric')
             }
-        }
-    }
-}
-loom.remapConfigurations.configureEach {
-    configurations.named(it.name) {
-        attributes {
-            attribute(loaderAttribute, 'fabric')
         }
     }
 }

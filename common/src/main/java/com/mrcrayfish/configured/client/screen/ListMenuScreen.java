@@ -6,7 +6,7 @@ import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -89,44 +89,44 @@ public abstract class ListMenuScreen extends TooltipScreen
         }).collect(Collectors.toList());
     }
 
-    protected void updateTooltip(GuiGraphics graphics, int mouseX, int mouseY)
+    protected void updateTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY)
     {
         if(ScreenUtil.isMouseWithin(10, 13, 23, 23, mouseX, mouseY))
         {
-            this.setActiveTooltip(graphics, Component.translatable("configured.gui.info"), mouseX, mouseY);
+            this.setActiveTooltip(extractor, Component.translatable("configured.gui.info"), mouseX, mouseY);
         }
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
     {
         // Resets the active tooltip each draw call
         this.resetTooltip();
 
         // Draws the background texture (dirt or custom texture)
-        super.render(graphics, mouseX, mouseY, partialTicks);
+        super.extractRenderState(extractor, mouseX, mouseY, partialTicks);
 
         // Draws widgets manually since they are not buttons
-        this.list.render(graphics, mouseX, mouseY, partialTicks);
-        this.searchTextField.render(graphics, mouseX, mouseY, partialTicks);
+        this.list.extractRenderState(extractor, mouseX, mouseY, partialTicks);
+        this.searchTextField.extractRenderState(extractor, mouseX, mouseY, partialTicks);
 
         // Draw title
-        graphics.drawCenteredString(this.font, this.title,this.width / 2, 7, 0xFFFFFFFF);
+        extractor.centeredText(this.font, this.title,this.width / 2, 7, 0xFFFFFFFF);
 
         // Draws the foreground. Allows subclasses to draw onto the screen at the appropriate time.
-        this.renderForeground(graphics, mouseX, mouseY, partialTicks);
+        this.extractForeground(extractor, mouseX, mouseY, partialTicks);
 
         // Draws the Configured logo in the top left of the screen
-        graphics.blit(RenderPipelines.GUI_TEXTURED, CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, CONFIGURED_LOGO, 10, 13, 0, 0, 23, 23, 32, 32);
 
         // Draws the search icon next to the search text field
-        graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 128, 26, 22, 11, 14, 14, 10, 10, 64, 64);
 
         // Gives a chance for child classes to set the active tooltip
-        this.updateTooltip(graphics, mouseX, mouseY);
+        this.updateTooltip(extractor, mouseX, mouseY);
     }
 
-    protected void renderForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {}
+    protected void extractForeground(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks) {}
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick)
@@ -172,13 +172,13 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+        public void extractWidgetRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
         {
-            super.renderWidget(graphics, mouseX, mouseY, partialTicks);
+            super.extractWidgetRenderState(extractor, mouseX, mouseY, partialTicks);
         }
 
         @Override
-        protected void renderListItems(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+        protected void extractListItems(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick)
         {
             List<Item> entries = this.children();
             for(int i = 0; i < entries.size(); i++)
@@ -188,11 +188,11 @@ public abstract class ListMenuScreen extends TooltipScreen
                 {
                     if(i % 2 != 0 && entry instanceof EntryBackground)
                     {
-                        graphics.fill(entry.getX() - 3, entry.getY(), entry.getX() + entry.getWidth() + 3, entry.getY() + 1, 0x33000000);
-                        graphics.fill(entry.getX() - 4, entry.getY() + 1, entry.getX() + entry.getWidth() + 4, entry.getY() + entry.getHeight() - 1, 0x33000000);
-                        graphics.fill(entry.getX() - 3, entry.getY() + entry.getHeight() - 1, entry.getX() + entry.getWidth() + 3, entry.getY() + entry.getHeight(), 0x33000000);
+                        extractor.fill(entry.getX() - 3, entry.getY(), entry.getX() + entry.getWidth() + 3, entry.getY() + 1, 0x33000000);
+                        extractor.fill(entry.getX() - 4, entry.getY() + 1, entry.getX() + entry.getWidth() + 4, entry.getY() + entry.getHeight() - 1, 0x33000000);
+                        extractor.fill(entry.getX() - 3, entry.getY() + entry.getHeight() - 1, entry.getX() + entry.getWidth() + 3, entry.getY() + entry.getHeight(), 0x33000000);
                     }
-                    this.renderItem(graphics, mouseX, mouseY, partialTick, entry);
+                    this.extractItem(extractor, mouseX, mouseY, partialTick, entry);
                 }
             }
         }
@@ -221,7 +221,7 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
             if(this.isMouseOver(mouseX, mouseY))
             {
@@ -274,9 +274,9 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, this.getX() + this.getWidth() / 2, this.getY() + (this.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF);
+            graphics.centeredText(ListMenuScreen.this.minecraft.font, this.label, this.getX() + this.getWidth() / 2, this.getY() + (this.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF);
         }
     }
 
@@ -291,10 +291,10 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick)
         {
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.label, this.getX() + this.getWidth() / 2, this.getY(), 0xFFFFFFFF);
-            graphics.drawCenteredString(ListMenuScreen.this.minecraft.font, this.bottomText, this.getX() + this.getWidth() / 2, this.getY() + 12, 0xFFFFFFFF);
+            graphics.centeredText(ListMenuScreen.this.minecraft.font, this.label, this.getX() + this.getWidth() / 2, this.getY(), 0xFFFFFFFF);
+            graphics.centeredText(ListMenuScreen.this.minecraft.font, this.bottomText, this.getX() + this.getWidth() / 2, this.getY() + 12, 0xFFFFFFFF);
 
             if(this.isMouseOver(mouseX, mouseY))
             {
@@ -338,13 +338,13 @@ public abstract class ListMenuScreen extends TooltipScreen
         }
 
         @Override
-        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
+        public void extractWidgetRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick)
         {
-            super.renderWidget(graphics, mouseX, mouseY, partialTick);
+            super.extractWidgetRenderState(extractor, mouseX, mouseY, partialTick);
             if(this.clearable && !this.getValue().isEmpty())
             {
                 boolean hovered = ScreenUtil.isMouseWithin(this.getX() + this.width - 15, this.getY() + 5, 9, 9, mouseX, mouseY);
-                graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + this.width - 15, this.getY() + 5, hovered ? 9 : 0, 55, 9, 9, 9, 9, 64, 64);
+                extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.getX() + this.width - 15, this.getY() + 5, hovered ? 9 : 0, 55, 9, 9, 9, 9, 64, 64);
             }
         }
 

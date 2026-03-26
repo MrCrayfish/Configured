@@ -3,13 +3,10 @@ package com.mrcrayfish.configured.impl.neoforge;
 import com.mrcrayfish.configured.api.IModConfig;
 import com.mrcrayfish.configured.api.IModConfigProvider;
 import com.mrcrayfish.configured.api.ModContext;
-import net.neoforged.fml.config.ConfigTracker;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.config.ModConfigs;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-import java.lang.reflect.Field;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;

@@ -4,7 +4,10 @@ plugins {
 }
 
 neoForge {
-    neoFormVersion = neo_form_version
+    enable {
+        neoFormVersion = neo_form_version
+        disableRecompilation = System.getenv("CI") == "true"
+    }
     def at = file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
         accessTransformers.add(at.absolutePath)
@@ -13,8 +16,8 @@ neoForge {
 
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
-    compileOnly "com.mrcrayfish:framework-common:${minecraft_version}-${framework_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "com.mrcrayfish:framework-common:${framework_version}+${minecraft_version}"
+    //compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     compileOnly "com.electronwill.night-config:core:${night_config_version}"
     compileOnly "com.electronwill.night-config:toml:${night_config_version}"
 }

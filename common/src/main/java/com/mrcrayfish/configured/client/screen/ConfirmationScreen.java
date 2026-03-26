@@ -3,7 +3,7 @@ package com.mrcrayfish.configured.client.screen;
 import com.mrcrayfish.configured.client.screen.widget.IconButton;
 import com.mrcrayfish.configured.client.util.ScreenUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.CommonComponents;
@@ -73,20 +73,20 @@ public class ConfirmationScreen extends Screen
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+    public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTicks)
     {
-        super.render(graphics, mouseX, mouseY, partialTicks);
+        super.extractRenderState(extractor, mouseX, mouseY, partialTicks);
 
         List<FormattedCharSequence> lines = this.font.split(this.message, 300);
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 10, this.startY - 30, this.icon.u(), this.icon.v(), 20, 20, 10, 10, 64, 64);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, IconButton.ICONS, this.width / 2 - 10, this.startY - 30, this.icon.u(), this.icon.v(), 20, 20, 10, 10, 64, 64);
 
-        drawListBackground(graphics, 0, this.width, this.startY, this.endY);
+        extractListBackground(extractor, 0, this.width, this.startY, this.endY);
 
         for(int i = 0; i < lines.size(); i++)
         {
             int lineWidth = this.font.width(lines.get(i));
-            graphics.drawString(this.font, lines.get(i), this.width / 2 - lineWidth / 2, this.startY + MESSAGE_PADDING + i * (this.font.lineHeight + 2) + 1, 0xFFFFFFFF);
+            extractor.text(this.font, lines.get(i), this.width / 2 - lineWidth / 2, this.startY + MESSAGE_PADDING + i * (this.font.lineHeight + 2) + 1, 0xFFFFFFFF);
         }
     }
 
@@ -135,15 +135,15 @@ public class ConfirmationScreen extends Screen
         }
     }
 
-    public static void drawListBackground(GuiGraphics graphics, int startX, int endX, int startY, int endY)
+    public static void extractListBackground(GuiGraphicsExtractor extractor, int startX, int endX, int startY, int endY)
     {
         boolean inGame = Minecraft.getInstance().level != null;
         Identifier backgroundTexture = !inGame ? MENU_LIST_BACKGROUND : IN_GAME_MENU_LIST_BACKGROUND;
         Identifier headerTexture = !inGame ? Screen.HEADER_SEPARATOR : Screen.INWORLD_HEADER_SEPARATOR;
         Identifier footerTexture = !inGame ? Screen.FOOTER_SEPARATOR : Screen.INWORLD_FOOTER_SEPARATOR;
-        graphics.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, startX, startY, (float) endX, (float) endY, endX - startX, endY - startY, 32, 32);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, headerTexture, startX, startY - 2, 0, 0, endX - startX, 2, 32, 2);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, footerTexture, startX, endY, 0, 0, endX - startX, 2, 32, 2);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, startX, startY, (float) endX, (float) endY, endX - startX, endY - startY, 32, 32);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, headerTexture, startX, startY - 2, 0, 0, endX - startX, 2, 32, 2);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, footerTexture, startX, endY, 0, 0, endX - startX, 2, 32, 2);
     }
 
     public static void showInfo(Minecraft minecraft, Screen parent, Component message)

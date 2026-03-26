@@ -2,7 +2,7 @@ package com.mrcrayfish.configured.client.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mrcrayfish.configured.Constants;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.network.chat.Component;
@@ -39,7 +39,7 @@ public abstract class TooltipScreen extends Screen
      * the tooltip is reset every draw call.
      *
      * @param tooltip a tooltip list to show
-     * @deprecated Use {@link #setActiveTooltip(GuiGraphics, List, int, int)}
+     * @deprecated Use {@link #setActiveTooltip(GuiGraphicsExtractor, List, int, int)}
      */
     @Deprecated
     public void setActiveTooltip(@Nullable List<FormattedCharSequence> tooltip)
@@ -52,18 +52,19 @@ public abstract class TooltipScreen extends Screen
      * Sets the tool tip to render. Must be actively called in the render method as
      * the tooltip is reset every draw call.
      *
-     * @param graphics the guigraphics instance
+     * @param extractor the guigraphics instance
      * @param tooltip a tooltip list to show
      * @param mouseX the mouse x position
      * @param mouseY the mouse y position
      */
-    public void setActiveTooltip(GuiGraphics graphics, @Nullable List<FormattedCharSequence> tooltip, int mouseX, int mouseY)
+    public void setActiveTooltip(GuiGraphicsExtractor extractor, @Nullable List<FormattedCharSequence> tooltip, int mouseX, int mouseY)
     {
         this.resetTooltip();
         this.tooltipText = tooltip;
         if(tooltip != null)
         {
-            graphics.setTooltipForNextFrame(tooltip, mouseX, mouseY);
+            Identifier style = this.tooltipStyle != null ? this.tooltipStyle.getTexture() : null;
+            extractor.setTooltipForNextFrame(this.minecraft.font, tooltip, mouseX, mouseY, style);
         }
     }
 
@@ -74,10 +75,11 @@ public abstract class TooltipScreen extends Screen
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(GuiGraphics graphics, Component text, int mouseX, int mouseY)
+    public void setActiveTooltip(GuiGraphicsExtractor extractor, Component text, int mouseX, int mouseY)
     {
         this.resetTooltip();
-        graphics.setTooltipForNextFrame(this.minecraft.font.split(text, 200), mouseX, mouseY);
+        Identifier style = this.tooltipStyle != null ? this.tooltipStyle.getTexture() : null;
+        extractor.setTooltipForNextFrame(this.minecraft.font, this.minecraft.font.split(text, 200), mouseX, mouseY, style);
     }
 
     /**
@@ -87,12 +89,13 @@ public abstract class TooltipScreen extends Screen
      *
      * @param text the text to show on the tooltip
      */
-    public void setActiveTooltip(GuiGraphics graphics, Component text, int mouseX, int mouseY, @Nullable TooltipStyle style)
+    public void setActiveTooltip(GuiGraphicsExtractor extractor, Component text, int mouseX, int mouseY, @Nullable TooltipStyle style)
     {
         this.resetTooltip();
         this.tooltipText = this.minecraft.font.split(text, 200);
         this.tooltipStyle = style;
-        graphics.setTooltipForNextFrame(this.tooltipText, mouseX, mouseY);
+        Identifier styleTexture = this.tooltipStyle != null ? this.tooltipStyle.getTexture() : null;
+        extractor.setTooltipForNextFrame(this.minecraft.font, this.tooltipText, mouseX, mouseY, styleTexture);
     }
 
     public record ListMenuTooltipComponent(FormattedCharSequence text) implements TooltipComponent
