@@ -7,7 +7,7 @@
 
 # Configured
 
-Configured is a simple and lightweight mod that dynamically creates configuration menus for every mod with a supported config system. The mod was initially created due to the removal of Forge's built-in GUI system but it has now expnaded in features and supported modloaders. Configured aims to make it easier for players to modify the configurations of mods by providing a beautiful GUI and an intuitive experience. The best part is that Configured doesn't need other mods to write extra code in order for a menu to be generated, assuming they are using a supported config system. This mod can be safely added to any modpack without any problems.
+Configured is a simple and lightweight mod that dynamically creates configuration menus for every mod with a supported config system. The mod was initially created due to the removal of Forge's built-in GUI system but it has now expanded in features and supported modloaders. Configured aims to make it easier for players to modify the configurations of mods by providing a beautiful GUI and an intuitive experience. The best part is that Configured doesn't need other mods to write extra code in order for a menu to be generated, assuming they are using a supported config system. This mod can be safely added to any modpack without any problems.
 
 ## Features
 
