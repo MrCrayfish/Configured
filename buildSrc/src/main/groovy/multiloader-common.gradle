@@ -114,7 +114,6 @@ processResources {
             "version"                        : project.version,
             "java_version"                   : java_version,
             "minecraft_version"              : minecraft_version,
-            "forge_version"                  : forge_version,
             "fabric_version"                 : fabric_version,
             "fabric_loader_version"          : fabric_loader_version,
             "fabric_minecraft_version_range" : fabric_minecraft_version_range,
