@@ -39,16 +39,12 @@ public class ClientConfigured implements ClientModInitializer
             });
         }
 
-        PayloadTypeRegistry.serverboundPlay().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
         ClientPlayNetworking.registerGlobalReceiver(MessageSessionData.TYPE, (payload, context) -> {
             MessageSessionData.handle(payload, Minecraft.getInstance()::execute);
         });
 
         if(Services.PLATFORM.isModLoaded("framework"))
         {
-            PayloadTypeRegistry.serverboundPlay().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
-            PayloadTypeRegistry.clientboundPlay().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
             ClientPlayNetworking.registerGlobalReceiver(MessageFramework.Response.TYPE, (payload, context) -> {
                 Minecraft mc = context.client();
                 MessageFramework.Response.handle(payload, mc::execute, mc.player, context.responseSender()::disconnect);
@@ -64,7 +60,7 @@ public class ClientConfigured implements ClientModInitializer
     private void openModList()
     {
         Minecraft minecraft = Minecraft.getInstance();
-        if(minecraft.level == null || minecraft.screen != null)
+        if(minecraft.level == null || minecraft.gui.screen() != null)
             return;
         Screen newScreen = null;
         if(FabricLoader.getInstance().isModLoaded("catalogue"))
@@ -77,7 +73,7 @@ public class ClientConfigured implements ClientModInitializer
         }
         if(newScreen != null)
         {
-            minecraft.setScreen(newScreen);
+            minecraft.gui.setScreen(newScreen);
         }
     }
 

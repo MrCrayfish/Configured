@@ -1,6 +1,8 @@
 package com.mrcrayfish.configured;
 
 import com.mrcrayfish.configured.impl.framework.message.MessageFramework;
+import com.mrcrayfish.configured.network.message.MessageSessionData;
+import com.mrcrayfish.configured.platform.Services;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -36,5 +38,14 @@ public class Configured implements ModInitializer
                 MessageFramework.Request.handle(payload, server::execute, player, context.responseSender()::disconnect);
             }
         });
+
+        PayloadTypeRegistry.serverboundPlay().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MessageSessionData.TYPE, MessageSessionData.STREAM_CODEC);
+
+        if(Services.PLATFORM.isModLoaded("framework"))
+        {
+            PayloadTypeRegistry.serverboundPlay().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
+            PayloadTypeRegistry.clientboundPlay().register(MessageFramework.Response.TYPE, MessageFramework.Response.STREAM_CODEC);
+        }
     }
 }

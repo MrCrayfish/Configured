@@ -22,7 +22,7 @@ public class FrameworkClientHandler
     {
         // Cancel handling if the player is not in a request screen
         Minecraft minecraft = Minecraft.getInstance();
-        if(!(minecraft.screen instanceof RequestScreen requestScreen))
+        if(!(minecraft.gui.screen() instanceof RequestScreen requestScreen))
             return;
 
         // This is already checked on the server before sending the response, we just do an additional check on client

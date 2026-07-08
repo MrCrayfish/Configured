@@ -65,7 +65,7 @@ public class RequestScreen extends ListMenuScreen implements IEditing
             }
             this.requested = true;
         }
-        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_CANCEL, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_CANCEL, button -> this.minecraft.gui.setScreen(this.parent)));
     }
 
     @Override
@@ -98,7 +98,7 @@ public class RequestScreen extends ListMenuScreen implements IEditing
 
         if(!this.failed && this.response != null && this.time >= 10)
         {
-            this.minecraft.setScreen(new ConfigScreen(this.parent, this.title, this.response));
+            this.minecraft.gui.setScreen(new ConfigScreen(this.parent, this.title, this.response));
             this.response = null;
         }
     }

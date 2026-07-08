@@ -76,13 +76,13 @@ public class ChangeEnumScreen extends TooltipScreen implements IEditing
                 if(this.list.getSelected() != null) {
                     this.onSave.accept(this.list.getSelected().enumValue);
                 }
-                this.minecraft.setScreen(this.parent);
+                this.minecraft.gui.setScreen(this.parent);
             }));
         }
 
         int cancelOffset = this.config.isReadOnly() ? -(buttonWidth / 2) : spacing;
         Component cancelLabel = this.config.isReadOnly() ? CommonComponents.GUI_BACK : CommonComponents.GUI_CANCEL;
-        this.addRenderableWidget(ScreenUtil.button(this.width / 2 + cancelOffset, this.height - 29, buttonWidth, 20, cancelLabel, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 + cancelOffset, this.height - 29, buttonWidth, 20, cancelLabel, button -> this.minecraft.gui.setScreen(this.parent)));
     }
 
     private void constructEntries()

@@ -58,11 +58,11 @@ public class EditStringScreen extends TooltipScreen implements IEditing
             String text = this.textField.getValue();
             if(this.validator.apply(text).getLeft()) {
                 this.onSave.accept(text);
-                this.minecraft.setScreen(this.parent);
+                this.minecraft.gui.setScreen(this.parent);
             }
         }));
         this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 3, this.height / 2 + 13, 128, 20, CommonComponents.GUI_CANCEL, (button) -> {
-            this.minecraft.setScreen(this.parent);
+            this.minecraft.gui.setScreen(this.parent);
         }));
 
         this.updateValidation();

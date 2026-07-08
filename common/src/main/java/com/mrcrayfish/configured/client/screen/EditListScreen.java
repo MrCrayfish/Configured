@@ -60,11 +60,11 @@ public class EditListScreen<T> extends Screen implements IEditing
             this.addRenderableWidget(new IconButton(this.width / 2 - 140, this.height - 29, 0, 44, 90, Component.translatable("configured.gui.apply"), (button) -> {
                 List<T> newValues = this.values.stream().map(StringHolder::getValue).map(s -> this.listType.getValueParser().apply(s)).collect(Collectors.toList());
                 this.holder.set(newValues);
-                this.minecraft.setScreen(this.parent);
+                this.minecraft.gui.setScreen(this.parent);
             }));
             this.addRenderableWidget(new IconButton(this.width / 2 - 45, this.height - 29, 22, 33, 90, Component.translatable("configured.gui.add_value"), (button) -> {
                 String newValue = this.holder instanceof IListConfigValue<T> listValue ? listValue.createPropertyValue() : "";
-                this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, this.config, Component.translatable("configured.gui.edit_value"), newValue, s -> {
+                this.minecraft.gui.setScreen(new EditStringScreen(EditListScreen.this, this.config, Component.translatable("configured.gui.edit_value"), newValue, s -> {
                     T value = this.listType.getValueParser().apply(s);
                     if(value != null) {
                         if(this.holder.isValid(Collections.singletonList(value))) {
@@ -90,14 +90,14 @@ public class EditListScreen<T> extends Screen implements IEditing
             {
                 ConfirmationScreen confirmScreen = new ActiveConfirmationScreen(EditListScreen.this, EditListScreen.this.config, Component.translatable("configured.gui.list_changed"), ConfirmationScreen.Icon.WARNING, result -> {
                     if(!result) return true;
-                    this.minecraft.setScreen(this.parent);
+                    this.minecraft.gui.setScreen(this.parent);
                     return false;
                 });
-                this.minecraft.setScreen(confirmScreen);
+                this.minecraft.gui.setScreen(confirmScreen);
             }
             else
             {
-                this.minecraft.setScreen(this.parent);
+                this.minecraft.gui.setScreen(this.parent);
             }
         }));
     }
@@ -200,7 +200,7 @@ public class EditListScreen<T> extends Screen implements IEditing
             this.holder = holder;
 
             this.editButton = new IconButton(0, 0, 1, 22, 20, CommonComponents.EMPTY, onPress -> {
-                EditListScreen.this.minecraft.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
+                EditListScreen.this.minecraft.gui.setScreen(new EditStringScreen(EditListScreen.this, EditListScreen.this.config, Component.translatable("configured.gui.edit_value"), this.holder.getValue(), s -> {
                     T value = EditListScreen.this.listType.getValueParser().apply(s);
                     if(value != null)
                     {

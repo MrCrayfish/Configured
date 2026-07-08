@@ -4,6 +4,7 @@ import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.framework.api.config.AbstractProperty;
 import com.mrcrayfish.framework.api.config.validate.Validator;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -75,7 +76,7 @@ public class FrameworkValue<T> implements IConfigValue<T>
     public Component getComment()
     {
         String key = this.getTranslationKey() + ".tooltip";
-        if(I18n.exists(key))
+        if(Language.getInstance().has(key))
         {
             return Component.translatable(key);
         }

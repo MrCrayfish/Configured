@@ -2,6 +2,7 @@ package com.mrcrayfish.configured.impl.neoforge;
 
 import com.mrcrayfish.configured.api.IConfigValue;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -81,7 +82,7 @@ public class NeoForgeValue<T> implements IConfigValue<T>
     {
         String rawComment = this.valueSpec.getComment();
         String key = this.getTranslationKey() + ".tooltip";
-        if(I18n.exists(key))
+        if(Language.getInstance().has(key))
         {
             MutableComponent comment = Component.translatable(key);
             if(rawComment != null)

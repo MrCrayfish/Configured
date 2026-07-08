@@ -5,6 +5,7 @@ import com.mrcrayfish.configured.api.Environment;
 import com.mrcrayfish.configured.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
+import org.apache.commons.lang3.EnumUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +24,7 @@ public class Config
     private static final Pattern UUID_PATTERN = Pattern.compile("^[\\da-fA-F]{8}\\b-[\\da-fA-F]{4}\\b-[\\da-fA-F]{4}\\b-[\\da-fA-F]{4}\\b-[\\da-fA-F]{12}$");
     private static final String VALID_CHAT_FORMATTING = Util.make(() -> {
         StringJoiner joiner = new StringJoiner(", ");
-        List.of(ChatFormatting.values()).forEach(formatting -> joiner.add(formatting.getName()));
+        List.of(ChatFormatting.values()).forEach(formatting -> joiner.add(formatting.name()));
         return joiner.toString();
     });
 
@@ -106,7 +107,7 @@ public class Config
                     properties.load(new FileInputStream(file));
                     forceConfiguredMenu = Boolean.parseBoolean(properties.getProperty("forceConfiguredMenu", "false"));
                     includeFoldersInSearch = Boolean.parseBoolean(properties.getProperty("includeFoldersInSearch", "false"));
-                    changedFormatting = ChatFormatting.getByName(properties.getProperty("changedFormatting", "italic"));
+                    changedFormatting = EnumUtils.getEnumIgnoreCase(ChatFormatting.class, "italic", ChatFormatting.ITALIC);
                 } catch(Exception e) {
                     throw new RuntimeException(e);
                 }

@@ -81,7 +81,7 @@ public class WorldSelectionScreen extends ListMenuScreen
     protected void init()
     {
         super.init();
-        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(ScreenUtil.button(this.width / 2 - 75, this.height - 29, 150, 20, CommonComponents.GUI_BACK, button -> this.minecraft.gui.setScreen(this.parent)));
     }
 
     @Override
@@ -233,7 +233,7 @@ public class WorldSelectionScreen extends ListMenuScreen
                 {
                     Component configName = Component.literal(ModConfigSelectionScreen.createLabelFromModConfig(WorldSelectionScreen.this.config));
                     Component newTitle = Component.literal(worldName).copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(configName);
-                    WorldSelectionScreen.this.minecraft.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, newTitle, WorldSelectionScreen.this.config));
+                    WorldSelectionScreen.this.minecraft.gui.setScreen(new ConfigScreen(WorldSelectionScreen.this.parent, newTitle, WorldSelectionScreen.this.config));
                     return;
                 }
                 Component message = result.message().orElse(Component.translatable("configured.gui.load_world_config_failed"));

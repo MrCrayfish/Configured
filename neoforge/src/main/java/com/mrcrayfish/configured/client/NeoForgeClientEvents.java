@@ -34,8 +34,8 @@ public class NeoForgeClientEvents
             Minecraft minecraft = Minecraft.getInstance();
             if(minecraft.player == null)
                 return;
-            Screen oldScreen = minecraft.screen;
-            minecraft.setScreen(new ModListScreen(oldScreen));
+            Screen oldScreen = minecraft.gui.screen();
+            minecraft.gui.setScreen(new ModListScreen(oldScreen));
         }
     }
 
@@ -43,7 +43,7 @@ public class NeoForgeClientEvents
     private static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event)
     {
         Minecraft minecraft = Minecraft.getInstance();
-        if(!(minecraft.screen instanceof TooltipScreen screen))
+        if(!(minecraft.gui.screen() instanceof TooltipScreen screen))
             return;
 
         if(screen.tooltipText == null)
@@ -61,7 +61,7 @@ public class NeoForgeClientEvents
     private static void onGetTooltipColor(RenderTooltipEvent.Texture event)
     {
         Minecraft minecraft = Minecraft.getInstance();
-        if(!(minecraft.screen instanceof TooltipScreen screen))
+        if(!(minecraft.gui.screen() instanceof TooltipScreen screen))
             return;
 
         if(screen.tooltipText == null)

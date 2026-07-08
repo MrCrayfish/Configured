@@ -6,6 +6,7 @@ import com.mrcrayfish.configured.api.IConfigEntry;
 import com.mrcrayfish.configured.api.IConfigValue;
 import com.mrcrayfish.configured.api.ValueEntry;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.jetbrains.annotations.Nullable;
@@ -100,7 +101,7 @@ public class NeoForgeFolderEntry implements IConfigEntry
         if(translationKey != null)
         {
             String tooltipKey = translationKey + ".tooltip";
-            if(I18n.exists(tooltipKey))
+            if(Language.getInstance().has(tooltipKey))
             {
                 return Component.translatable(tooltipKey);
             }

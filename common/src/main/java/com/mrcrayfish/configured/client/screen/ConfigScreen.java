@@ -153,13 +153,13 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     } else if(this.minecraft.level != null && ConfigHelper.getChangedValues(this.folderEntry).stream().anyMatch(IConfigValue::requiresWorldRestart)) {
                         ConfirmationScreen.showInfo(this.minecraft, this.parent, Component.translatable("configured.gui.world_restart_needed"));
                     } else{
-                        this.minecraft.setScreen(this.parent);
+                        this.minecraft.gui.setScreen(this.parent);
                     }
                 };
                 ActionResult confirmationResult = this.config.showSaveConfirmation(this.minecraft.player);
                 if(confirmationResult.asBoolean() && confirmationResult.message().isPresent())
                 {
-                    this.minecraft.setScreen(this.createSaveConfirmationScreen(confirmationResult, saveTask));
+                    this.minecraft.gui.setScreen(this.createSaveConfirmationScreen(confirmationResult, saveTask));
                 }
                 else
                 {
@@ -177,15 +177,15 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             {
                 if(this.isChanged(this.folderEntry))
                 {
-                    this.minecraft.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, Component.translatable("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {
+                    this.minecraft.gui.setScreen(new ActiveConfirmationScreen(this, ConfigScreen.this.config, Component.translatable("configured.gui.unsaved_changes"), ConfirmationScreen.Icon.WARNING, result -> {
                         if(!result) return true;
-                        this.minecraft.setScreen(this.parent);
+                        this.minecraft.gui.setScreen(this.parent);
                         return false;
                     }));
                 }
                 else
                 {
-                    this.minecraft.setScreen(this.parent);
+                    this.minecraft.gui.setScreen(this.parent);
                 }
             }));
             this.updateButtons();
@@ -203,9 +203,9 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
                     }
                     break;
                 }
-                this.minecraft.setScreen(target);
+                this.minecraft.gui.setScreen(target);
             }));
-            this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 2, this.height - 29, 128, 20, CommonComponents.GUI_BACK, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(ScreenUtil.button(this.width / 2 + 2, this.height - 29, 128, 20, CommonComponents.GUI_BACK, button -> this.minecraft.gui.setScreen(this.parent)));
         }
 
         this.deepSearchCheckBox = new CheckBoxButton(this.width / 2 + 115, 25, button -> this.updateSearchResults());
@@ -250,7 +250,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         });
         confirmScreen.setPositiveText(Component.translatable("configured.gui.reset_all").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         confirmScreen.setNegativeText(CommonComponents.GUI_CANCEL);
-        Minecraft.getInstance().setScreen(confirmScreen);
+        Minecraft.getInstance().gui.setScreen(confirmScreen);
     }
 
     private void restoreDefaults(IConfigEntry entry)
@@ -333,7 +333,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
             super(createLabelForFolderEntry(entry));
             this.button = new IconButton(10, 5, 11, 33, 0, Component.literal(this.getLabel()).withStyle(ChatFormatting.BOLD).withStyle(ChatFormatting.WHITE), onPress -> {
                 Component newTitle = ConfigScreen.this.title.copy().append(Component.literal(" > ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)).append(this.getLabel());
-                ConfigScreen.this.minecraft.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, entry));
+                ConfigScreen.this.minecraft.gui.setScreen(new ConfigScreen(ConfigScreen.this, newTitle, ConfigScreen.this.config, entry));
             });
             if(entry.getTooltip() != null)
             {
@@ -360,7 +360,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         private static Component createLabelForFolderEntry(IConfigEntry entry)
         {
             String key = entry.getTranslationKey();
-            if(key != null && I18n.exists(key))
+            if(key != null && Language.getInstance().has(key))
             {
                 return Component.translatable(key);
             }
@@ -623,7 +623,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
-            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder.get(), s -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().gui.setScreen(new EditStringScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder.get(), s -> {
                 return holder.isValid(s) ? Pair.of(true, CommonComponents.EMPTY) : Pair.of(false, holder.getValidationHint());
             }, s -> {
                 holder.set(s);
@@ -652,7 +652,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.edit");
-            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder)));
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().gui.setScreen(new EditListScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder)));
             this.listType = ListTypes.getType((IConfigValue) holder);
             if(this.listType == ListTypes.getUnknown())
             {
@@ -683,7 +683,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
         {
             super(holder);
             Component buttonText = ConfigScreen.this.config.isReadOnly() ? Component.translatable("configured.gui.view") : Component.translatable("configured.gui.change");
-            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder.get(), holder, e -> {
+            this.button = ScreenUtil.button(10, 5, 46, 20, buttonText, button -> Minecraft.getInstance().gui.setScreen(new ChangeEnumScreen(ConfigScreen.this, ConfigScreen.this.config, this.label, holder.get(), holder, e -> {
                 holder.set(e);
                 ConfigScreen.this.updateButtons();
             })));
@@ -728,7 +728,7 @@ public class ConfigScreen extends ListMenuScreen implements IEditing
      */
     private static String createLabelFromHolder(IConfigValue<?> holder)
     {
-        if(holder.getTranslationKey() != null && I18n.exists(holder.getTranslationKey()))
+        if(holder.getTranslationKey() != null && Language.getInstance().has(holder.getTranslationKey()))
         {
             return Component.translatable(holder.getTranslationKey()).getString();
         }

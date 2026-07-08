@@ -57,7 +57,7 @@ public class ConfirmationScreen extends Screen
         {
             if(this.handler.apply(true))
             {
-                this.minecraft.setScreen(this.parent);
+                this.minecraft.gui.setScreen(this.parent);
             }
         }));
         if(this.negativeText != null)
@@ -66,7 +66,7 @@ public class ConfirmationScreen extends Screen
             {
                 if(this.handler.apply(false))
                 {
-                    this.minecraft.setScreen(this.parent);
+                    this.minecraft.gui.setScreen(this.parent);
                 }
             }));
         }
@@ -161,6 +161,6 @@ public class ConfirmationScreen extends Screen
         ConfirmationScreen confirm = new ConfirmationScreen(parent, message, icon, result -> true);
         confirm.setPositiveText(Component.translatable("configured.gui.close"));
         confirm.setNegativeText(null);
-        minecraft.setScreen(confirm);
+        minecraft.gui.setScreen(confirm);
     }
 }

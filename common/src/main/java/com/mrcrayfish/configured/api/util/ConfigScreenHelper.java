@@ -43,7 +43,7 @@ public class ConfigScreenHelper
      */
     public static Screen createSelectionScreen(Component title, IModConfig config)
     {
-        return createSelectionScreen(Minecraft.getInstance().screen, title, config);
+        return createSelectionScreen(Minecraft.getInstance().gui.screen(), title, config);
     }
 
     /**
