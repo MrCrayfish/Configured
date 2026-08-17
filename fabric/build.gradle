@@ -21,9 +21,9 @@ dependencies {
     implementation "com.mrcrayfish:framework-fabric:${framework_version}+${minecraft_version}"
 
     // JEI
-    //compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    //compileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
-    //runtimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}"
+    runtimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 
     // ModMenu
     compileOnly "com.terraformersmc:modmenu:${modmenu_version}"
