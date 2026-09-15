@@ -16,7 +16,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.client.gui.ModListScreen;
+import net.neoforged.neoforge.client.gui.modlist.ModListScreen;
 import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -35,7 +35,7 @@ public class NeoForgeClientEvents
             if(minecraft.player == null)
                 return;
             Screen oldScreen = minecraft.gui.screen();
-            minecraft.gui.setScreen(new ModListScreen(oldScreen));
+            minecraft.gui.setScreen(ModListScreen.create(oldScreen));
         }
     }
 
